@@ -230,6 +230,19 @@
        <string>Filter Mean</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="bFilterFasta">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>170</y>
+        <width>121</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Filter Fasta</string>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

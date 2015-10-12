@@ -23,7 +23,7 @@ class JoinWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(JoinWindow, self).__init__()
-		uic.loadUi('./ui/joinfields.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/joinfields.py', self)
 		self.cexp=expdat
 		self.cField1.addItems(expdat.fields)
 		self.cField2.addItems(expdat.fields)
@@ -37,7 +37,7 @@ class MetaDataDetailsWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(MetaDataDetailsWindow, self).__init__()
-		uic.loadUi('./ui/metadatadetails.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/metadatadetails.py', self)
 		self.cexp=expdat
 		self.bFieldValues.clicked.connect(self.values)
 		self.cField.addItems(expdat.fields)
@@ -55,7 +55,7 @@ class MetaDataWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(MetaDataWindow, self).__init__()
-		uic.loadUi('./ui/plotmetadata.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/plotmetadata.py', self)
 		self.cexp=expdat
 		self.mddict={}
 		for cmeta in expdat.plotmetadata:
@@ -111,7 +111,7 @@ class AdvPlotWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(AdvPlotWindow, self).__init__()
-		uic.loadUi('./ui/advplot.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/advplot.py', self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -150,7 +150,7 @@ class SortSamplesWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(SortSamplesWindow, self).__init__()
-		uic.loadUi('./ui/sortsamples.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/sortsamples.py', self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -184,7 +184,7 @@ class FilterSamplesWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(FilterSamplesWindow, self).__init__()
-		uic.loadUi('./ui/filtersamples.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/filtersamples.py', self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -216,10 +216,21 @@ class FilterSamplesWindow(QtGui.QDialog):
 
 
 
+class FilterFastaWindow(QtGui.QDialog):
+	def __init__(self):
+		super(FilterFastaWindow, self).__init__()
+		uic.loadUi('/Users/amnon/qttestamnon/filterfasta.py', self)
+		self.bBrowse.clicked.connect(self.browse)
+
+	def browse(self):
+		fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open fasta file',filter='*.fa;;*.fasta;;*.fna'))
+		self.tFileName.setText(fname)
+
+
 class LoadWindow(QtGui.QDialog):
 	def __init__(self):
 		super(LoadWindow, self).__init__()
-		uic.loadUi('./ui/load.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/load.py', self)
 		self.bLoadBrowseTable.clicked.connect(self.browsetable)
 		self.bLoadBrowseMap.clicked.connect(self.browsemap)
 		self.bLoadLoad.clicked.connect(self.load)
@@ -250,7 +261,7 @@ class AppWindow(QtGui.QMainWindow):
 
 	def __init__(self):
 		super(AppWindow, self).__init__()
-		uic.loadUi('./ui/appwindow.py', self)
+		uic.loadUi('/Users/amnon/qttestamnon/appwindow.py', self)
 		self.bMainLoadNew.clicked.connect(self.load)
 		self.bPickleLoad.clicked.connect(self.pickleload)
 		self.bMainPlot.clicked.connect(self.plot)
@@ -264,6 +275,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bFilterPresence.clicked.connect(self.filterpresence)
 		self.bFilterMean.clicked.connect(self.filtermean)
 		self.bJoinFields.clicked.connect(self.joinfields)
+		self.bFilterFasta.clicked.connect(self.filterfasta)
 
 		# the main list right mouse menu
 		self.bMainList.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -289,7 +301,7 @@ class AppWindow(QtGui.QMainWindow):
 
 		# put some experiments:
 		au.Debug(6,'Loading sample experiment')
-		expdat=analysis.load('./test_data/bears.clean.single.table.txt','./test_data/map.txt')
+		expdat=analysis.load('/Users/amnon/Projects/bears/bears.clean.new.withtax.biom','/Users/amnon/Projects/bears/map.txt')
 		self.addexp(expdat)
 
 
@@ -445,6 +457,32 @@ class AppWindow(QtGui.QMainWindow):
 				else:
 					sortfield=str(dwin.cField.currentText())
 				analysis.plotexp(cexp,sortby=sortfield,numeric=numeric,showline=showline,minreads=minreads,usegui=True,cdb=self.cooldb,seqdb=self.bactdb)
+
+
+	def filterfasta(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			filterfastawin = FilterFastaWindow()
+			res=filterfastawin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				filename=str(filterfastawin.tFileName.text())
+				exclude=filterfastawin.cExclude.checkState()
+				pmatch=filterfastawin.cPartialMatch.checkState()
+				newname=str(filterfastawin.tNewName.text())
+				if not newname:
+					newname=cexp.studyname+'-ffa'
+				overwrite=filterfastawin.cOverwrite.checkState()
+				newexp=analysis.filterfasta(cexp,filename,exclude=exclude,subseq=pmatch)
+				if overwrite==0:
+					newexp.studyname=newname
+					self.addexp(newexp)
+				else:
+					self.replaceexp(newexp)
 
 
 	def filtersamples(self):
