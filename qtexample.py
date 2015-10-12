@@ -23,7 +23,7 @@ class JoinWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(JoinWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/joinfields.py', self)
+		uic.loadUi('./ui/joinfields.py', self)
 		self.cexp=expdat
 		self.cField1.addItems(expdat.fields)
 		self.cField2.addItems(expdat.fields)
@@ -37,7 +37,7 @@ class MetaDataDetailsWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(MetaDataDetailsWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/metadatadetails.py', self)
+		uic.loadUi('./ui/metadatadetails.py', self)
 		self.cexp=expdat
 		self.bFieldValues.clicked.connect(self.values)
 		self.cField.addItems(expdat.fields)
@@ -55,7 +55,7 @@ class MetaDataWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(MetaDataWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/plotmetadata.py', self)
+		uic.loadUi('./ui/plotmetadata.py', self)
 		self.cexp=expdat
 		self.mddict={}
 		for cmeta in expdat.plotmetadata:
@@ -111,7 +111,7 @@ class AdvPlotWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(AdvPlotWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/advplot.py', self)
+		uic.loadUi('./ui/advplot.py', self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -150,7 +150,7 @@ class SortSamplesWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(SortSamplesWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/sortsamples.py', self)
+		uic.loadUi('./ui/sortsamples.py', self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -184,7 +184,7 @@ class FilterSamplesWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(FilterSamplesWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/filtersamples.py', self)
+		uic.loadUi('./ui/filtersamples.py', self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -219,7 +219,7 @@ class FilterSamplesWindow(QtGui.QDialog):
 class FilterFastaWindow(QtGui.QDialog):
 	def __init__(self):
 		super(FilterFastaWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/filterfasta.py', self)
+		uic.loadUi('./ui/filterfasta.py', self)
 		self.bBrowse.clicked.connect(self.browse)
 
 	def browse(self):
@@ -230,7 +230,7 @@ class FilterFastaWindow(QtGui.QDialog):
 class LoadWindow(QtGui.QDialog):
 	def __init__(self):
 		super(LoadWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/load.py', self)
+		uic.loadUi('./ui/load.py', self)
 		self.bLoadBrowseTable.clicked.connect(self.browsetable)
 		self.bLoadBrowseMap.clicked.connect(self.browsemap)
 		self.bLoadLoad.clicked.connect(self.load)
@@ -261,7 +261,7 @@ class AppWindow(QtGui.QMainWindow):
 
 	def __init__(self):
 		super(AppWindow, self).__init__()
-		uic.loadUi('/Users/amnon/qttestamnon/appwindow.py', self)
+		uic.loadUi('./ui/appwindow.py', self)
 		self.bMainLoadNew.clicked.connect(self.load)
 		self.bPickleLoad.clicked.connect(self.pickleload)
 		self.bMainPlot.clicked.connect(self.plot)
@@ -301,7 +301,7 @@ class AppWindow(QtGui.QMainWindow):
 
 		# put some experiments:
 		au.Debug(6,'Loading sample experiment')
-		expdat=analysis.load('/Users/amnon/Projects/bears/bears.clean.new.withtax.biom','/Users/amnon/Projects/bears/map.txt')
+		expdat=analysis.load('./test_data/bears.clean.new.withtax.biom','./test_data/map.txt')
 		self.addexp(expdat)
 
 
