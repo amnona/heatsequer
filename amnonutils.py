@@ -25,6 +25,57 @@ def Debug(dlevel,*args):
 		print (args)
 
 
+
+def reverse(seq):
+	oseq=''
+	for a in seq:
+		oseq=a+oseq
+	return oseq
+
+def complement(seq):
+	seq=seq.upper()
+	oseq=''
+	for a in seq:
+		if a=='A':
+			oseq+='T'
+		elif a=='C':
+			oseq+='G'
+		elif a=='G':
+			oseq+='C'
+		elif a=='T':
+			oseq+='A'
+		else:
+			oseq+='N'
+	return oseq
+
+def revcomp(seq):
+	return reverse(complement(seq))
+
+
+def readfastaseqs(filename):
+	"""
+	read a fasta file and return a list of sequences
+	input:
+	filename - the fasta file name
+
+	output:
+	seqs - a list of sequences
+	"""
+	fl=open(filename,"rU")
+	cseq=''
+	seqs=[]
+	for cline in fl:
+		if cline[0]=='>':
+			if cseq:
+				seqs.append(cseq)
+				cseq=''
+		else:
+			cseq+=cline.strip()
+	if cseq:
+		seqs.append(cseq)
+	return seqs
+
+
 def isort(clist,reverse=False):
 	"""
 	matlab style sort
@@ -130,6 +181,51 @@ def nicenum(num):
 	else:
 		numstr=int(num)
 	return numstr
+
+
+
+def SeqToArray(seq):
+	""" convert a string sequence to a numpy array"""
+	seqa=np.zeros(len(seq),dtype=np.int8)
+	for ind,base in enumerate(seq):
+		if base=='A':
+			seqa[ind]=0
+		elif base=='a':
+			seqa[ind]=0
+		elif base=='C':
+			seqa[ind]=1
+		elif base=='c':
+			seqa[ind]=1
+		elif base=='G':
+			seqa[ind]=2
+		elif base=='g':
+			seqa[ind]=2
+		elif base=='T':
+			seqa[ind]=3
+		elif base=='t':
+			seqa[ind]=3
+		elif base=='-':
+			seqa[ind]=4
+		else:
+			seqa[ind]=5
+	return(seqa)
+
+
+def ArrayToSeq(seqa):
+	""" convert a numpy array to sequence (upper case)"""
+	seq=''
+	for cnuc in seqa:
+		if cnuc==0:
+			seq+='A'
+		elif cnuc==1:
+			seq+='C'
+		elif cnuc==2:
+			seq+='G'
+		elif cnuc==3:
+			seq+='T'
+		else:
+			seq+='N'
+	return(seq)
 
 
 def fdr(pvalues, correction_type = "Benjamini-Hochberg"):

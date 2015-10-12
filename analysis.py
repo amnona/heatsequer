@@ -167,7 +167,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 	for idx,cmap in enumerate(mapsamples):
 		if cmap not in tablesamples:
 			removemap.append(idx)
-			del smap[cmap]
+			try:
+				del smap[cmap]
+			except:
+				au.Debug(8,'Duplicate SampleID %s in mapping file' % cmap)
 	if len(removemap)>0:
 		au.Debug(7,'need to remove %d samples from mapping file' % len(removemap))
 	mapsamples=au.delete(mapsamples,removemap)
@@ -1056,7 +1059,7 @@ def pulseplot(expdat,cid):
 	legend(plen)
 
 
-def addplotmetadata(expdat,field,value=False,inverse=False,color='g',ax=False,beforesample=True):
+def addplotmetadata(expdat,field,value=False,inverse=False,color='g',ax=False,beforesample=True,partial=False):
 	"""
 	plot lines on an experiment plot from plotexp. NOTE: need to use with the output of plotexp!!!
 	input:
@@ -1066,6 +1069,7 @@ def addplotmetadata(expdat,field,value=False,inverse=False,color='g',ax=False,be
 	inverse - inverse the logic of value
 	color - the color to plot
 	beforesample - True if it happened between the prev. and current sample, False if in the middle of the sample
+	partial - True to allow substring match, False for exact match
 	"""
 
 	if not ax:
@@ -1077,8 +1081,12 @@ def addplotmetadata(expdat,field,value=False,inverse=False,color='g',ax=False,be
 	for idx,csamp in enumerate(expdat.samples):
 		plotit=False
 		if value:
-			if expdat.smap[csamp][field]==value:
-				plotit=True
+			if partial:
+				if value in expdat.smap[csamp][field]:
+					plotit=True
+			else:
+				if expdat.smap[csamp][field]==value:
+					plotit=True
 		else:
 			if expdat.smap[csamp][field]!='':
 				plotit=True
@@ -1511,6 +1519,30 @@ def analyzenumreads(expdat,blanks=['blank','empty']):
 	show()
 
 
+def filterfasta(expdat,filename,exclude=False,subseq=False):
+	"""
+	Filter bacteria based on a fasta file (keeping only sequences in the fasta file)
+	input:
+	expdat
+	filename - the fasta file name
+	exclude - False to keep only seqs from the file, True to throw away seqs from the file
+	subseq - match subsequences (slower)
+
+	output:
+	newexp - the filtered experiment
+	"""
+
+	seqs=au.readfastaseqs(filename)
+	newexp=filterseqs(expdat,seqs,exclude=exclude,subseq=subseq)
+	filt='Filter sequences from file '+filename
+	if exclude:
+		filt+=' (Exclude)'
+	if subseq:
+		filt+=' (subseq)'
+	newexp.filters.append(filt)
+	return newexp
+
+
 def filterbacteriafromfile(expdat,filename,exclude=False,subseq=False):
 	"""
 	filter bacteria from an experiment based on a file with sequences (one per line)
@@ -1550,7 +1582,8 @@ def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore'):
 	dat=copy.copy(expdat.data)
 #	dat[dat<20]=20
 #	dat=np.log2(dat)
-	dat=(dat>10)
+	dat=(dat>1)
+	print('li')
 	bdat=dat
 #	bdat=scale(dat,axis=1,copy=True)
 	nbact=np.size(dat,0)
@@ -1558,7 +1591,7 @@ def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore'):
 	allsamp=np.arange(nsamp)
 	allbact=np.arange(nbact)
 
-	bthresh=0
+	bthresh=0.5
 	sthresh=0
 	if startb:
 		ubact=[]
@@ -1574,9 +1607,9 @@ def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore'):
 		if method=='zscore':
 			# find samples
 			meanin=np.mean(bdat[ubact,:],axis=0)
-			print(meanin[0:10])
+#			print(meanin[0:10])
 			sdiff=meanin-np.mean(np.mean(bdat[ubact,:]))
-			print(sdiff[0:10])
+#			print(sdiff[0:10])
 			if len(ubact)>1:
 				usamp=allsamp[sdiff>sthresh*np.std(np.mean(bdat[ubact,:],axis=0))]
 			else:
@@ -1818,3 +1851,55 @@ def filterannotations(expdat,annotation,cdb,exclude=False):
 	newexp.filters.append('Filter annotations %s' % annotation)
 	au.Debug(6,'%d bacteria found' % len(keeplist))
 	return newexp
+
+
+def savetsvtable(expdat,filename,logtransform=True):
+	"""
+	save an experiment as a tab separated table, with columns for samples and rows for bacteria
+	for jose navas long babies paper
+	input:
+	expdat
+	filename - name of the output tsv file
+	minreads - save only bacteria with >=minreads reads
+	logtransform - True to save the log2 of the reads, False to save the reads
+	"""
+
+	ldat=copy.copy(expdat.data)
+	if logtransform:
+		ldat[np.where(ldat<1)]=1
+		ldat=np.log2(ldat)
+
+	of=open(filename,'w')
+	of.write("Taxonomy\tSequence")
+	for csamp in expdat.samples:
+		of.write("\t%s" % csamp)
+	of.write("\n")
+	for idx,cseq in enumerate(expdat.seqs):
+		of.write("%s\t%s" % (expdat.tax[idx],cseq))
+		for cval in ldat[idx,:]:
+			of.write("\t%f" % cval)
+		of.write("\n")
+	of.close()
+
+
+def getnucdistribution(expdat,position):
+	"""
+	get the distribution of nucleotides in the positions in position
+	note this is unweighted
+	input:
+	expdat
+	position - a list of positions (0 based) to test
+
+	output:
+	"""
+
+	retv=np.zeros((len(position),6))
+	for cseq in expdat.seqs:
+		cseqn=au.SeqToArray(cseq)
+		for idx,cpos in enumerate(position):
+			retv[idx,cseqn[cpos]]+=1
+	figure()
+	for cnuc in range(np.size(retv,axis=1)):
+		for crow in range(np.size(retv,axis=0)-1):
+			bar(np.arange(np.size(retv,axis=0)),retv[crow+1,:],bottom=retv[crow,:])
+	return (retv)
