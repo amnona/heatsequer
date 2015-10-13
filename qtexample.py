@@ -301,7 +301,10 @@ class AppWindow(QtGui.QMainWindow):
 
 		# put some experiments:
 		au.Debug(6,'Loading sample experiment')
-		expdat=analysis.load('./test_data/bears.clean.new.withtax.biom','./test_data/map.txt')
+		try:
+			expdat=analysis.load('./test_data/bears.clean.new.withtax.biom','./test_data/map.txt')
+		except:
+			au.Debug(6,'Sample experiment not found. sorry')
 		self.addexp(expdat)
 
 
