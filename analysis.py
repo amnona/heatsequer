@@ -265,7 +265,7 @@ def reordersamples(exp,newpos,inplace=False):
 
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1):
 	"""
 	Plot an experiment
 	input:
@@ -282,6 +282,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	showxall - True to show all sample names when not sorting, False to show no more than 10
 	showcolorbar - True to plot the colorbar. False to not plot
 	ptitle - name of the figure or False to show processing history as name
+	lowcutoff - minimal value for read (for 0 log transform) - the minimal resolution - could be 10000*2/origreads
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)

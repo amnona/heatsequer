@@ -361,7 +361,8 @@ class AppWindow(QtGui.QMainWindow):
 		expdname='%s (%s-S, %s-B)' % (expname,au.nicenum(len(expdat.samples)),au.nicenum(len(expdat.sids)))
 		self.explist[expdname]=expdat
 		self.bMainList.addItem(expdname)
-
+		self.bMainList.clearSelection()
+		self.bMainList.setCurrentRow(self.bMainList.count()-1)
 
 	def replaceexp(self,expdat):
 		"""
