@@ -303,9 +303,9 @@ class AppWindow(QtGui.QMainWindow):
 		au.Debug(6,'Loading sample experiment')
 		try:
 			expdat=analysis.load('./test_data/bears.clean.new.withtax.biom','./test_data/map.txt')
+			self.addexp(expdat)
 		except:
 			au.Debug(6,'Sample experiment not found. sorry')
-		self.addexp(expdat)
 
 
 	def listItemRightClicked(self, QPos):
