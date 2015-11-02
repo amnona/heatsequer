@@ -179,6 +179,43 @@ class SortSamplesWindow(QtGui.QDialog):
 			self.tNewName.setReadOnly(True)
 
 
+class DiffExpWindow(QtGui.QDialog):
+	cexp=[]
+
+	def __init__(self,expdat):
+		super(DiffExpWindow, self).__init__()
+		uic.loadUi('./ui/diffexp.py', self)
+		self.cexp=expdat
+		self.cField.addItems(expdat.fields)
+		self.bFieldValues1.clicked.connect(self.fieldvalues1)
+		self.bFieldValues2.clicked.connect(self.fieldvalues2)
+		self.cAll.stateChanged.connect(self.allvalues)
+#		self.cField.stateChanged.connect(self.fieldchanged)
+		self.tNewName.setText(self.cexp.studyname+'_de')
+
+#	def fieldchanged(self):
+#		self.tNewName.setText(self.cexp.studyname+'_'+str(self.cField.currentText())+'_de')
+
+	def fieldvalues1(self):
+		cfield=str(self.cField.currentText())
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		if ok:
+			self.tValue1.setText(val)
+
+	def fieldvalues2(self):
+		cfield=str(self.cField.currentText())
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		if ok:
+			self.tValue2.setText(val)
+
+	def allvalues(self):
+		# unchecked
+		if self.cAll.checkState()==0:
+			self.tValue2.setReadOnly(False)
+		else:
+			self.tValue2.setReadOnly(True)
+
+
 class FilterSamplesWindow(QtGui.QDialog):
 	cexp=[]
 
@@ -255,6 +292,24 @@ class LoadWindow(QtGui.QDialog):
 		self.reject()
 
 
+
+class ListWindow(QtGui.QDialog):
+	def __init__(self,listdata=[],listname=''):
+		"""
+		create a list window with items in the list and the listname as specified
+		input:
+		listdata - the data to show in the list (a list)
+		listname - name to display above the list
+		"""
+		super(ListWindow, self).__init__()
+		uic.loadUi('./ui/listwindow.py', self)
+		for citem in listdata:
+			self.lList.addItem(citem)
+		if listname:
+			self.lLabel.setText(listname)
+
+
+
 class AppWindow(QtGui.QMainWindow):
 	# the experiments loaded for analysis
 	explist={}
@@ -267,6 +322,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainPlot.clicked.connect(self.plot)
 		self.bMainAdvancedPlot.clicked.connect(self.advplot)
 		self.bMainFilterSamples.clicked.connect(self.filtersamples)
+		self.bDiffExp.clicked.connect(self.diffexp)
 		self.bFilterOrigReads.clicked.connect(self.filterorigreads)
 		self.bMainSortSamples.clicked.connect(self.sortsamples)
 		self.bMainClusterBacteria.clicked.connect(self.clusterbacteria)
@@ -275,7 +331,11 @@ class AppWindow(QtGui.QMainWindow):
 		self.bFilterPresence.clicked.connect(self.filterpresence)
 		self.bFilterMean.clicked.connect(self.filtermean)
 		self.bJoinFields.clicked.connect(self.joinfields)
+		self.bJoinExps.clicked.connect(self.joinexps)
+		self.bBicluster.clicked.connect(self.bicluster)
 		self.bFilterFasta.clicked.connect(self.filterfasta)
+		self.bRenormalize.clicked.connect(self.renormalize)
+
 
 		# the main list right mouse menu
 		self.bMainList.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -312,13 +372,26 @@ class AppWindow(QtGui.QMainWindow):
 		self.listMenu= QtGui.QMenu()
 		menuremove = self.listMenu.addAction("Remove Item")
 		self.connect(menuremove, QtCore.SIGNAL("triggered()"), self.menuRemove)
-		menusave = self.listMenu.addAction("Save Item")
+		menusave = self.listMenu.addAction("Save (pickle) Item")
 		self.connect(menusave, QtCore.SIGNAL("triggered()"), self.menuSave)
-		menuexport = self.listMenu.addAction("Export Item")
+		menuexport = self.listMenu.addAction("Save (biom) Item")
 		self.connect(menuexport, QtCore.SIGNAL("triggered()"), self.menuExport)
+		menuinfo = self.listMenu.addAction("Info")
+		self.connect(menuinfo, QtCore.SIGNAL("triggered()"), self.expinfo)
 		parentPosition = self.bMainList.mapToGlobal(QtCore.QPoint(0, 0))
 		self.listMenu.move(parentPosition + QPos)
 		self.listMenu.show()
+
+	def expinfo(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			listwin = ListWindow(cexp.filters,cexp.studyname)
+			res=listwin.exec_()
 
 	def menuRemove(self):
 		if len(self.bMainList.selectedItems())>1:
@@ -331,18 +404,22 @@ class AppWindow(QtGui.QMainWindow):
 
 	def menuSave(self):
 		cname=str(self.bMainList.currentItem().text())
-		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment',''))
+		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as pickle',''))
 		fl=open(fname,'w')
 		pickle.dump(self.explist[cname],fl,-1)
 		fl.close()
-		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved' % cname)
+		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as pickle' % cname)
 #		picklewrapper.save('test',currentItemName)
 
 	def menuExport(self):
 		cname=str(self.bMainList.currentItem().text())
-		cm='global %s;%s=self.explist[cname]' % (cname,cname)
-		exec(cm)
-		au.Debug(7,'exported',cname)
+		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as biom',''))
+		analysis.savebiom(self.explist[cname],fname)
+		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as biom table and mapping file' % cname)
+#		cname=str(self.bMainList.currentItem().text())
+#		cm='global %s;%s=self.explist[cname]' % (cname,cname)
+#		exec(cm)
+#		au.Debug(7,'exported',cname)
 
 
 	def addexp(self,expdat):
@@ -489,6 +566,34 @@ class AppWindow(QtGui.QMainWindow):
 					self.replaceexp(newexp)
 
 
+	def diffexp(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			diffexpwin = DiffExpWindow(cexp)
+			res=diffexpwin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				field=str(diffexpwin.cField.currentText())
+				value1=str(diffexpwin.tValue1.text())
+				value2=str(diffexpwin.tValue2.text())
+				newname=str(diffexpwin.tNewName.text())
+				method=str(diffexpwin.cMethod.currentText())
+				compareall=diffexpwin.cAll.checkState()
+				if compareall:
+					value2=False
+				if method=='all':
+					newexp=analysis.getdiffsigall(cexp,field,value1,value2)
+				else:
+					newexp=analysis.getdiffsig(cexp,field,value1,value2,method=method)
+				if newexp:
+					newexp.studyname=newname+'_'+field
+					self.addexp(newexp)
+
+
 	def filtersamples(self):
 		items=self.bMainList.selectedItems()
 		if len(items)!=1:
@@ -553,6 +658,38 @@ class AppWindow(QtGui.QMainWindow):
 				newexp=analysis.clusterbacteria(cexp,minreads=val)
 				newexp.studyname=newexp.studyname+'_cb'
 				self.addexp(newexp)
+
+
+	def bicluster(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			newexp=analysis.bicluster(cexp)
+			newexp.studyname=newexp.studyname+'_bicluster'
+			self.addexp(newexp)
+
+
+	def joinexps(self):
+		items=self.bMainList.selectedItems()
+		if len(items)<2:
+			print("Need at least 2 experiments!")
+			return
+		newfieldname,ok=QtGui.QInputDialog.getText(self,'Join experiments','Name of study name field')
+		if ok:
+			cname=str(items[0].text())
+			baseexp=self.explist[cname]
+			allexpname=baseexp.studyname
+			for citem in items[1:]:
+				cname=str(citem.text())
+				cexp=self.explist[cname]
+				baseexp=analysis.joinexperiments(baseexp,cexp,missingval='NA',origfieldname=newfieldname)
+				allexpname+='+'+cexp.studyname
+			baseexp.studyname=allexpname
+			self.addexp(baseexp)
 
 
 
@@ -628,6 +765,19 @@ class AppWindow(QtGui.QMainWindow):
 				newexp=analysis.filtertaxonomy(cexp,tax=str(val),exact=False)
 				newexp.studyname=newexp.studyname+'_ftax'
 				self.addexp(newexp)
+
+	def renormalize(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			newexp=analysis.normalizereads(cexp)
+			newexp.studyname=newexp.studyname+'_norm'
+			self.addexp(newexp)
+
 
 def main():
 	app = QtGui.QApplication(sys.argv)

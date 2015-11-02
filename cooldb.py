@@ -39,8 +39,12 @@ class cooldb:
 		# 89 bp hash of sequences pointing to location in dat
 		self.shortseqdict={}
 
+		# True if we also loaded the greengenes ids from getggids
+		self.biomggloaded=False
+
 
 def loaddb(dbname='./db/coolseqs.txt'):
+#def loaddb(dbname='./db/coolseqs.gg97-135.txt'):
 	db=cooldb()
 	db.dbfile=dbname
 	au.Debug(0,'Loadding coolseq database',db.dbfile)
@@ -71,6 +75,20 @@ def getseqinfo(db,seq):
 	info - a list of known info about the sequence
 	'''
 
+	# if seq is numeric, it is a greengenesid - need the database after getggids
+	if seq.isdigit():
+		au.Debug(0,'Looking for info for ggid %s' % seq)
+		if not db.biomggloaded:
+			au.Debug(9,'GreenGenes IDs were not loaded for cooldb!')
+		ggid=int(seq)
+		info=[]
+		for cidx in range(len(db.dat)):
+			if 'biomggid' in db.dat[cidx]:
+				if int(db.dat[cidx]['biomggid'])==ggid:
+					info.append(db.dat[cidx]['bacteria_description'])
+		return info
+	# not a ggid so look for the sequence
+	au.Debug(0,'Looking for info for sequence',seq)
 	info=[]
 	sseq=seq[0:89]
 	if not sseq in db.shortseqdict:
@@ -87,6 +105,7 @@ def getseqinfo(db,seq):
 		info.append(db.dat[cpos]['bacteria_description'])
 		au.Debug(0,'found in position',cpos)
 	return info
+
 
 def saveseq(db,seq,taxonomy,filename,description,ggid=False,expdescription=False):
 	""""
@@ -144,3 +163,93 @@ def saveseq(db,seq,taxonomy,filename,description,ggid=False,expdescription=False
 		db.shortseqdict[seq89]=[idx]
 
 	return db
+
+
+def exportfasta(db,filename):
+	"""
+	export the cooldb to fasta format
+	used for conversion to greengenes
+	the header is the actual sequence!
+	input:
+	db - the cooldb
+	filename - name of the output fasta file
+	"""
+
+	fl=open(filename,'w')
+	for cent in db.dat:
+		fl.write('>%s\n' % cent['sequence'])
+		fl.write('%s\n' % cent['sequence'])
+	fl.close()
+
+
+def getggids(db,biomname):
+	"""
+	load the closed reference biom table for the sequences in exportfasta
+	and convert the database to greengenesIDs.
+	input:
+	db - the cooldb used for the exportfasta
+	biomname - the biom table file obtained by running pick_closed_reference on the exportfasta file
+
+	output:
+	db - the new cooldb with the 'biomggid' field added
+	"""
+
+	# load the biom table
+	table = biom.load_table(biomname)
+
+	# each sample is a sequence from cooldb
+	tseqs = table.ids(axis='sample')
+	tggids= table.ids(axis='observation')
+
+	for cseq in tseqs:
+		# find the position of the sequence in cooldb
+		spos=-1
+		sseq=cseq[0:89]
+		if not sseq in db.shortseqdict:
+			au.Debug(8,'sequence %s not found in database short hash' % cseq)
+			return db
+		for cpos in db.shortseqdict[sseq]:
+			fulldbseq=db.dat[cpos]['sequence']
+			if cseq==fulldbseq:
+				spos=cpos
+				break
+		if spos==-1:
+			au.Debug(8,'sequence %s not in database' % cseq)
+			return db
+		reads=table.data(cseq,axis='sample')
+		pnz=np.where(reads>0)
+		if not len(pnz[0]) == 1:
+			au.Debug(9,'same sequence assigned to multiple ggids!',cseq)
+			return db
+
+		db.dat[spos]['biomggid']=tggids[pnz[0]][0]
+
+	db.biomggloaded=True
+	return db
+
+
+
+def savedb(db,filename):
+	"""
+	save the coolseqs database
+	for use after getggids to add the biomggid field to the database
+	input:
+	db - the coolseq database
+	filename - name of the output file to write
+	"""
+
+	fl=open(filename,'w')
+	fields=db.dat[0].keys()
+	# write the header (tsv)
+	for cfield in fields:
+		fl.write('%s\t' % cfield)
+	fl.write('\n')
+	for cdat in db.dat:
+		for cfield in fields:
+			if cfield in cdat:
+				fl.write('%s\t' % cdat[cfield])
+			else:
+				fl.write('%s\t' % '0')
+		fl.write('\n')
+	fl.close()
+	au.Debug(4,'Saved cooldb',filename)

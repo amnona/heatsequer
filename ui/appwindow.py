@@ -97,12 +97,12 @@
      <rect>
       <x>330</x>
       <y>40</y>
-      <width>181</width>
-      <height>251</height>
+      <width>261</width>
+      <height>261</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -158,6 +158,19 @@
       </property>
       <property name="text">
        <string>Filter OrigReads</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="bJoinExps">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>120</y>
+        <width>115</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Join Exps</string>
       </property>
      </widget>
     </widget>
@@ -234,13 +247,57 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>170</y>
+        <y>160</y>
         <width>121</width>
         <height>32</height>
        </rect>
       </property>
       <property name="text">
        <string>Filter Fasta</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="bRenormalize">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>121</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Renormalize</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Analysis</string>
+     </attribute>
+     <widget class="QPushButton" name="bDiffExp">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>115</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Diff. Expr.</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="bBicluster">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>115</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>BiCluster</string>
       </property>
      </widget>
     </widget>

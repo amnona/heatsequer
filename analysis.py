@@ -36,6 +36,8 @@ from scipy import cluster
 from scipy import spatial
 from scipy import stats
 from sklearn.preprocessing import scale
+import sklearn.metrics
+import sklearn.cross_validation
 from collections import defaultdict
 import copy
 # import Tkinter
@@ -100,6 +102,36 @@ class experiment:
 
 		# the list of annotations to add to plot (for addplotmetadata)
 		self.plotmetadata=[]
+
+		# the tree structure of the sequences (from loadexptree)
+		self.tree=False
+
+
+def copyexp(expdat):
+	"""
+	copy an experiment (duplicating the important fields)
+	input:
+	expdat
+	output:
+	newexp
+	"""
+
+	newexp=copy.copy(expdat)
+	newexp.data=copy.deepcopy(expdat.data)
+	newexp.samples=copy.deepcopy(expdat.samples)
+	newexp.seqs=copy.deepcopy(expdat.seqs)
+	newexp.sids=copy.deepcopy(expdat.sids)
+	newexp.seqdict=copy.deepcopy(expdat.seqdict)
+	newexp.tax=copy.deepcopy(expdat.tax)
+	newexp.plotmetadata=copy.deepcopy(expdat.plotmetadata)
+	newexp.smap=copy.deepcopy(expdat.smap)
+	newexp.fields=copy.deepcopy(expdat.fields)
+	newexp.filters=copy.deepcopy(expdat.filters)
+	newexp.origreads=copy.deepcopy(expdat.origreads)
+	newexp.origotunames=copy.deepcopy(expdat.origotunames)
+
+	return newexp
+
 
 def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',studyname=False):
 	"""
@@ -580,6 +612,8 @@ def filterorigreads(exp,minreads):
 	return newexp
 
 
+
+
 def reorderbacteria(exp,order,inplace=False):
 	"""
 	reorder the bacteria in an experiment (can delete if bacteria not in new order)
@@ -603,31 +637,36 @@ def reorderbacteria(exp,order,inplace=False):
 	return newexp
 
 
-def filtersamples(exp,field,filt,exact=True,exclude=False,numexpression=False):
+def filtersamples(exp,field,filtval,exact=True,exclude=False,numexpression=False):
 	"""
 	filter samples in experiment according to field
 	input:
 	exp
 	field - name of the field
-	filt - the string to filter
+	filtval - the string to filter (if a list of strings, filter if any in the list)
 	exact - True for exact match, False for substring
 	exclude - False to keep only matching samples, True to exclude matching samples
 	numexpression - True if val is a python expression, False if just a value. For an expression assume value is the beggining of the line (i.e. '<=5')
 	"""
+
+	if not isinstance(filtval,list):
+		filtval=[filtval]
+
 	keep=[]
 	for cidx,csamp in enumerate(exp.samples):
 		keepit=False
-		if numexpression:
-			cval=exp.smap[csamp][field]
-			if eval(cval+filt):
-				keepit=True
-		elif exact:
-			if exp.smap[csamp][field]==filt:
-				keepit=True
-		else:
-			if filt in exp.smap[csamp][field]:
-				keepit=True
-		# if exclude reverse the decision
+		for filt in filtval:
+			if numexpression:
+				cval=exp.smap[csamp][field]
+				if eval(cval+filt):
+					keepit=True
+			elif exact:
+				if exp.smap[csamp][field]==filt:
+					keepit=True
+			else:
+				if filt in exp.smap[csamp][field]:
+					keepit=True
+			# if exclude reverse the decision
 		if exclude:
 			keepit=not keepit
 		if keepit:
@@ -1321,6 +1360,7 @@ def joinexperiments(exp1,exp2,missingval='NA',origfieldname='origexp'):
 		newexp.smap[csamp][origfieldname]=exp1.studyname
 	for csamp in exp2.samples:
 		newexp.smap[csamp][origfieldname]=exp2.studyname
+	newexp.fields.append(origfieldname)
 
 	newexp.filters.append('joined with %s' % exp2.studyname)
 	return newexp
@@ -1349,9 +1389,46 @@ def sortbygroupdiff(expdat,field,val1,val2):
 	return newexp
 
 
+def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
+	"""
+	Get the differentially abundant bacteria (using getdiffsig) using all methods possible.
+	Sort results according to combined effect order
+	input:
+	see getdiffsig()
+
+	output:
+	newexp - the new experiment with bacteria significantly differentiating the 2 groups by at least 1 method
+	"""
+
+	methods=['mean','binary','ranksum','freqpres']
+	res=[]
+	for cmethod in methods:
+		res.append(getdiffsig(expdat,field=field,val1=val1,val2=val2,method=cmethod,numperm=numperm,maxfval=maxfval))
+
+	keep=[]
+	keeporder=[]
+	for cidx,cseq in enumerate(expdat.seqs):
+		pos=[]
+		for cres in res:
+			if cseq in cres.seqdict:
+				pos.append(float(cres.seqdict[cseq])/len(cres.seqs))
+		if len(pos)>0:
+			keep.append(cidx)
+			keeporder.append(np.mean(pos))
+	keep=np.array(keep)
+	if len(keep)>0:
+		si=np.argsort(keeporder)
+		newexp=reorderbacteria(expdat,keep[si])
+		newexp.filters.append('differential expression (all) in %s between %s and %s' % (field,val1,val2))
+		return newexp
+	else:
+		au.Debug(6,'No bacteria found')
+		return False
+
+
 def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1):
 	"""
-	test the difference between 2 groups (val1 and val2 in field field)
+	test the differential expression between 2 groups (val1 and val2 in field field)
 	for bacteria that have a high difference.
 	input:
 	expdat
@@ -1360,9 +1437,9 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	val2 - value for the second group or false to compare to all other
 	method - the test to compare the 2 groups:
 		mean - absolute difference in mean frequency
-		bin - abs diff in binary presence/absence
-		rank - abs diff in rank order (to ignore outliers)
-		freqpres - abs diff in frequency
+		binary - abs diff in binary presence/absence
+		ranksum - abs diff in rank order (to ignore outliers)
+		freqpres - abs diff in frequency only in samples where bacteria is present
 	numperm - number of random permutations to run
 	maxfval - the maximal f-value (FDR) for a bacteria to keep
 
@@ -1385,32 +1462,47 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	numseqs=len(cexp.seqs)
 
 	eps=0.000001
+
 	if method=='mean':
-		eps=20
-	if method=='rank':
+		pass
+#		eps=20
+	elif method=='ranksum':
 		for idx in range(numseqs):
 			dat[idx,:]=stats.rankdata(dat[idx,:])
-	if method=='bin':
+	elif method=='binary':
 		dat=(dat>np.log2(minthresh))
+	elif method=='freqpres':
+		dat[dat<=minthresh]=np.nan
+	else:
+		au.Debug(9,"Method not supported!",method)
+		return
 
 
-	m1=np.mean(dat[:,0:len1],axis=1)
-	m2=np.mean(dat[:,len1:],axis=1)
+	m1=np.nanmean(dat[:,0:len1],axis=1)
+	m2=np.nanmean(dat[:,len1:],axis=1)
 	odif=(m1-m2)/(m1+m2+eps)
-	print(np.max(odif))
-	print(np.min(odif))
+	odif[np.isnan(odif)]=0
 	alldif=np.zeros([len(cexp.sids),numperm])
 	for x in range(numperm):
 		rp=np.random.permutation(len1+len2)
-		m1=np.mean(dat[:,rp[0:len1]],axis=1)
-		m2=np.mean(dat[:,rp[len1:]],axis=1)
+		m1=np.nanmean(dat[:,rp[0:len1]],axis=1)
+		m2=np.nanmean(dat[:,rp[len1:]],axis=1)
 		diff=(m1-m2)/(m1+m2+eps)
+#		diff[np.isnan(diff)]=0
 		alldif[:,x]=diff
 	pval=[]
 	for crow in range(len(odif)):
-		cpval=float(np.sum(np.abs(alldif[crow,:])>=np.abs(odif[crow])))/numperm
+		cdat=alldif[crow,:]
+		cdat=cdat[np.logical_not(np.isnan(cdat))]
+		cnumperm=len(cdat)
+		if cnumperm==0:
+			pval.append(1)
+			continue
+		cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/cnumperm
+#		cpval=float(np.sum(np.abs(alldif[crow,:])>=np.abs(odif[crow])))/numperm
 		# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
-		cpval=min(cpval+(1.0/numperm),1)
+		cpval=min(cpval+(1.0/cnumperm),1)
+#		cpval=min(cpval+(1.0/numperm),1)
 		pval.append(cpval)
 	# NOTE: maybe use better fdr (this one not tested...)
 	fval=au.fdr(pval)
@@ -1753,6 +1845,7 @@ def getexpdbsources(expdat):
 def clipseqs(expdat,startpos):
 	"""
 	clip the first nucleotides in all sequences in experiment
+	to fix offset in sequencing
 	input:
 	expdat
 	startpos - the position to start from (0 indexed)
@@ -1857,7 +1950,7 @@ def filterannotations(expdat,annotation,cdb,exclude=False):
 def savetsvtable(expdat,filename,logtransform=True):
 	"""
 	save an experiment as a tab separated table, with columns for samples and rows for bacteria
-	for jose navas long babies paper
+	for jose clemente long babies paper
 	input:
 	expdat
 	filename - name of the output tsv file
@@ -1904,3 +1997,344 @@ def getnucdistribution(expdat,position):
 		for crow in range(np.size(retv,axis=0)-1):
 			bar(np.arange(np.size(retv,axis=0)),retv[crow+1,:],bottom=retv[crow,:])
 	return (retv)
+
+
+
+def findsamples(expdat,field,value,exclude=False):
+	"""
+	return the positions of samples in expdat matching value in field
+	similar to filtersamples but returns a list of indices (for the data matrix)
+	input:
+	expdat
+	field - name of the field to test
+	value - the value to look for
+	exclude - True to get positions without that value, False to get positions of the value
+
+	output:
+	pos - a list of positions matching the field/val (for use as indices in expdat.data)
+	"""
+
+	pos=[]
+	for cidx,csamp in enumerate(expdat.samples):
+		if expdat.smap[csamp][field]==value:
+			if not exclude:
+				pos.append(cidx)
+		else:
+			if exclude:
+				pos.append(cidx)
+	return pos
+
+
+def BaysZeroClassifyTest(oexpdat,field,val1,val2=False,n_folds=10,istreeexpand=False,randseed=False,numiter=1):
+	"""
+	Test the baysian zero inflated classifier by doing n_fold cross validation on a given dataset
+	input:
+	expdat
+	field - the field to use for classification
+	val1 - the value of group1 in field
+	val2 - value of group2 in field, or False to use all non val1 as group2
+	n_folds - number of groups to divide to for crossvalidation
+	istreeexpand - True if we want to use the tree shrinkage on each training set (if the exp is from addsubtrees)
+	randseed - if non False, use the specified random seed for the test/validation division
+	numiter - the number of times to run the cross validation
+
+	output:
+	auc - the auc of each iteration
+	"""
+	if randseed:
+		np.random.seed(randseed)
+
+	# we want only to keep the 2 classes
+	if val2:
+		oexpdat=filtersamples(oexpdat,field,[val1,val2])
+
+	# remove the validation samples and keep them in a different experiment valexp
+	ind1=findsamples(oexpdat,field,val1)
+	types=np.zeros(len(oexpdat.samples))
+	types=types>10
+	types[ind1]=True
+	aucres=[]
+	for citer in range(numiter):
+		rs = sklearn.cross_validation.StratifiedKFold(types, n_folds=n_folds,shuffle=True)
+		for trainidx,testidx in rs:
+			valexp=reordersamples(oexpdat,testidx)
+			expdat=reordersamples(oexpdat,trainidx)
+			# classify
+			lrscores=BayZeroClassify(expdat,valexp,field,val1,val2,istreeexpand)
+
+			# prepare the correct answer list
+			typeis1=[]
+			for vsamp in valexp.samples:
+				if valexp.smap[vsamp][field]==val1:
+					vtype=1
+				else:
+					vtype=2
+				typeis1.append(vtype==1)
+
+			cauc=sklearn.metrics.roc_auc_score(typeis1, lrscores, average='macro', sample_weight=None)
+			au.Debug(4,"auc=%f" % cauc)
+			aucres.append(cauc)
+
+	au.Debug(8,"mean is : %f" % np.mean(aucres))
+	au.Debug(8,"s.err is : %f" % (np.std(aucres)/np.sqrt(len(aucres))))
+	return(aucres)
+
+
+def BayZeroClassify(expdat,valexp,field,val1,val2=False,istreeexpand=False):
+	"""
+	Do the Zero inflated Naive Bayes Classifier
+	Does a p-value based on presence/absence if bacteria is 0 in sample, otherwise do non-parametric permutaion test p-value
+	combine p-values for all bacteria as if independent and look at log ratio of 2 categories as prediction
+	input:
+	expdat - the training set
+	valexp - the validation set (to be classified)
+	field - the field to use for classification
+	val1 - the value of group1 in field
+	val2 - value of group2 in field, or False to use all non val1 as group2
+	istreeexpand - True if we want to use the tree shrinkage on each training set (if the exp is from addsubtrees)
+
+	output:
+	pred - the log2(ratio) prediction score for each sample in the validation experiment (>0 means from val1, <0 means from val2)
+	"""
+
+	# if val2 is not empty, keep only samples with val1 or val2
+	if val2:
+		expdat=filtersamples(expdat,field,[val1,val2])
+	ind1=findsamples(expdat,field,val1)
+	types=np.zeros(len(expdat.samples))
+	types=types>10
+	types[ind1]=True
+
+	# if an expanded tree, keep the best subtrees
+	if istreeexpand:
+		expdat=keeptreebest(expdat,field,val1,val2)
+		valexp=filterseqs(valexp,expdat.seqs)
+
+	# prepare the claissifier
+	g1ind=findsamples(expdat,field,val1)
+	if val2:
+		g2ind=findsamples(expdat,field,val2)
+	else:
+		g2ind=findsamples(expdat,field,val1,exclude=True)
+
+	tot1=len(g1ind)
+	tot2=len(g2ind)
+	dat=expdat.data
+	zero1=np.sum(dat[:,g1ind]==0,axis=1)
+	zero2=np.sum(dat[:,g2ind]==0,axis=1)
+
+	# p value for getting a 0 in each sample type
+	# we do max(zero1,1) to remove effect of sampling error
+	MINTHRESH=1
+	pmissing1=np.divide((np.maximum(MINTHRESH,zero1)+0.0),tot1)
+	pmissing2=np.divide((np.maximum(MINTHRESH,zero2)+0.0),tot2)
+
+	ppres1=np.divide((np.maximum(MINTHRESH,tot1-zero1)+0.0),tot1)
+	ppres2=np.divide((np.maximum(MINTHRESH,tot2-zero2)+0.0),tot2)
+	# and the log ratio of proability 1 to probability 2
+	lograt0=np.log2(pmissing1/pmissing2)
+	logratn0=np.log2(ppres1/ppres2)
+
+	# the prediction log ratio scores
+	lrscores=[]
+	for vidx,vsamp in enumerate(valexp.samples):
+		au.Debug(2,"Classifying sample %s" % vsamp)
+		cvdat=valexp.data[:,vidx]
+		vzero=np.where(cvdat==0)[0]
+		crat0=np.sum(lograt0[vzero])
+		vnzero=np.where(cvdat>0)[0]
+		cratn0=np.sum(logratn0[vnzero])
+		# need to choose bigger or smaller (direction of test)
+		# we test both and take the more extreme p-value
+		# the probability to be bigger
+		ratnz=[]
+		for cnzpos in vnzero:
+			allz=np.where(dat[cnzpos,:]>0)[0]
+			nz1=np.intersect1d(allz,g1ind)
+			if len(nz1)<5:
+				continue
+			nz2=np.intersect1d(allz,g2ind)
+			if len(nz2)<5:
+				continue
+			d1=dat[cnzpos,nz1]
+			d2=dat[cnzpos,nz2]
+			p1b=(0.0+max(1,np.sum(d1>=cvdat[cnzpos])))/len(d1)
+			p2b=(0.0+max(1,np.sum(d2>=cvdat[cnzpos])))/len(d2)
+			ratb=np.log2(p1b/p2b)
+			p1s=(0.0+max(1,np.sum(d1<=cvdat[cnzpos])))/len(d1)
+			p2s=(0.0+max(1,np.sum(d2<=cvdat[cnzpos])))/len(d2)
+			rats=np.log2(p1s/p2s)
+
+			if np.abs(ratb)>=np.abs(rats):
+				ratnz.append(ratb)
+			else:
+				ratnz.append(rats)
+		cratfreq=np.sum(ratnz)
+		totratio=crat0+cratfreq+cratn0+np.log2((tot1+0.0)/tot2)
+		lrscores.append(totratio)
+		au.Debug(2,"LRScore %f, zscore %f, nzscore %f, freqscore %f" % (totratio,crat0,cratn0,cratfreq))
+	au.Debug(3,"Finished classifying")
+	return lrscores
+
+
+def loadexptree(expdat,treefilename):
+	"""
+	load a tree file associated with an experiment
+	DONT USE - CANNOT DEEP COPY IT!
+	input:
+	expdat
+	treefilename - the name of the newick tree file (from make_phylogeny.py). note that need to use the sequences as the fasta sequence ids (use -s in the CreateTable)
+
+	output:
+	expdat - with a new field - tree
+	"""
+
+	import skbio.tree
+
+	tree=skbio.tree.TreeNode.read(treefilename)
+	au.Debug(4,'Loaded tree')
+	expdat.tree=tree
+
+	return expdat
+
+
+
+def insertbacteria(expdat,freqs=[],seq="unknown",tax="unknown"):
+	"""
+	insert a new bacteria to an experiment
+
+	input:
+	expdat
+	freqs - the frequency of the bacteria in all samles of expdat or False to add zeros
+	seq - the sequence of the new bacteria
+	tax - taxonomy of the new bacteria
+
+	output:
+	pos - position of the new bacteria
+	"""
+
+	if len(freqs)==0:
+		freqs=np.zeros([1,len(expdat.seqs)])
+
+	expdat.data=np.vstack((expdat.data,freqs))
+	expdat.tax.append(tax)
+
+	if seq in expdat.seqdict:
+		au.Debug(6,'Sequence already in experiment',seq)
+	# get a unique sequence
+		cid=0
+		while seq+str(cid) in expdat.seqdict:
+			cid+=1
+		expdat.seqs.append()
+		seq=seq+str(cid)
+
+	expdat.seqs.append(seq)
+	expdat.seqdict[seq]=len(expdat.seqs)-1
+	expdat.sids.append(seq)
+	return expdat,len(expdat.seqs)-1
+
+
+def addsubtrees(expdat,tree,inplace=False):
+	"""
+	add otus for all subtrees with the frequency being the sum of all bacteria in the subtree
+	input:
+	expdat - the experiment
+	tree - the tree for the experiment
+	inplace - if true, replace current experiment
+
+	output:
+	newexp - the new experiment with twice-1 number of otus
+	"""
+
+#	if not expdat.tree:
+#		au.Debug(8,"No tree loaded for experiment")
+#		return False
+
+	if inplace:
+		newexp=expdat
+	else:
+		newexp=copy.deepcopy(expdat)
+
+	subtrees=tree.subsets()
+	for csubtree in subtrees:
+		newname=""
+		newtax=""
+		newfreq=np.zeros([1,len(newexp.samples)])
+		for cbact in csubtree:
+			if not cbact in newexp.seqdict:
+				au.Debug(6,'sequence not in seqdict',cbact)
+				continue
+			cpos=newexp.seqdict[cbact]
+			newfreq+=newexp.data[cpos,:]
+			newname+='%d,' % cpos
+			if newtax=='':
+				newtax=newexp.tax[cpos]
+			else:
+				newtax=au.common_start(newtax,newexp.tax[cpos])
+		newexp,newpos=insertbacteria(newexp,freqs=newfreq,seq=newname,tax=newtax)
+	newexp.filters.append("Add subtrees")
+	return(newexp)
+
+
+def keeptreebest(expdat,field,val1,val2,method="meandif"):
+	"""
+	keep only the best combinations wrt given criteria
+	use after addsubtrees()
+
+	input:
+	expdat - after addsubtrees
+	field - the field to use for comparison
+	val1 - value for group1
+	val2 - value for group2 or False for all except group1
+	method:
+		meandif - keep the largest mean difference between groups / total mean
+	"""
+
+	pos1=findsamples(expdat,field,val1)
+	if val2:
+		pos2=findsamples(expdat,field,val2)
+	else:
+		pos2=findsamples(expdat,field,val1,exclude=True)
+	allpos=list(set(pos1+pos2))
+
+	mean1=np.mean(expdat.data[:,pos1],axis=1)
+	mean2=np.mean(expdat.data[:,pos2],axis=1)
+	meanall=np.mean(expdat.data[:,allpos],axis=1)
+	minval=1.0/len(allpos)
+	meanall[meanall<1.0/minval]=minval
+	difval=np.abs((mean1-mean2)/meanall)
+
+	si=np.argsort(difval)
+	si=si[::-1]
+
+	dontuse={}
+	keep=[]
+	for cidx in si:
+		cseq=expdat.seqs[cidx]
+		poss=cseq.split(',')
+		if len(poss)==1:
+			if not str(expdat.seqdict[cseq]) in dontuse:
+				keep.append(cidx)
+				dontuse[str(expdat.seqdict[cseq])]=True
+#				print("added %s" % str(expdat.seqdict[cseq]))
+#			else:
+#				print('cannot use %s' % str(expdat.seqdict[cseq]))
+			continue
+		keepit=True
+		for cpos in poss:
+			if cpos=='':
+				continue
+			if cpos in dontuse:
+				keepit=False
+				break
+		if keepit:
+			keep.append(cidx)
+			for cpos in poss:
+				dontuse[cpos]=True
+#			print("added %s" % poss)
+#		else:
+#			print("cannot use %s" % poss)
+
+	newexp=reorderbacteria(expdat,keep)
+	newexp.filters.append("keeptreebest field %s val1 %s val2 %s" % (field,val1,str(val2)))
+	return newexp

@@ -658,6 +658,14 @@ def GetSeqInfo(db,seq):
 	numstudies=len(set(allstudies))
 	return([totalappear,numstudies,list(set(allstudies)),studysamples,totdbsamples])
 
+	# get the most frequent samples
+	nzp=pv[nz]
+	si=np.argsort(nzp)
+	sv=nzp[si]
+	siorig=nz[si]
+	for cid in siorig:
+		db.cur.execute("SELECT StudyID FROM Samples WHERE SampleID=?",[int(cpos)+1])
+		studyid=db.cur.fetchone()
 
 
 def GetSeqInfoSummary(bactdb,seq,field='HOST_TAXID',sortednodes=[]):
@@ -819,3 +827,23 @@ def SamplesInStudy(db,studyid):
 	for a in res:
 		samples.append(a[0])
 	return samples
+
+
+def GetSampleMapField(db,sampleid):
+	"""
+	Get the value of the mapping file field for the given sample
+	input:
+	db
+	sampleid - the sampleid to look for
+	field - field name (i.e. "ENV_MATTER")
+
+	output:
+	val - the value of the field
+	"""
+
+	vals={}
+	db.cur.execute('SELECT Field,Value FROM Maps WHERE SampleID=?',[sampleid])
+	res=db.cur.fetchall()
+	for a in res:
+		vals[a[0]]=a[1]
+	return(vals)

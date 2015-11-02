@@ -262,6 +262,20 @@ def fdr(pvalues, correction_type = "Benjamini-Hochberg"):
 	return new_pvalues
 
 
+def common_start(sa,sb):
+	"""
+	returns the longest common substring from the beginning of sa and sb
+	from http://stackoverflow.com/questions/18715688/find-common-substring-between-two-strings
+	"""
+
+	def _iter():
+		for a, b in zip(sa, sb):
+			if a == b:
+				yield a
+			else:
+				return
+	return ''.join(_iter())
+
 
 DebugLevel=5
 
