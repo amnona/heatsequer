@@ -471,15 +471,22 @@ def onplotkeyclick(event):
 		cax.ofig.canvas.draw()
 	# show taxonomies
 	if event.key=='h':
+		contamlist=[]
 		cax.set_yticks(np.array(range(len(cexp.seqs))))
 		labs=au.clipstrings(cexp.tax,25,reverse=True)
 		if cexp.cdb:
 			for idx,cseq in enumerate(cexp.seqs):
 				info=cooldb.getseqinfo(cexp.cdb,cseq)
 				if len(info)>0:
+					for cinfo in info:
+						if "ontamination" in cinfo:
+							contamlist.append(idx)
 					labs[idx]+='*'
 		cax.tick_params(axis='y', which='major', labelsize=8)
 		cax.set_yticklabels(labs)
+		for idx,clab in enumerate(cax.get_yticklabels()):
+			if idx in contamlist:
+				clab.set_color("red")
 		cax.set_ylim(cylim[0], cylim[1])
 		cax.set_xlim(cxlim[0], cxlim[1])
 		tight_layout()
