@@ -572,7 +572,12 @@ class AppWindow(QtGui.QMainWindow):
 			tablefname=str(loadwin.tLoadTable.text())
 			mapfname=str(loadwin.tLoadMap.text())
 			expname=str(loadwin.tLoadName.text())
-			expdat=analysis.load(tablefname,mapfname)
+			metabolite=loadwin.cMetabolite.checkState()
+			if metabolite:
+				tabletype='meta'
+			else:
+				tabletype='biom'
+			expdat=analysis.load(tablefname,mapfname,tabletype=tabletype)
 			expdat.studyname=expname
 			self.addexp(expdat)
 			analysis.analyzenumreads(expdat)
