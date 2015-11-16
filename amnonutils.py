@@ -279,3 +279,38 @@ def common_start(sa,sb):
 
 DebugLevel=5
 
+
+def listdel(dat,todel):
+	"""
+	delete elements with indices from list todel in the list dat
+	input:
+	dat - the list to remove elements from
+	todel - indices of the items to remove
+
+	output:
+	dat - the new deleted list
+	"""
+
+	for cind in sorted(todel, reverse=True):
+		del dat[cind]
+	return dat
+
+
+
+def listtodict(dat):
+	"""
+	convert a list into a dict with keys as elements, values the position in the list
+	input:
+	dat - the list
+
+	output:
+	thedict
+	"""
+
+	thedict={}
+	for idx,cdat in enumerate(dat):
+		if cdat in thedict:
+			thedict[cdat].append(idx)
+		else:
+			thedict[cdat]=[idx]
+	return thedict

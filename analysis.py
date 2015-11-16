@@ -106,6 +106,9 @@ class experiment:
 		# the tree structure of the sequences (from loadexptree)
 		self.tree=False
 
+		# the experiment type ('biom' or 'meta' for metabolite)
+		self.datatype=''
+
 
 def copyexp(expdat):
 	"""
@@ -133,7 +136,7 @@ def copyexp(expdat):
 	return newexp
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',studyname=False):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',studyname=False,tabletype='biom'):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -144,13 +147,12 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 	nameisseq - False to keep otu name as sid without hashing it, True to treat otuid as sequence
 	addsname - a string to add to each sample name (or empty to not add)
 	studyname - Flase to assign from table file name, otherwise string to store as study name
+	tabletype:
+		'biom' - a biom table
+		'meta' - a metabolomics table (row per sample, col per metabolite, can contain duplicate metaboliteids)
 	output:
 	an experiment class for the current experiment
 	"""
-
-	au.Debug(6,'Loading biom table')
-	# load the biom table
-	table = biom.load_table(tablename)
 
 	au.Debug(6,'Loading mapping file')
 	# load the mapping file
@@ -165,6 +167,48 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 		mapsamples.append(cid)
 	mapf.close()
 	au.Debug(6,'number of samples in map is %d' % len(mapsamples))
+
+	if tabletype=='biom':
+		au.Debug(6,'Loading biom table')
+		# load the biom table
+		table = biom.load_table(tablename)
+	elif tabletype=='meta':
+		au.Debug(6,'Loading metabolite table')
+		# load the metabolite table and turn it into a biom table
+		fl=open(tablename,'rU')
+		head=fl.readline().rstrip('\n')
+		# its a csv
+		headsplit=head.split(',')
+		headsplit=headsplit[1:]
+		# look if we have strange entries (like 'x','y','z')
+		usepos=[]
+		metabolites=[]
+		for idx,cmet in enumerate(headsplit):
+			if cmet[0].isdigit():
+				usepos.append(idx+1)
+				metabolites.append("%s-%d" % (cmet,idx))
+			else:
+				au.Debug(7,'Metabolite %s (col %d) not numeric!' % (cmet,idx))
+		# load sample names
+		sampnames=[]
+		for cline in fl:
+			cline=cline.rstrip('\n')
+			cdat=cline.split(',')
+			sampnames.append(cdat[0])
+		fl.close()
+		# now load the table data:
+		dat=np.genfromtxt(tablename,skip_header=1,usecols=usepos,delimiter=',')
+		dat=np.transpose(dat)
+		# and create the biom table:
+		table=biom.table.Table(dat,metabolites,sampnames)
+		# and add metabolite name as taxonomy:
+		taxdict={}
+		for cmet in metabolites:
+			taxdict[cmet]={'taxonomy': cmet}
+		table.add_metadata(taxdict,axis='observation')
+	else:
+		au.Debug(9,'Table type %s not supported' % tabletype)
+		return False
 
 	if addsname!='':
 		idtable={}
@@ -238,6 +282,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 		studyname=os.path.basename(tablename)
 
 	exp=experiment()
+	exp.datatype=tabletype
 	exp.data=table.matrix_data.todense().A
 	exp.smap=smap
 	exp.samples=tablesamples
@@ -266,11 +311,14 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 		print("Samples with 0 reads: %d" % (np.size(colsum)-np.size(okreads[1])))
 		exp=reordersamples(exp,okreads[1])
 		colsum=np.sum(exp.data,axis=0,keepdims=True)
+	if tabletype=='biom':
+		exp.data=10000*exp.data/colsum
+	elif tabletype=='meta':
+		exp.data=10000*exp.data/np.mean(colsum)
 
-	exp.data=10000*exp.data/colsum
 
 	exp.commands.append("load('"+tablename+"',mapname='"+mapname+")")
-	exp.filters.append('loaded '+tablename)
+	exp.filters.append('loaded table=%s, map=%s' % (tablename,mapname))
 	exp=sortbacteria(exp)
 	return(exp)
 
@@ -451,6 +499,35 @@ def onplotkeyclick(event):
 		cax.set_ylim(cylim[1],cylim[1]+(cylim[1]-cylim[0]))
 		tight_layout()
 		cax.ofig.canvas.draw()
+	if event.key==',':
+	# select next bacteria
+		cax.guiwin.clearselection()
+		cax.lastselect+=1
+		cax.guiwin.selectbact([cax.lastselect])
+		cax.guiwin.updateinfo(cax.guiwin.csamp,cax.lastselect)
+		if cexp.cdb:
+			info = cooldb.getseqinfo(cexp.cdb,cexp.seqs[cax.lastselect])
+			if cax.guiwin:
+				cax.guiwin.updatecdb(info)
+			else:
+				for cinfo in info:
+					print (cinfo)
+				sys.stdout.flush()
+	if event.key=='.':
+	# select prev bacteria
+		cax.guiwin.clearselection()
+		cax.lastselect-=1
+		cax.guiwin.selectbact([cax.lastselect])
+		cax.guiwin.updateinfo(cax.guiwin.csamp,cax.lastselect)
+		if cexp.cdb:
+			info = cooldb.getseqinfo(cexp.cdb,cexp.seqs[cax.lastselect])
+			if cax.guiwin:
+				cax.guiwin.updatecdb(info)
+			else:
+				for cinfo in info:
+					print (cinfo)
+				sys.stdout.flush()
+
 	if event.key=='left':
 		cx=cax.guiwin.csamp
 		cx=cx-1
@@ -603,12 +680,13 @@ def filtermean(expdat,meanval):
 	return newexp
 
 
-def filterorigreads(exp,minreads):
+def filterorigreads(exp,minreads,inplace=False):
 	"""
 	filter away all samples that contained originally less than minreads
 	input:
 	exp - the experiment
 	minreads - the minimum number of reads of the sample in the biom table to filter if less
+	inplace - True to replace current experiment, False to create a new one
 	output:
 	newexp - the filtered experiment
 	"""
@@ -814,14 +892,14 @@ def filterid(expdat,sids,exclude=False):
 	return newexp
 
 
-def filtertaxonomy(exp,tax,exact=False,inverse=False):
+def filtertaxonomy(exp,tax,exact=False,exclude=False):
 	"""
 	filter bacteria matching a given taxonomy name
 	input:
 	exp
 	tax - the taxonomy name to filter by
 	exact - True for exact matches to tax string, false for substring
-	inverse - True to throw away matching taxonomy, False to keep matching
+	exclude - True to throw away matching taxonomy, False to keep matching
 	"""
 
 	match=[]
@@ -833,7 +911,7 @@ def filtertaxonomy(exp,tax,exact=False,inverse=False):
 		else:
 			if tax in ctax:
 				keep=True
-		if inverse:
+		if exclude:
 			keep=not keep
 		if keep:
 			match.append(cidx)
@@ -841,8 +919,8 @@ def filtertaxonomy(exp,tax,exact=False,inverse=False):
 	filt='filter taxonomy '
 	if exact:
 		filt+='exact match '
-	if inverse:
-		filt+='inverse '
+	if exclude:
+		filt+='exclude '
 	filt+=tax
 	newexp.filters.append(filt)
 	au.Debug(6,'%d bacteria left' % len(newexp.sids))
@@ -895,7 +973,50 @@ def calcdistmat(expdat,distmetric='bc'):
 	return dist,dsamp
 
 
-def getgroupdist(expdat,field,distmat,dsamp,plotit=True):
+
+def loaddistmat(expdat,dmfilename):
+	"""
+	load a distance matrix (from qiime) for analysis
+	input:
+	expdat
+	dmfilename - name of the distance matrix file
+
+	output:
+	distmat - the distance matrix
+	dsamp - the mapping to position in the mapping file for each distmat entry
+	"""
+
+	fl=open(dmfilename,'rU')
+	# get the column ids
+	head=fl.readline().strip('\n')
+	ids=head.split('\t')
+	ids=ids[1:]
+	dist=np.array([])
+	snames={}
+	for idx,cline in enumerate(fl):
+		cline=cline.strip("\n")
+		vals=cline.split('\t')
+		dist=np.vstack((dist,au.tofloat(vals[1:]))) if dist.size else np.array(au.tofloat(vals[1:]))
+		if not vals[0]==ids[idx]:
+			au.Debug(9,"strange! line %d row head %s but col head %s" % (idx,vals[0],ids[idx]))
+		snames[vals[0]]=idx
+	fl.close()
+	expkeep=[]
+	distorder=[]
+	dsamp={}
+	for idx,csamp in enumerate(expdat.samples):
+		if csamp in snames:
+			distorder.append(snames[csamp])
+			expkeep.append(idx)
+			dsamp[csamp]=snames[csamp]
+	au.Debug(6,"%d samples in dist mat, %d samples in experiment" % (len(ids),len(expdat.samples)))
+	au.Debug(6,"%d samples to keep from dist mat, %d samples to keep from experiment" % (len(distorder),len(expkeep)))
+#	dist=dist[distorder,:]
+#	dist=dist[:,distorder]
+	return dist,dsamp
+
+
+def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals=False):
 	"""
 	calculate the distance matrix based on groups of samples according to field
 	using a distance matrix and mapping
@@ -905,16 +1026,22 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True):
 	distmat - the distance matrix (from calcdistmat or loaddistmat)
 	dsamp - the mapping of each sample id to the distance matrix position
 	plotit - True to plot heatmap, False to no plot
+	plottype:
+		'heatmap'
+		'hist'
+	uvals - false to plot all values, or a list of values to plot only them (in field)
 	output:
 	gdist - the group distance matrix
 	uvals - a list of group names in the matrix (ordered)
 	"""
 
 	vals=getfieldvals(expdat,field)
-	uvals=list(set(vals))
+	if not uvals:
+		uvals=list(set(vals))
 	gdist=np.empty([len(uvals),len(uvals)])
 	gdist.fill(np.NaN)
 	gmap=defaultdict(list)
+	distdict={}
 	for idx,cval in enumerate(vals):
 		gmap[cval].append(idx)
 	for idx1,cg1 in enumerate(uvals):
@@ -923,20 +1050,39 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True):
 			pos2=gmap[cg2]
 			adist=[]
 			for p1 in pos1:
+				if expdat.samples[p1] not in dsamp:
+					continue
 				for p2 in pos2:
+					if expdat.samples[p2] not in dsamp:
+						continue
 					if p1==p2:
 						continue
 					adist.append(distmat[dsamp[expdat.samples[p1]],dsamp[expdat.samples[p2]]])
+			distdict[(cg1,cg2)]=adist
 			gdist[idx1,idx2]=np.mean(adist)
 	if plotit:
 		figure()
-		iax=imshow(gdist,interpolation='nearest',aspect='auto',vmin=0,vmax=1)
-		ax=iax.get_axes()
-		ax.set_xticks(range(len(uvals)))
-		ax.set_xticklabels(uvals,rotation=90)
-		ax.set_yticks(range(len(uvals)))
-		ax.set_yticklabels(uvals)
-		title(expdat.studyname+' '+field)
+		if plottype=='heatmap':
+			iax=imshow(gdist,interpolation='nearest',aspect='auto',vmin=0,vmax=1)
+			ax=iax.get_axes()
+			ax.set_xticks(range(len(uvals)))
+			ax.set_xticklabels(uvals,rotation=90)
+			ax.set_yticks(range(len(uvals)))
+			ax.set_yticklabels(uvals)
+			title(expdat.studyname+' '+field)
+		elif plottype=='hist':
+			pl=[]
+			pairs=[]
+			names=[]
+			for k,v in distdict.items():
+				ks=set(k)
+				if ks in pairs:
+					continue
+				pl.append(v)
+				pairs.append(ks)
+				names.append(k)
+			hist(pl,alpha=0.5,normed=True,bins=50,range=[0,1])
+			legend(names)
 	return gdist,uvals
 
 
@@ -1669,21 +1815,35 @@ def filterbacteriafromfile(expdat,filename,exclude=False,subseq=False):
 	return newexp
 
 
-def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore'):
+def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore',sampkeep=0.5,bactkeep=0.25,justcount=False,numruns=1):
 	"""
 	cluster bacteria and samples from subgroup
 	input:
 	expdat
 	numiter - number of iterations to run the biclustering
 	startb - start list of bacteria [acgt] of False for random
-	method - 'zscore' or 'ranksum'. the method for choosing which sample/bacteria to keep
+	method: the method for choosing which sample/bacteria to keep. options areL
+		'zscore'
+		'ranksum'
+		'binary' - only one working currently!!!
+	sampkeep - the minimal fraction of bacteria to be present in a sample in order to keep the sample (for binary) or 0 for random
+	bactkeep - the minimal difference in the number of samples a bacteria apprears in order to keep the bacteria (for binary) or 0 for random
+	justcount - True to not reorder the experiment - just the bacteria & samples (to run faster)
+	numruns - number of times to run
+
+	output:
+	newexp - the reordered experiment
+	seqs - the sequences in the cluster
+	samples - the samples in the cluster (position in experiment)
 	"""
 
 	dat=copy.copy(expdat.data)
-#	dat[dat<20]=20
-#	dat=np.log2(dat)
-	dat=(dat>1)
-	print('li')
+	if method=='zscore':
+		dat[dat<20]=20
+		dat=np.log2(dat)
+#		dat=(dat>1)
+	elif method=='binary':
+		dat=(dat>1)
 	bdat=dat
 #	bdat=scale(dat,axis=1,copy=True)
 	nbact=np.size(dat,0)
@@ -1691,92 +1851,158 @@ def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore'):
 	allsamp=np.arange(nsamp)
 	allbact=np.arange(nbact)
 
-	bthresh=0.5
+
+	allseqs=[]
+	allsamples=[]
+	bthresh=0.25
 	sthresh=0
-	if startb:
-		ubact=[]
-		for cbact in startb:
-			ubact.append(expdat.seqdict[cbact])
-	else:
-		ubact=[np.random.randint(nbact)]
-	if starts:
-		usamp=starts
-	else:
-		usamp=np.arange(nsamp)
-	for citer in range(numiter):
-		if method=='zscore':
-			# find samples
-			meanin=np.mean(bdat[ubact,:],axis=0)
-#			print(meanin[0:10])
-			sdiff=meanin-np.mean(np.mean(bdat[ubact,:]))
-#			print(sdiff[0:10])
-			if len(ubact)>1:
-				usamp=allsamp[sdiff>sthresh*np.std(np.mean(bdat[ubact,:],axis=0))]
-			else:
-				usamp=allsamp[sdiff>sthresh*np.std(bdat[ubact,:])]
-			print("num samples %d" % len(usamp))
+	for crun in range(numruns):
+		if bactkeep==0:
+			bactkeep=np.random.uniform(0.1,0.5)
+			au.Debug(6,"bactkeep %f" % bactkeep)
+		if sampkeep==0:
+			sampkeep=np.random.uniform(0.25,0.75)
+			au.Debug(6,"sampkeep %f" % sampkeep)
+		if startb:
+			ubact=[]
+			for cbact in startb:
+				ubact.append(expdat.seqdict[cbact])
+		else:
+			ubact=[np.random.randint(nbact)]
+		if starts:
+			usamp=starts
+		else:
+			usamp=np.arange(nsamp)
+		for citer in range(numiter):
+			if method=='zscore':
+				# find samples
+				meanin=np.mean(bdat[ubact,:],axis=0)
+	#			print(meanin[0:10])
+				sdiff=meanin-np.mean(np.mean(bdat[ubact,:]))
+	#			print(sdiff[0:10])
+				if len(ubact)>1:
+					usamp=allsamp[sdiff>sthresh*np.std(np.mean(bdat[ubact,:],axis=0))]
+				else:
+					usamp=allsamp[sdiff>sthresh*np.std(bdat[ubact,:])]
+				print("num samples %d" % len(usamp))
 
-			meanin=np.mean(dat[:,usamp],axis=1)
-			nusamp=np.setdiff1d(allsamp,usamp)
-			sdiff=meanin-np.mean(dat[:,nusamp],axis=1)
-#			sdiff=meanin-np.mean(np.mean(bdat[:,usamp]))
-			if len(usamp)>1:
-#				ubact=allbact[sdiff>bthresh*np.std(np.mean(bdat,axis=1))]
-				ubact=allbact[sdiff>bthresh]
-			else:
-#				ubact=allbact[sdiff>bthresh*np.std(bdat)]
-				ubact=allbact[sdiff>bthresh]
-			print("num bacteria %d" % len(ubact))
+				meanin=np.mean(dat[:,usamp],axis=1)
+				nusamp=np.setdiff1d(allsamp,usamp)
+				sdiff=meanin-np.mean(dat[:,nusamp],axis=1)
+	#			sdiff=meanin-np.mean(np.mean(bdat[:,usamp]))
+				if len(usamp)>1:
+	#				ubact=allbact[sdiff>bthresh*np.std(np.mean(bdat,axis=1))]
+					ubact=allbact[sdiff>bthresh]
+				else:
+	#				ubact=allbact[sdiff>bthresh*np.std(bdat)]
+					ubact=allbact[sdiff>bthresh]
+				print("num bacteria %d" % len(ubact))
 
-		elif method=='ranksum':
-			nubact=np.setdiff1d(allbact,ubact)
-			keepsamp=[]
-			apv=[]
-			astat=[]
-			for idx,csamp in enumerate(expdat.samples):
-				g1=bdat[ubact,idx]
-				g2=bdat[nubact,idx]
-				if len(g1)>1:
-					g1=np.squeeze(g1)
-				if len(g2)>1:
-					g2=np.squeeze(g2)
-				stat,pv=stats.mannwhitneyu(g2,g1)
-				apv.append(pv)
-				astat.append(stat)
-				if pv<0.05:
-					keepsamp.append(idx)
-			# figure()
-			# hist(apv,100)
-			# show()
-			# figure()
-			# hist(astat,100)
-			# show()
-			usamp=keepsamp
-			print('number of samples: %d' % len(usamp))
-			nusamp=np.setdiff1d(allsamp,usamp)
-			keepbact=[]
-			for idx,cbact in enumerate(expdat.sids):
-				g1=np.squeeze(bdat[idx,usamp])
-				g2=np.squeeze(bdat[idx,nusamp])
-				try:
+			elif method=='binary':
+				# find samples
+				meanin=np.mean(bdat[ubact,:],axis=0)
+				sdiff=meanin
+				if len(ubact)>1:
+					usamp=allsamp[sdiff>=sampkeep]
+				else:
+					usamp=allsamp[sdiff>=sampkeep]
+				print("num samples %d" % len(usamp))
+
+				meanin=np.mean(dat[:,usamp],axis=1)
+				nusamp=np.setdiff1d(allsamp,usamp)
+				sdiff=meanin-np.mean(dat[:,nusamp],axis=1)
+				if len(usamp)>1:
+	#				ubact=allbact[sdiff>bthresh*np.std(np.mean(bdat,axis=1))]
+					ubact=allbact[sdiff>=bactkeep]
+				else:
+	#				ubact=allbact[sdiff>bthresh*np.std(bdat)]
+					ubact=allbact[sdiff>=bactkeep]
+				print("num bacteria %d" % len(ubact))
+
+			elif method=='ranksum':
+				nubact=np.setdiff1d(allbact,ubact)
+				keepsamp=[]
+				apv=[]
+				astat=[]
+				for idx,csamp in enumerate(expdat.samples):
+					g1=bdat[ubact,idx]
+					g2=bdat[nubact,idx]
+					if len(g1)>1:
+						g1=np.squeeze(g1)
+					if len(g2)>1:
+						g2=np.squeeze(g2)
 					stat,pv=stats.mannwhitneyu(g2,g1)
-					if pv<0.001:
-						keepbact.append(idx)
-				except:
-					pass
-			ubact=keepbact
-			print('number of bacteria: %d' % len(ubact))
+					apv.append(pv)
+					astat.append(stat)
+					if pv<0.05:
+						keepsamp.append(idx)
+				# figure()
+				# hist(apv,100)
+				# show()
+				# figure()
+				# hist(astat,100)
+				# show()
+				usamp=keepsamp
+				print('number of samples: %d' % len(usamp))
+				nusamp=np.setdiff1d(allsamp,usamp)
+				keepbact=[]
+				for idx,cbact in enumerate(expdat.sids):
+					g1=np.squeeze(bdat[idx,usamp])
+					g2=np.squeeze(bdat[idx,nusamp])
+					try:
+						stat,pv=stats.mannwhitneyu(g2,g1)
+						if pv<0.001:
+							keepbact.append(idx)
+					except:
+						pass
+				ubact=keepbact
+				print('number of bacteria: %d' % len(ubact))
 
-	x=np.setdiff1d(allsamp,usamp)
-	sampo=np.concatenate((usamp,x))
-	bacto=np.concatenate((ubact,np.setdiff1d(allbact,ubact)))
+			else:
+				au.Debug(9,"biclustering method %s not supported")
+				return
 
-	newexp=reordersamples(expdat,sampo)
-	newexp=reorderbacteria(newexp,bacto)
-	newexp.filters.append('biclustering')
-	return newexp
+		x=np.setdiff1d(allsamp,usamp)
+		sampo=np.concatenate((usamp,x))
+		bacto=np.concatenate((ubact,np.setdiff1d(allbact,ubact)))
+
+		seqs=[]
+		for cbact in ubact:
+			seqs.append(expdat.seqs[cbact])
+		samples=[]
+		for csamp in usamp:
+			samples.append(csamp)
+
+		if not justcount:
+			newexp=reordersamples(expdat,sampo)
+			newexp=reorderbacteria(newexp,bacto,inplace=True)
+			newexp.filters.append('biclustering')
+		else:
+			newexp=False
+
+		allseqs.append(seqs)
+		allsamples.append(samples)
+	return newexp,allseqs,allsamples
 
 
+def testbicluster(expdat,numiter=5,numruns=100):
+	"""
+	show the sizes of clusters in data, random and random normalized
+	"""
+	figure()
+	cc,seqs,samps=bicluster(expdat,method='binary',justcount=True,numruns=numruns,numiter=numiter)
+	for idx,cseqs in enumerate(seqs):
+		plot(len(samps[idx]),len(cseqs),'xr')
+	rp=randomizeexp(expdat,normalize=False)
+	cc,seqs,samps=bicluster(rp,method='binary',justcount=True,numruns=numruns,numiter=numiter)
+	for idx,cseqs in enumerate(seqs):
+		plot(len(samps[idx]),len(cseqs),'xk')
+	rp=randomizeexp(expdat,normalize=True)
+	cc,seqs,samps=bicluster(rp,method='binary',justcount=True,numruns=numruns,numiter=numiter)
+	for idx,cseqs in enumerate(seqs):
+		plot(len(samps[idx]),len(cseqs),'xk')
+	xlabel('# Samples in cluster')
+	ylabel('# Bacteria in cluster')
 
 def savebiom(expdat,filename):
 	"""
@@ -1815,11 +2041,15 @@ def savebiom(expdat,filename):
 
 
 
-def getexpdbsources(expdat):
-	if not expdat.seqdb:
-		au.Debug(9,'No sequence database loaded')
-		return
-	dat=bactdb.GetDBSource(expdat.seqdb,expdat.seqs)
+def getexpdbsources(expdat,seqdb=False):
+	if not seqdb:
+		if not expdat.seqdb:
+			au.Debug(9,'No sequence database loaded')
+			return
+		else:
+			seqdb=expdat.seqdb
+
+	dat=bactdb.GetDBSource(seqdb,expdat.seqs)
 
 	newexp=copy.deepcopy(expdat)
 
@@ -1879,18 +2109,24 @@ def clipseqs(expdat,startpos):
 	return newexp
 
 
-def normalizereads(expdat,fixorig=True,numreads=10000):
+def normalizereads(expdat,numreads=10000,fixorig=False,inplace=False):
 	"""
 	normalize the number of reads per sample to 10k
 	input:
 	expdat
-	fixorig - True to fix origreads with the same ratio, False to keep as before
 	numreads - the number of reads to normalize to
+	fixorig - True to fix origreads with the same ratio, False to keep as before
+	inplace - true to replace orig experiment, false to create a new experiment
 
 	output:
 	newexp - the normalized experiment
 	"""
-	newexp=copy.deepcopy(expdat)
+
+	if inplace:
+		newexp=expdat
+	else:
+		newexp=copy.deepcopy(expdat)
+
 	for idx,csamp in enumerate(newexp.samples):
 		totreads=np.sum(newexp.data[:,idx])
 		if totreads==0:
@@ -2345,3 +2581,323 @@ def keeptreebest(expdat,field,val1,val2,method="meandif"):
 	newexp=reorderbacteria(expdat,keep)
 	newexp.filters.append("keeptreebest field %s val1 %s val2 %s" % (field,val1,str(val2)))
 	return newexp
+
+
+
+def randomizeexp(expdat,normalize=False):
+	"""
+	randomly permute each bacteria in the experiment indepenedently (permute the samples where it appears)
+	input:
+	expdat
+	normalize - True to renormalize each sample to constant sum, False to not normalize
+
+	output:
+	newexp - the permuted experiment
+	"""
+
+	newexp=copy.deepcopy(expdat)
+	numsamps=len(newexp.samples)
+	for idx,cseq in enumerate(newexp.seqs):
+		rp=np.random.permutation(numsamps)
+		newexp.data[idx,:]=newexp.data[idx,rp]
+	if normalize:
+		newexp=normalizereads(newexp,inplace=True,fixorig=False)
+
+	newexp.filters.append("RANDOMIZED!!! normalize = %s" % normalize)
+
+	return newexp
+
+
+
+def testmdenrichment(expdat,samples,field,numeric=False):
+	"""
+	test for enrichment in a subset of samples of the experiment for metadata field field
+	input:
+	expdat
+	samples - the samples (positions) for the enrichment testing
+	field - the field to test
+	numeric - True if the field is numeric (test mean)
+	"""
+
+	vals=getfieldvals(expdat,field)
+	numsamps=len(vals)
+	numgroup=len(samples)
+	uvals=list(set(vals))
+	gmap=defaultdict(list)
+	for idx,cval in enumerate(vals):
+		gmap[cval].append(idx)
+
+	pv={}
+	for cval in uvals:
+		glen=float(len(gmap[cval]))
+		numin=float(len(np.intersect1d(samples,gmap[cval])))
+		pnull=glen/numsamps
+		p1=stats.binom.cdf(numin,numgroup,pnull)
+		p2=stats.binom.cdf(numgroup-numin,numgroup,1-pnull)
+		p=min(p1,p2)
+		pv[cval]={}
+		pv[cval]['pval']=p
+		pv[cval]['observed']=numin
+		pv[cval]['expected']=pnull*numgroup
+
+#		if p<0.05:
+#			print("cval %s numin %f groupsize %d pnull %f p1 %f p2 %f" % (cval,numin,numgroup,pnull,p1,p2))
+
+	return pv
+
+
+def testmdenrichmentall(expdat,samples,maxpv=0.001,fdr=0.05):
+	"""
+	test enrichment in all metadata fields/values
+	input:
+	expdat
+	samples - a list of samples to test (positions, not sample names)
+	fdr - the false discovery rate in order to show a category
+
+	output:
+	upv - a list of dict of pvalues for significant fields/values ('pval','expected','observed','field','val')
+	"""
+
+	justp=[]
+	allpv=[]
+	for cfield in expdat.fields:
+		vals=getfieldvals(expdat,cfield)
+		uvals=list(set(vals))
+		if len(uvals)>10:
+			continue
+		pv=testmdenrichment(expdat,samples,cfield)
+		for k,v in pv.items():
+			justp.append(v['pval'])
+			v['field']=cfield
+			v['val']=k
+			allpv.append(v)
+#			if v['pval']<=maxpv:
+#				print("field %s, val %s, pv %f (observed %d, expected %f)" % (cfield,k,v['pval'],v['observed'],v['expected']))
+
+	# do the fdr if needed
+	if fdr:
+		fval=au.fdr(justp)
+		keep=np.where(np.array(fval)<=fdr)
+		keep=keep[0]
+	else:
+		keep=np.arange(len(justp))
+
+	if len(keep)==0:
+		au.Debug(6,'No significant cateogries found')
+
+	upv=[]
+	for ckeep in keep:
+		upv.append(allpv[ckeep])
+		au.Debug(6,allpv[ckeep])
+	return upv
+
+
+def toorigreads(expdat,inplace=False):
+	"""
+	convert the number of reads to absolute using the origreads field
+	input:
+	expdat
+	inplace - True to replace current exp, false to create a new one
+
+	output:
+	newexp - each sample has origreads reads (instead of 10k)
+	"""
+	if inplace:
+		newexp=expdat
+	else:
+		newexp=copy.deepcopy(expdat)
+
+	for idx,csamp in enumerate(newexp.samples):
+		totreads=np.sum(newexp.data[:,idx])
+		origreads=newexp.origreads[idx]
+		if totreads==0:
+			continue
+		ratio=float(origreads)/totreads
+		newexp.data[:,idx]=newexp.data[:,idx]*ratio
+	newexp.filters.append("changed reads to origread value")
+	return newexp
+
+
+def subsample(expdat,numreads=10000,inplace=False):
+	"""
+	subsample (rarify) reads from all samples in an experiment
+	input:
+	expdat
+	numreads - number of reads to subsample to
+	inplace - true to replace current experiment
+
+	output:
+	newexp - the new subsampled experiment
+	"""
+
+	newexp=filterorigreads(expdat,numreads,inplace)
+	newexp=toorigreads(newexp,inplace=True)
+
+	table=biom.table.Table(newexp.data,newexp.seqs,newexp.samples)
+	table=table.subsample(numreads,axis='observation')
+	tids=table.ids(axis='sample')
+	for idx,cid in enumerate(tids):
+		if not cid==newexp.samples[idx]:
+			print('problem with sample ids!!!!')
+	newpos=[]
+	for cseq in table.ids(axis='observation'):
+		newpos.append(newexp.seqdict[cseq])
+	newexp=reorderbacteria(newexp,newpos,inplace=True)
+	newexp.data=table.matrix_data.todense().A
+	newexp=normalizereads(newexp,numreads=10000,inplace=True,fixorig=False)
+	newexp.filters.append("subsample to %d" % numreads)
+	return newexp
+
+
+def testenrichment(data,group,method='binary',fdr=0.05,twosided=False,printit=True):
+	"""
+	test for enrichment for samples in groupind in the dict of arrays data
+	input:
+	data - a dict (by category value) of numpy arrays (each of length totseqs) of the value of each sequence
+	group - the indices of the group elements
+	method - the test to apply:
+		'binary' - presence/abscence
+		'ranksum' - not implemented yet
+	fdr - the false discovery rate value or false for no fdr
+	twosided - True to test both lower and higher, False to test just higher in group
+	printit - True to print the significant, False to not print
+
+	output:
+	plist - a list of dict entries ('pval','observed','expected','name')
+	"""
+
+	grouplen=len(group)
+	allpv=[]
+	justp=[]
+	for k,v in data.items():
+		if method=='binary':
+			gvals=v[group]
+			gnz=np.count_nonzero(gvals)
+			anz=np.count_nonzero(v)
+			pnull=float(anz)/len(v)
+			p1=stats.binom.cdf(grouplen-gnz,grouplen,1-pnull)
+			if twosided:
+				p2=stats.binom.cdf(gnz,grouplen,pnull)
+				p=min(p1,p2)
+			else:
+				p=p1
+			pv={}
+			pv['pval']=p
+			pv['observed']=gnz
+			pv['expected']=pnull*grouplen
+			pv['name']=k
+			allpv.append(pv)
+			justp.append(p)
+		elif method=='ranksum':
+			rdat=v
+			notgroup=np.setdiff1d(np.arange(len(v)),group)
+			u,p=stats.mannwhitneyu(rdat[group],rdat[notgroup])
+			pv={}
+			pv['pval']=p
+			pv['observed']=np.mean(rdat[group])
+			pv['expected']=np.mean(rdat)
+			pv['name']=k
+			allpv.append(pv)
+			justp.append(p)
+		else:
+			au.Debug(9,'testenrichment method not supported',method)
+			return False
+	if fdr:
+		fval=au.fdr(justp)
+		keep=np.where(np.array(fval)<=fdr)
+		keep=keep[0]
+	else:
+		keep=np.arange(len(justp))
+	plist=[]
+	rat=[]
+	for cidx in keep:
+		plist.append(allpv[cidx])
+		rat.append(np.abs(float(allpv[cidx]['observed']-allpv[cidx]['expected']))/np.mean([allpv[cidx]['observed'],allpv[cidx]['expected']]))
+	si=np.argsort(rat)
+	si=si[::-1]
+	if printit:
+		for idx,crat in enumerate(rat):
+			print(plist[si[idx]])
+	return(plist)
+
+def findseqsinexp(expdat,seqs):
+	"""
+	find sequences from seqs in expdat sequences and return the indices
+	input:
+	expdat
+	seqs - a list of sequences
+
+	output:
+	res - a list of indices where seqs are in expdat sequences
+	"""
+	res=[]
+	for cseq in seqs:
+		res.append(expdat.seqdict[cseq])
+	return res
+
+
+def testbactenrichment(expdat,seqs,cdb=False,bdb=False,dbexpres=False,translatestudy=False):
+	"""
+	test for enrichment in bacteria database categories for the bacteria in the list seqs
+	enrichment is tested against manual curation (if cdb not False) and automatic curation (if bactdb not false)
+
+	input:
+	expdat
+	seqs - the sequences in the cluster
+	cdb - the cooldb (manual curation) or false to skip
+	bactdb - the automatic database or false to skip
+	dbexpres - the assignment of values to all bacteria in the experiment (for bactdb) or false to calulate it. it is the output of bactdb.GetSeqListInfo()
+
+	output:
+	dbexpres - new if calculated
+	"""
+
+	# maybe need to keep similar freq bacteria?
+	if cdb:
+		cooldb.testenrichment(cdb,expdat.seqs,seqs)
+	if bdb:
+		if not dbexpres:
+			dbexpres=bactdb.GetSeqListInfo(bdb,expdat.seqs,info='studies')
+		seqpos=findseqsinexp(expdat,seqs)
+		plist=testenrichment(dbexpres,seqpos,printit=False)
+		for cpv in plist:
+			cname=cpv['name']
+			if translatestudy:
+				studyname=bactdb.StudyNameFromID(bdb,cname)
+			else:
+				studyname=cname
+			print("%s - observed %f, expected %f, pval %f" % (studyname,cpv['observed'],cpv['expected'],cpv['pval']))
+	return dbexpres
+
+
+
+
+def saveillitable(expdat,filename):
+	"""
+	create a tsv table file for use with the illi visualization tool
+	input:
+	expdat
+	filename - name of the table file to create
+	"""
+
+	fl=open(filename,'w')
+	for idx,ctax in enumerate(expdat.tax):
+		atax=ctax.split(';')
+		btax=[]
+		for tpart in atax:
+			if not tpart=='':
+				btax.append(tpart)
+		if len(btax)>2:
+			btax=btax[-2:]
+		taxstr=''
+		for tpart in btax:
+			taxstr+=';%s' % tpart
+		cname='%s-%d' % (taxstr,idx)
+		fl.write('\t%s' % cname)
+	fl.write('\n')
+	for sampidx,csamp in enumerate(expdat.samples):
+		fl.write('%s' % csamp)
+		for idx,cseq in enumerate(expdat.tax):
+			fl.write('\t%f' % expdat.data[idx,sampidx])
+		fl.write('\n')
+	fl.close()

@@ -16,7 +16,7 @@ import analysis
 import bactdb
 import cooldb
 import os.path
-
+import numpy as np
 
 class JoinWindow(QtGui.QDialog):
 	cexp=[]
@@ -105,6 +105,54 @@ class MetaDataWindow(QtGui.QDialog):
 			self.mddict[cname]=cmeta
 
 
+class BiClusterWindow(QtGui.QDialog):
+	cexp=[]
+
+	def __init__(self,expdat,cdb=False,bdb=False):
+		super(BiClusterWindow, self).__init__()
+		uic.loadUi('./ui/bicluster.py', self)
+		self.cexp=expdat
+		self.cooldb=cdb
+		self.bactdb=bdb
+		self.lStudy.setText(self.cexp.studyname)
+		self.bBiCluster.clicked.connect(self.bicluster)
+		self.bView.clicked.connect(self.view)
+
+	def bicluster(self):
+		newexp,seqs,samples=analysis.bicluster(self.cexp,method='binary',sampkeep=0,bactkeep=0,justcount=True)
+		self.samples=samples[0]
+		self.seqs=seqs[0]
+		self.lNumSamples.setText(str(len(self.samples)))
+		self.lNumBacteria.setText(str(len(self.seqs)))
+		self.lSamples.clear()
+		self.lBacteria.clear()
+		# if we have enough bacteria and samples, update the info list
+		if len(self.seqs)>=5 and len(self.samples)>=5:
+			sampmd=analysis.testmdenrichmentall(self.cexp,self.samples)
+			for cmd in sampmd:
+				self.lSamples.addItem("%s - %s (p:%f o:%d e:%f)" % (cmd['field'],cmd['val'],cmd['pval'],cmd['observed'],cmd['expected']))
+			if self.cooldb:
+				bmd=cooldb.testenrichment(self.cooldb,self.cexp.seqs,self.seqs)
+				for cbmd in bmd:
+					self.lBacteria.addItem("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
+
+
+	def view(self):
+		cexp=self.cexp
+		allsamp=np.arange(len(cexp.samples))
+		allbact=np.arange(len(cexp.seqs))
+
+		x=np.setdiff1d(allsamp,self.samples)
+		sampo=np.concatenate((self.samples,x))
+		ubact=[]
+		for cseq in self.seqs:
+			ubact.append(cexp.seqdict[cseq])
+		bacto=np.concatenate((ubact,np.setdiff1d(allbact,ubact)))
+
+		newexp=analysis.reorderbacteria(cexp,bacto)
+		newexp=analysis.reordersamples(newexp,sampo,inplace=True)
+		analysis.plotexp(newexp,seqdb=self.bactdb,sortby=False,numeric=False,usegui=True,cdb=self.cooldb,showline=False)
+
 
 class AdvPlotWindow(QtGui.QDialog):
 	cexp=[]
@@ -185,6 +233,43 @@ class DiffExpWindow(QtGui.QDialog):
 	def __init__(self,expdat):
 		super(DiffExpWindow, self).__init__()
 		uic.loadUi('./ui/diffexp.py', self)
+		self.cexp=expdat
+		self.cField.addItems(expdat.fields)
+		self.bFieldValues1.clicked.connect(self.fieldvalues1)
+		self.bFieldValues2.clicked.connect(self.fieldvalues2)
+		self.cAll.stateChanged.connect(self.allvalues)
+#		self.cField.stateChanged.connect(self.fieldchanged)
+		self.tNewName.setText(self.cexp.studyname+'_de')
+
+#	def fieldchanged(self):
+#		self.tNewName.setText(self.cexp.studyname+'_'+str(self.cField.currentText())+'_de')
+
+	def fieldvalues1(self):
+		cfield=str(self.cField.currentText())
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		if ok:
+			self.tValue1.setText(val)
+
+	def fieldvalues2(self):
+		cfield=str(self.cField.currentText())
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		if ok:
+			self.tValue2.setText(val)
+
+	def allvalues(self):
+		# unchecked
+		if self.cAll.checkState()==0:
+			self.tValue2.setReadOnly(False)
+		else:
+			self.tValue2.setReadOnly(True)
+
+
+class ClassifyWindow(QtGui.QDialog):
+	cexp=[]
+
+	def __init__(self,expdat):
+		super(ClassifyWindow, self).__init__()
+		uic.loadUi('./ui/classifier.py', self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bFieldValues1.clicked.connect(self.fieldvalues1)
@@ -323,6 +408,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainAdvancedPlot.clicked.connect(self.advplot)
 		self.bMainFilterSamples.clicked.connect(self.filtersamples)
 		self.bDiffExp.clicked.connect(self.diffexp)
+		self.bClassifier.clicked.connect(self.classify)
 		self.bFilterOrigReads.clicked.connect(self.filterorigreads)
 		self.bMainSortSamples.clicked.connect(self.sortsamples)
 		self.bMainClusterBacteria.clicked.connect(self.clusterbacteria)
@@ -594,6 +680,26 @@ class AppWindow(QtGui.QMainWindow):
 					self.addexp(newexp)
 
 
+	def classify(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			classifywin = ClassifyWindow(cexp)
+			res=classifywin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				field=str(classifywin.cField.currentText())
+				value1=str(classifywin.tValue1.text())
+				value2=str(classifywin.tValue2.text())
+				method=str(classifywin.cMethod.currentText())
+				compareall=classifywin.cAll.checkState()
+				if compareall:
+					value2=False
+				auc=analysis.BaysZeroClassifyTest(cexp,field,value1,value2,numiter=5)
+
 	def filtersamples(self):
 		items=self.bMainList.selectedItems()
 		if len(items)!=1:
@@ -610,7 +716,8 @@ class AppWindow(QtGui.QMainWindow):
 				newname=str(filtersampleswin.tNewName.text())
 				overwrite=filtersampleswin.cOverwrite.checkState()
 				exclude=filtersampleswin.cExclude.checkState()
-				newexp=analysis.filtersamples(cexp,field,value,exclude=exclude)
+				exact=filtersampleswin.cExact.checkState()
+				newexp=analysis.filtersamples(cexp,field,value,exclude=exclude,exact=exact)
 				if overwrite==0:
 					newexp.studyname=newname
 					self.addexp(newexp)
@@ -668,9 +775,18 @@ class AppWindow(QtGui.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			newexp=analysis.bicluster(cexp)
-			newexp.studyname=newexp.studyname+'_bicluster'
-			self.addexp(newexp)
+
+			biclusterwin = BiClusterWindow(cexp,cdb=self.cooldb,bdb=self.bactdb)
+			res=biclusterwin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				print('lala')
+
+#			newexp=analysis.bicluster(cexp,method='binary')
+#			newexp.studyname=newexp.studyname+'_bicluster'
+#			self.addexp(newexp)
+
+#			if len(newexp.samples)>5 and len(newexp.seqs)>5:
+#				pv=analysis.testbactenrichment(cexp,newexp.seqs,cdb=False,bdb=False,dbexpres=False,translatestudy=False)
 
 
 	def joinexps(self):

@@ -847,3 +847,73 @@ def GetSampleMapField(db,sampleid):
 	for a in res:
 		vals[a[0]]=a[1]
 	return(vals)
+
+
+def GetSeqListInfo(db,seqs,info='samples'):
+	"""
+	Get information about a sequence list.
+	input:
+	db
+	seqs - a list of sequences (ACGT)
+	info - the info type to collect:
+		'samples' - the samples for each sequence
+		'studies' - the studies where each seq appears
+		'types' - env_matter+host_taxid
+
+	output:
+	res - a dict with info type as keys, each containing an array (1 entry per sequence) with the freq of the seq in the entry
+	"""
+
+	res={}
+	studyreads={}
+	for idx,cseq in enumerate(seqs):
+		if info=='samples':
+			# Get the read vector for the samples
+			pv=GetSeqVec(db,cseq)
+			if len(pv)==0:
+				continue
+			nz=np.where(pv>db.MINFREQ)
+			totalappear=len(nz[0])
+			au.Debug(2,"--------Seq",cseq)
+			au.Debug(3,"Found in",totalappear,"Samples")
+			au.Debug(3,"Fraction=",float(totalappear)/len(pv))
+			for csamp in nz[0]:
+				res.setdefault(csamp,np.zeros(len(seqs)))[idx]=pv[csamp]
+		elif info=='studies':
+			totappear,numstudies,allstudies,studysamples,totdbsamples=GetSeqInfo(db,cseq)
+			if totappear>0:
+				sres=studysamples.items()
+				vlens=[]
+				for cv in sres:
+					cstudy=cv[0]
+					cnumreads=cv[1]
+					if not cstudy in studyreads:
+						studyreads[cstudy]=SamplesInStudy(db,cstudy)
+					totsamps=studyreads[cstudy]
+					vlens.append(float(len(cnumreads))/len(totsamps))
+				sv,si=au.isort(vlens,reverse=True)
+				for cind in si:
+					studyid=sres[cind][0]
+					if vlens[cind]>0.25:
+						res.setdefault(studyid,np.zeros(len(seqs)))[idx]+=1
+		elif info=='types':
+			pv=GetSeqVec(db,cseq)
+			if len(pv)==0:
+				continue
+			nz=np.where(pv>db.MINFREQ)
+			for csamp in nz[0]:
+				db.cur.execute("SELECT Field,Value FROM Maps WHERE SampleID=?",[int(csamp)+1])
+				allvals=db.cur.fetchall()
+				matter='NA'
+				host='NA'
+				for cv in allvals:
+					if cv[0].lower()=='env_matter':
+						matter=cv[1]
+					if cv[0].lower()=='host_taxid':
+						host=cv[1]
+				res.setdefault(matter+'-'+host,np.zeros(len(seqs)))[idx]+=1
+
+		else:
+			au.Debug(9,"info type not supported",info)
+			return False
+	return res

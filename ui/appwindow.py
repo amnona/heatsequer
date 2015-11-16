@@ -300,6 +300,19 @@
        <string>BiCluster</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="bClassifier">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>115</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Classifier</string>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

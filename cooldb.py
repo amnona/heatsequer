@@ -20,6 +20,7 @@ from matplotlib.pyplot import *
 import csv
 from scipy import cluster
 from scipy import spatial
+from scipy import stats
 from sklearn.preprocessing import scale
 import datetime
 import copy
@@ -253,3 +254,93 @@ def savedb(db,filename):
 		fl.write('\n')
 	fl.close()
 	au.Debug(4,'Saved cooldb',filename)
+
+
+def testenrichment(db,allseqs,group,maxfval=0.05):
+	"""
+	test for database entries enriched in sequences from group compared to allseqs (all the sequences)
+	input:
+	db - the coolseq database
+	allseqs - a list of all the sequences
+	group - a list of subgroup of sequences to test vs allseqs
+	maxfval - the maximal fdr value
+
+	output:
+	newplist - a sorted list of dict for annotaions which are below fdr ('description','pval','observed','expected')
+	"""
+
+	alllen=len(allseqs)
+	glen=len(group)
+	allshort=[]
+	for cseq in allseqs:
+		allshort.append(cseq[:89])
+	groupshort=[]
+	for cseq in group:
+		groupshort.append(cseq[:89])
+	asdict=au.listtodict(allshort)
+	gsdict=au.listtodict(groupshort)
+
+	dbdesc=[]
+	for cdat in db.dat:
+		dbdesc.append(cdat['bacteria_description'])
+
+	descdict=au.listtodict(dbdesc)
+
+	allp=[]
+	pv=[]
+	for k,v in descdict.items():
+		allmatch=0
+		groupmatch=0
+		usedseq={}
+		for cdatidx in v:
+			cdat=db.dat[cdatidx]
+			cseq=cdat['sequence']
+			if cseq in usedseq:
+				continue
+			usedseq[cseq]=True
+			cseqs=cseq[:89]
+			if not cseqs in asdict:
+				continue
+			for opos in asdict[cseqs]:
+				oseq=allseqs[opos]
+				mlen=min(len(oseq),len(cseq))
+				if not oseq[:mlen]==cseq[:mlen]:
+					continue
+				allmatch+=1
+			if not cseqs in gsdict:
+				continue
+			for opos in gsdict[cseqs]:
+				oseq=group[opos]
+				mlen=min(len(oseq),len(cseq))
+				if not oseq[:mlen]==cseq[:mlen]:
+					continue
+				groupmatch+=1
+		pnull=float(allmatch)/alllen
+#		p1=stats.binom.cdf(groupmatch,glen,pnull)
+		p2=stats.binom.cdf(glen-groupmatch,glen,1-pnull)
+#		p=min(p1,p2)
+		p=p2
+		allp.append(p)
+		cpv={}
+		cpv['pval']=p
+		cpv['observed']=groupmatch
+		cpv['expected']=pnull*glen
+		cpv['description']=k
+		pv.append(cpv)
+
+	fval=au.fdr(allp)
+	keep=np.where(np.array(fval)<=maxfval)
+	plist=[]
+	rat=[]
+	for cidx in keep[0]:
+		plist.append(pv[cidx])
+		rat.append(np.abs(float(pv[cidx]['observed']-pv[cidx]['expected']))/np.mean([pv[cidx]['observed'],pv[cidx]['expected']]))
+	si=np.argsort(rat)
+	si=si[::-1]
+	newplist=[]
+	for idx,crat in enumerate(rat):
+		print(plist[si[idx]])
+		newplist.append(plist[si[idx]])
+	return(newplist)
+
+
