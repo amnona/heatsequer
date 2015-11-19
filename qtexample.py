@@ -580,7 +580,7 @@ class AppWindow(QtGui.QMainWindow):
 			expdat=analysis.load(tablefname,mapfname,tabletype=tabletype)
 			expdat.studyname=expname
 			self.addexp(expdat)
-			# for biom table show the number of reads
+			# for biom table show the number of reads`
 			if tabletype=='biom':
 				analysis.analyzenumreads(expdat)
 

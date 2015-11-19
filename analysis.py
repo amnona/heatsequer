@@ -2140,6 +2140,38 @@ def normalizereads(expdat,numreads=10000,fixorig=False,inplace=False):
 	return newexp
 
 
+def normalizebyseqs(expdat,seqs,exclude=False,fixorig=True):
+	"""
+	normalize experiment by making the sum of frequencies in seqs constant in each sample
+	input:
+	expdat
+	seqs - the sequences to use as the normalization factor (sum of the sequences)
+	exclude - true to use all sequences except in seqs as the normalization factor, False to use seqs
+	fixorig - True to modify the origreads field, false to leave it as it was
+	"""
+
+	newexp=copy.deepcopy(expdat)
+	spos=[]
+	for cseq in seqs:
+		spos.append(expdat.seqdict[cseq])
+	if exclude:
+		spos=np.setdiff1d(np.arange(len(expdat.seqs)),spos)
+	ssum=np.sum(expdat.data[spos,:],axis=0)+0.0
+	ssum[ssum==0]=1
+	frat=ssum/np.mean(ssum)
+	for idx in range(len(expdat.samples)):
+		newexp.data[:,idx]=newexp.data[:,idx]/frat[idx]
+		if fixorig:
+			newexp.origreads[idx]=newexp.origreads[idx]/frat[idx]
+	filt='Normalize By Seqs '
+	if len(spos)==1:
+		filt+=newexp.tax[spos[0]]
+	else:
+		filt+=str(len(spos))
+	if exclude:
+		filt+=' Exclude'
+	newexp.filters.append(filt)
+	return newexp
 
 def filterandnormalize(expdat,seqs,exclude=False,subseq=False,numreads=10000):
 	"""
@@ -2901,3 +2933,40 @@ def saveillitable(expdat,filename):
 			fl.write('\t%f' % expdat.data[idx,sampidx])
 		fl.write('\n')
 	fl.close()
+
+
+def sortcorrelation(expdat):
+	"""
+	sort bacteria according to highest correlation/anti-correlation
+
+	input:
+	expdat
+
+	output:
+	newexp - the experiment with bacteria sorted by correlation (each time next bacteria the most abs(corr) to the current bacteria)
+	"""
+
+	cdat=copy.copy(expdat.data)
+	cdat[cdat<=2]=2
+	cdat=np.log2(cdat)
+	cdat=scale(cdat,axis=1,copy=False,with_mean=False)
+	au.Debug(6,"Calculating correlation matrix")
+	cmat=np.corrcoef(cdat)
+	au.Debug(6,"sorting bacteria")
+	cmat=np.abs(cmat)
+	cmat-=np.identity(len(expdat.seqs))
+	maxpos=np.argmax(cmat)
+	maxpos=np.unravel_index(maxpos,np.shape(cmat))
+	order=[maxpos[0]]
+	ubact=np.arange(len(expdat.seqs))
+	ubact=np.delete(ubact,maxpos[0])
+	maxpos=maxpos[0]
+	while len(ubact)>0:
+		cdat=cmat[ubact,maxpos]
+		cdat=cdat.flatten()
+		maxpos=np.argmax(cdat)
+		order.append(ubact[maxpos])
+		ubact=np.delete(ubact,maxpos)
+	newexp=reorderbacteria(expdat,order)
+	newexp.filters.append("correlation sort")
+	return newexp
