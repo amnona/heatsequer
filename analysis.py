@@ -154,19 +154,19 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 	an experiment class for the current experiment
 	"""
 
-	au.Debug(6,'Loading mapping file')
-	# load the mapping file
-	mapf = open(mapname, 'rU')
-	reader = csv.DictReader(mapf, delimiter='\t')
-	fields = reader.fieldnames
-	smap = {}
-	mapsamples = []
-	for cline in reader:
-		cid = cline['#SampleID']
-		smap[cid] = cline
-		mapsamples.append(cid)
-	mapf.close()
-	au.Debug(6,'number of samples in map is %d' % len(mapsamples))
+	# au.Debug(6,'Loading mapping file')
+	# # load the mapping file
+	# mapf = open(mapname, 'rU')
+	# reader = csv.DictReader(mapf, delimiter='\t')
+	# fields = reader.fieldnames
+	# smap = {}
+	# mapsamples = []
+	# for cline in reader:
+	# 	cid = cline['#SampleID']
+	# 	smap[cid] = cline
+	# 	mapsamples.append(cid)
+	# mapf.close()
+	# au.Debug(6,'number of samples in map is %d' % len(mapsamples))
 
 	if tabletype=='biom':
 		au.Debug(6,'Loading biom table')
@@ -216,6 +216,27 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 		for cid in ids:
 			idtable[cid]=addsname+cid
 		table=table.update_ids(idtable,axis='sample')
+
+	smap = {}
+	mapsamples = []
+	if mapname:
+		au.Debug(6,'Loading mapping file')
+		# load the mapping file
+		mapf = open(mapname, 'rU')
+		reader = csv.DictReader(mapf, delimiter='\t')
+		fields = reader.fieldnames
+		for cline in reader:
+			cid = cline['#SampleID']
+			smap[cid] = cline
+			mapsamples.append(cid)
+		mapf.close()
+		au.Debug(6,'number of samples in map is %d' % len(mapsamples))
+	else:
+		au.Debug(6,'No mapping file supplied - using just sample names')
+		tablesamples = table.ids(axis='sample')
+		for cid in tablesamples:
+			smap[cid]={'#SampleID':cid}
+			mapsamples.append(cid)
 
 	tablesamples = table.ids(axis='sample')
 	au.Debug(6,'number of samples in table is %d' % len(tablesamples))

@@ -903,7 +903,9 @@ class AppWindow(QtGui.QMainWindow):
 
 
 def main():
+	print("starting heatsequer")
 	app = QtGui.QApplication(sys.argv)
+	print("almost ready")
 	window = AppWindow()
 	sys.exit(app.exec_())
 
