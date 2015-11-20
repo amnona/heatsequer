@@ -237,6 +237,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 		for cid in tablesamples:
 			smap[cid]={'#SampleID':cid}
 			mapsamples.append(cid)
+		fields=['#SampleID']
 
 	tablesamples = table.ids(axis='sample')
 	au.Debug(6,'number of samples in table is %d' % len(tablesamples))
@@ -2155,7 +2156,7 @@ def normalizereads(expdat,numreads=10000,fixorig=False,inplace=False):
 		ratio=float(numreads)/totreads
 		newexp.data[:,idx]=newexp.data[:,idx]*ratio
 		if fixorig:
-			au.Debug(6,'fixing original frequencies')
+			au.Debug(2,'fixing original frequencies')
 			newexp.origreads[idx]=float(newexp.origreads[idx])/ratio
 	newexp.filters.append("renormalized reads to sum %d" % numreads)
 	return newexp
@@ -2798,8 +2799,17 @@ def subsample(expdat,numreads=10000,inplace=False):
 	newexp=reorderbacteria(newexp,newpos,inplace=True)
 	newexp.data=table.matrix_data.todense().A
 	newexp=normalizereads(newexp,numreads=10000,inplace=True,fixorig=False)
+	for cidx in range(len(newexp.samples)):
+		newexp.origreads[cidx]=numreads
+	newexp=updateorigreads(newexp)
 	newexp.filters.append("subsample to %d" % numreads)
 	return newexp
+
+
+def updateorigreads(expdat):
+	for idx,csamp in enumerate(expdat.samples):
+		expdat.smap[csamp]['origReads']=expdat.origreads[idx]
+	return expdat
 
 
 def testenrichment(data,group,method='binary',fdr=0.05,twosided=False,printit=True):

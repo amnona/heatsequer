@@ -421,6 +421,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bBicluster.clicked.connect(self.bicluster)
 		self.bFilterFasta.clicked.connect(self.filterfasta)
 		self.bRenormalize.clicked.connect(self.renormalize)
+		self.bSubsample.clicked.connect(self.subsample)
 
 
 		# the main list right mouse menu
@@ -456,7 +457,9 @@ class AppWindow(QtGui.QMainWindow):
 
 	def listItemRightClicked(self, QPos):
 		self.listMenu= QtGui.QMenu()
-		menuremove = self.listMenu.addAction("Remove Item")
+		menuremove = self.listMenu.addAction("Rename")
+		self.connect(menuremove, QtCore.SIGNAL("triggered()"), self.menuRename)
+		menuremove = self.listMenu.addAction("Delete")
 		self.connect(menuremove, QtCore.SIGNAL("triggered()"), self.menuRemove)
 		menusave = self.listMenu.addAction("Save (pickle) Item")
 		self.connect(menusave, QtCore.SIGNAL("triggered()"), self.menuSave)
@@ -478,6 +481,20 @@ class AppWindow(QtGui.QMainWindow):
 			cexp=self.explist[cname]
 			listwin = ListWindow(cexp.filters,cexp.studyname)
 			res=listwin.exec_()
+
+
+	def menuRename(self):
+		if len(self.bMainList.selectedItems())>1:
+			return
+		for citem in self.bMainList.selectedItems():
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			val,ok=QtGui.QInputDialog.getText(self,'Rename experiment','old name=%s' % cname)
+			if ok:
+				self.removeexp(cname)
+				cexp.studyname=val
+				self.addexp(cexp)
+
 
 	def menuRemove(self):
 		if len(self.bMainList.selectedItems())>1:
@@ -527,6 +544,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainList.clearSelection()
 		self.bMainList.setCurrentRow(self.bMainList.count()-1)
 
+
 	def replaceexp(self,expdat):
 		"""
 		replace an existing experiment with new values
@@ -537,6 +555,7 @@ class AppWindow(QtGui.QMainWindow):
 		for item in items:
 			self.bMainList.takeItem(self.bMainList.row(item))
 			self.bMainList.addItem(expname)
+
 
 	def removeexp(self,expname):
 		"""
@@ -874,6 +893,21 @@ class AppWindow(QtGui.QMainWindow):
 				newexp=analysis.filtermean(cexp,meanval=val*10000)
 				newexp.studyname=newexp.studyname+'_fmean'
 				self.addexp(newexp)
+
+	def subsample(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			val,ok=QtGui.QInputDialog.getInt(self,'Subsample','Number of reads per sample',value=10000,min=0)
+			if ok:
+				newexp=analysis.subsample(cexp,numreads=val)
+				newexp.studyname=newexp.studyname+'_sub'
+				self.addexp(newexp)
+
 
 	def filtertaxonomy(self):
 		items=self.bMainList.selectedItems()
