@@ -136,7 +136,7 @@ def copyexp(expdat):
 	return newexp
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',studyname=False,tabletype='biom'):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',studyname=False,tabletype='biom',normalize=True):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -150,6 +150,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 	tabletype:
 		'biom' - a biom table
 		'meta' - a metabolomics table (row per sample, col per metabolite, can contain duplicate metaboliteids)
+	normalize - True to normalize to 10k reads per sample, False to not normalize (change to mean 10k reads/sample)
 	output:
 	an experiment class for the current experiment
 	"""
@@ -333,9 +334,12 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,addsname='',st
 		print("Samples with 0 reads: %d" % (np.size(colsum)-np.size(okreads[1])))
 		exp=reordersamples(exp,okreads[1])
 		colsum=np.sum(exp.data,axis=0,keepdims=True)
-	if tabletype=='biom':
+	if tabletype=='meta':
+		normalize=False
+
+	if normalize:
 		exp.data=10000*exp.data/colsum
-	elif tabletype=='meta':
+	else:
 		exp.data=10000*exp.data/np.mean(colsum)
 
 
@@ -367,7 +371,7 @@ def reordersamples(exp,newpos,inplace=False):
 
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True):
 	"""
 	Plot an experiment
 	input:
@@ -408,8 +412,9 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 
 #	ldat=ldat[:,sidx]
 	ldat=newexp.data
-	ldat[np.where(ldat<1)]=1
-	ldat=np.log2(ldat)
+	if uselog:
+		ldat[np.where(ldat<1)]=1
+		ldat=np.log2(ldat)
 	oldparams=plt.rcParams
 	mpl.rc('keymap',back='c, backspace')
 	mpl.rc('keymap',forward='v')
@@ -2100,14 +2105,14 @@ def getexpdbsources(expdat,seqdb=False):
 	return newexp
 
 
-
-def clipseqs(expdat,startpos):
+def clipseqs(expdat,startpos,addseq='TAC'):
 	"""
 	clip the first nucleotides in all sequences in experiment
 	to fix offset in sequencing
 	input:
 	expdat
-	startpos - the position to start from (0 indexed)
+	startpos - the position to start from (0 indexed) or negative to add nucleotides
+	addseq - the sequence to add (just a guess) if startpos is negative
 	output:
 	newexp - new experiment with all sequences clipped and joined identical sequences
 	"""
@@ -2117,7 +2122,11 @@ def clipseqs(expdat,startpos):
 	newdict={}
 	keeppos=[]
 	for idx,cseq in enumerate(newexp.seqs):
-		cseq=cseq[startpos:]
+		if startpos>=0:
+			cseq=cseq[startpos:]
+		else:
+			cseq=addseq[:abs(startpos)]+cseq
+			cseq=cseq[:len(expdat.seqs[0])]
 		if cseq in newdict:
 			newexp.data[newdict[cseq],:] += newexp.data[idx,:]
 		else:
@@ -2966,12 +2975,15 @@ def saveillitable(expdat,filename):
 	fl.close()
 
 
-def sortcorrelation(expdat):
+def sortcorrelation(expdat,method='all'):
 	"""
 	sort bacteria according to highest correlation/anti-correlation
 
 	input:
 	expdat
+	method:
+		pres - use correlation only on samples where present in one of the two sequnences
+		all - use correlation on all samples (default)
 
 	output:
 	newexp - the experiment with bacteria sorted by correlation (each time next bacteria the most abs(corr) to the current bacteria)
@@ -3001,3 +3013,133 @@ def sortcorrelation(expdat):
 	newexp=reorderbacteria(expdat,order)
 	newexp.filters.append("correlation sort")
 	return newexp
+
+
+def plotdiffsummary2(expdatlist1,expdatlist2,seqs1,seqs2,field,val1,val2=False,method='mean',sortit=True):
+	"""
+	plot a heat map for 2 results (i.e. 16s and KO predictions) for zech chinese ibd study
+	input:
+	expdatlist1,expdatlist2 - a list of experiments to plot (row per experiment - all must contain field and val1,val2 in it)
+	seqs1,seqs2 - the sequences to examine
+	field - name of the field dividing the 2 groups
+	val1 - value of the field for group 1 (or a list of values 1 per experiment)
+	val2 - value of the field for group 2 or False for all the rest (not val1) (or a list of values 1 per experiment)
+	method:
+		- mean - calculate the difference in the mean of the 2 groups
+	sortit - True to sort according to difference in the first expdat, False to use the order in seqs
+	"""
+	diff1=plotdiffsummary(expdatlist1,seqs1,field,val1,val2,method,sortit)
+	diff2=plotdiffsummary(expdatlist2,seqs2,field,val1,val2,method,sortit)
+	print(np.shape(diff1))
+	print(np.shape(diff2))
+	diff=np.vstack([diff1,diff2])
+	maxdiff=np.nanmax(np.abs(diff))
+	figure()
+	imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
+	colorbar()
+	title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
+	plot([-0.5,len(expdatlist1)-0.5],[np.shape(diff1)[0]-0.5,np.shape(diff1)[0]-0.5],'k')
+	autoscale(tight=True)
+
+def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=True):
+	"""
+	plot a heat map for the fold change in each experiment in expdatlist
+	for the log2 foldchange between the 2 groups (val1,val2 values in field)
+	for zech chinese ibd paper
+	input:
+	expdatlist - a list of experiments to plot (row per experiment - all must contain field and val1,val2 in it)
+	seqs - the sequences to examine
+	field - name of the field dividing the 2 groups
+	val1 - value of the field for group 1 (or a list of values 1 per experiment)
+	val2 - value of the field for group 2 or False for all the rest (not val1) (or a list of values 1 per experiment)
+	method:
+		- mean - calculate the difference in the mean of the 2 groups
+	sortit - True to sort according to difference in the first expdat, False to use the order in seqs
+
+	output:
+	diffsum - the same as the plotted heatmap (row per otu, column per experiment)
+	"""
+
+	if not(type(val1) is list):
+		tval1=val1
+		val1=[]
+		for cexp in expdatlist:
+			val1.append(tval1)
+	if not(type(val2) is list):
+		tval2=val2
+		val2=[]
+		for cexp in expdatlist:
+			val2.append(tval2)
+	diff=np.array(getdiffsummary(expdatlist[0],seqs,field,val1[0],val2[0],method))
+	odiff=copy.copy(diff)
+	odiffnotnan=np.where(np.isfinite(odiff))[0]
+	diffsum=[]
+	for cidx,cexp in enumerate(expdatlist[1:]):
+		cdiff=np.array(getdiffsummary(cexp,seqs,field,val1[cidx+1],val2[cidx+1],method))
+		diff=np.vstack([diff,cdiff])
+		notnan=np.where(np.isfinite(cdiff))[0]
+		notnan=np.intersect1d(notnan,odiffnotnan)
+		cdiffsum=float(np.sum((cdiff[notnan]>0)==(odiff[notnan]>0)))/len(notnan)
+		diffsum.append(cdiffsum)
+	if sortit:
+		si=np.argsort(diff[0,:])
+		diff=diff[:,si]
+	figure()
+	maxdiff=np.nanmax(np.abs(diff))
+	diff=np.transpose(diff)
+	imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
+	colorbar()
+	title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
+	return diff
+
+def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean'):
+	"""
+	plot the fold change between 2 groups in each of the sequences in seqs
+	for zech chinese ibd paper
+	input:
+	expdat
+	seqs - the sequences to examine
+	field - name of the field dividing the 2 groups
+	val1 - value of the field for group 1
+	val2 - value of the field for group 2 or False for all the rest (not val1)
+	method:
+		- mean - calculate the difference in the mean of the 2 groups
+
+	output:
+	diff - a list of the difference between the 2 groups for each sequence
+	"""
+
+	pos1=findsamples(expdat,field,val1)
+	if val2:
+		pos2=findsamples(expdat,field,val2)
+	else:
+		pos2=findsamples(expdat,field,val1,exclude=True)
+
+	diff=[]
+	for cseq in seqs:
+		if cseq in expdat.seqdict:
+			seqpos=expdat.seqdict[cseq]
+		else:
+			diff.append[np.nan]
+			continue
+		if method=='mean':
+			cval1=np.mean(expdat.data[seqpos,pos1])
+			cval2=np.mean(expdat.data[seqpos,pos2])
+			threshold=0.1
+		elif method=='binary':
+			cval1=np.mean(expdat.data[seqpos,pos1]>0)
+			cval2=np.mean(expdat.data[seqpos,pos2]>0)
+			threshold=0.001
+		else:
+			au.Debug(9,"Unknown method %s for getdiff" % method)
+			return False
+		if cval1<=threshold and cval2<=threshold:
+			diff.append(np.nan)
+			continue
+		if cval1<threshold:
+			cval1=threshold
+		if cval2<threshold:
+			cval2=threshold
+		cdiff=np.log2(cval1/cval2)
+		diff.append(cdiff)
+	return diff

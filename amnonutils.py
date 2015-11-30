@@ -314,3 +314,29 @@ def listtodict(dat):
 		else:
 			thedict[cdat]=[idx]
 	return thedict
+
+
+def savelisttofile(dat,filename,delimiter='\t'):
+	"""
+	save a list to a (tab delimited) file
+	inputL
+	dat - the list to save
+	filename - the filename to save to
+	delimiter - the delimiter to use
+	"""
+
+	with open(filename,'w') as fl:
+		fl.write(delimiter.join(dat))
+
+
+def dictupper(dat):
+	"""
+	turn dict keys to upper case
+	input:
+	dat - a dict with string keys
+	output:
+	newdat - a dict with the upper case keys
+	"""
+
+	newdat = {k.upper(): v for k,v in dat.iteritems()}
+	return newdat

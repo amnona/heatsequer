@@ -7,7 +7,7 @@ bactdb.py
 get info from the bacterial database (SRBactDB.py)
 """
 
-__version__ = "0.1"
+__version__ = "1.0"
 
 import amnonutils as au
 
@@ -17,15 +17,14 @@ import matplotlib.pyplot as plt
 import biom
 from matplotlib.pyplot import *
 import csv
-from scipy import cluster
-from scipy import spatial
-from sklearn.preprocessing import scale
-import copy
+#from scipy import cluster
+#from scipy import spatial
+#from sklearn.preprocessing import scale
+#import copy
 import sqlite3
 from collections import defaultdict
 # for debugging - use XXX()
 from pdb import set_trace as XXX
-import networkx as nx
 from scipy import stats
 
 
@@ -102,7 +101,7 @@ def LoadOntologyOBO(db,filename,ontologyname):
 	filename - of the .obo ontology
 	ontologyname - for the hash of ontologies
 	"""
-	ofile=open(filename,"r")
+	ofile=open(filename,"rU")
 	ohash={}
 	namehash={}
 	idhash={}
@@ -193,6 +192,8 @@ def InitOntologyGraph(db,pv,field,ontohashname):
 	keep it in a dictionary of field names in self.OntoGraph[fieldname]
 	including the graph layout for fast drawing
 	"""
+
+	import networkx as nx
 
 	if not ontohashname in db.Ontology:
 		au.Debug(10,"Ontology not loaded",ontohashname)
@@ -917,3 +918,338 @@ def GetSeqListInfo(db,seqs,info='samples'):
 			au.Debug(9,"info type not supported",info)
 			return False
 	return res
+
+
+
+#####################################
+# database creation/addition methods
+#####################################
+def CreateTables(dbfilename,areyousure='no'):
+	"""
+	Create the database tables
+	NOTE: will delete old database!!!!
+	input:
+	dbfilename - name of the database file to create
+	areyousure - must be 'yes' in order to create the database
+
+	output:
+	db - the database structure
+	"""
+
+	assert areyousure=='yes'
+	db=dbstart(dbfilename)
+	db.cur.execute("DROP TABLE IF EXISTS Samples")
+	db.cur.execute("CREATE TABLE Samples(SampleID INTEGER PRIMARY KEY AUTOINCREMENT,StudyID INT,SampleName TEXT,FileName TEXT,TotalReads INTEGER)")
+	db.cur.execute("DROP TABLE IF EXISTS Reads")
+	db.cur.execute("CREATE TABLE Reads(SeqID INT NOT NULL,SampleID INT NOT NULL,Reads DOUBLE NOT NULL)")
+	db.cur.execute("DROP TABLE IF EXISTS Maps")
+	db.cur.execute("CREATE TABLE Maps(UID INTEGER PRIMARY KEY AUTOINCREMENT,SampleID INTEGER,Field TEXT,Value TEXT)")
+	db.cur.execute("DROP TABLE IF EXISTS Experiments")
+	db.cur.execute("CREATE TABLE Experiments(StudyID INTEGER,ExpName TEXT,MapFileName TEXT)")
+	db.cur.execute("DROP TABLE IF EXISTS Sequences")
+	db.cur.execute("CREATE TABLE Sequences(SeqID INTEGER PRIMARY KEY AUTOINCREMENT,Sequence TEXT)")
+
+	# create the indexes
+	# note we do not create the read table indexes since it slows insertion down
+	# can create later by using:
+	# CreateReadInds()
+	db.cur.execute("CREATE INDEX SeqIDInd ON Sequences (SeqID)")
+	db.cur.execute("CREATE INDEX SeqInd ON Sequences (Sequence)")
+	db.cur.execute("CREATE INDEX MapSampleInd ON Maps (SampleID)")
+	db.cur.execute("CREATE INDEX SampleStudyInd ON Samples (StudyID)")
+	db.cur.execute("CREATE INDEX SampleNameInd ON Samples (SampleName)")
+
+	db.con.commit()
+	return db
+
+
+def CreateReadInds(db):
+	"""
+	create the read indexes (after db is ready - to make insertions faster)
+	"""
+	au.Debug(6,"Creating read sequence index")
+	db.cur.execute("CREATE INDEX ReadSeqInd ON Reads (SeqID)")
+	au.Debug(6,"Creating read sample index")
+	db.cur.execute("CREATE INDEX ReadSampleInd ON Reads (SampleID)")
+	db.con.commit()
+	au.Debug(6,"Done creating indexes")
+
+
+
+def GetSuidFromSampleID(db,sampleid,expid,addnew=False):
+	"""
+	get the suid (sample unique identifier) from the Samples table in the database
+	if it does not exist, create it
+	input:
+	sampleid - the name of the sample (from mapping file)
+	expid - the studyid from where the sample originated can also do without expid(=0)
+	addnew - True to add the new sample to the table if not found, false to not add and return False
+	output:
+	suid - the sample id or False if not added
+	isnew - True if a new sample, False if already existed
+	"""
+
+	isnew=True
+	if expid>0:
+		db.cur.execute("SELECT SampleID FROM Samples WHERE SampleName = ? AND StudyID = ?",(sampleid,expid))
+	else:
+		db.cur.execute("SELECT SampleID FROM Samples WHERE SampleName = ?",sampleid)
+	res=db.cur.fetchone()
+	if res:
+		isnew=False
+		suid=res[0]
+		au.Debug(0,"Found SampleID",sampleid,"SUID=",suid)
+		# see we don't have a double entry for same sampleid
+		res=db.cur.fetchone()
+		if res:
+			self.Debug(10,"SampleID found twice!!!")
+	else:
+		if addnew:
+			db.cur.execute("INSERT INTO Samples (SampleName,StudyID,TotalReads) VALUES (?,?,?)",(sampleid,expid,0))
+			suid=db.cur.lastrowid
+			au.Debug(0,"SampleID",sampleid,"Not found so added, new SUID=",suid)
+		else:
+			au.Debug(6,"Sample not found and not added",sampleid)
+			suid=False
+	return suid,isnew
+
+
+def AddSample(db,sampleid,seqid,count):
+	"""
+	add count reads to position sampleid,seqid
+	important: if it already exists, it is overwritten!!!!
+	input:
+	db
+	sampleid - from the Samples table
+	seqid - int (from the Sequences table)
+	count - the fraction it was observed
+	"""
+	db.cur.execute("INSERT INTO Reads (SeqID,SampleID,Reads) VALUES(?,?,?)",(seqid,sampleid,count))
+	au.Debug(0,"Added seqid ",seqid,"to sample",sampleid,"counts",count)
+
+
+
+def AddFileToDB(db,expid,filename):
+	"""
+	load a deblurred sample file into the database
+	File needs to be .ref.fa format
+	(fasta, XXX;size=SIZE;\nSequence (one line))
+	and one line per sequence (after the > line - not split)
+	input:
+	db
+	expid - from where the sample is taken - integer
+	sampleid - the name of the sample
+	filename - file containing the .ref.fa of the sample
+	"""
+	# get the total number of reads
+	totalreads=0
+	au.Debug(2,"* scanning total reads from file",filename)
+	afile=open(filename,'rU')
+	for cline in afile:
+		# get the size from the mark duplicaed in usearch by looking for ;size=NNN;
+		sizematch=re.search('(?<=;size=)\d+',cline)
+		numReads=int(sizematch.group(0))
+		totalreads += numReads
+		seqline=afile.next().strip()
+	afile.close()
+	au.Debug(2,"total reads",totalreads)
+	if totalreads==0:
+		au.Debug(3,"*** no reads in file",filename)
+		return()
+	if totalreads<self.MINEXPREADS:
+		au.Debug(2,"*** not enough reads in file",filename,' it was',totalreads)
+		return()
+
+	# get sampleid from file name
+	# just remove the '.fasta.ref.fa'
+	sampleid=filename[:-13]
+	sampleid=basename(sampleid)
+	# get the sampleUID and upate total reads
+	suid,isnew=GetSuidFromSampleID(db,sampleid,expid,addnew=True)
+	db.cur.execute("UPDATE Samples SET TotalReads=? WHERE SampleName=? AND StudyID=?",(totalreads,suid,expid))
+	if not isnew:
+		au.Debug(6,"Sample already exists - deleting read file entries")
+		db.cur.execute("DELETE FROM Reads WHERE SampleID=?",[suid])
+
+	# and now read the sequences
+	afile=open(filename,'rU')
+	au.Debug(0,"inserting reads into table in file",filename)
+	for cline in afile:
+		sizematch=re.search('(?<=;size=)\d+',cline)
+		numReads=int(sizematch.group(0))
+		seqline=afile.next().strip()
+		# get the greengenes ID and number of reads
+		seqID=GetSeqID(db,seqline,insert=True)
+		AddSample(db,suid,seqID,float32(numReads)/totalreads)
+
+	afile.close()
+	au.Debug(2,"finished reading",filename)
+	db.con.commit()
+	db.Debug(2,"Commited")
+
+
+def GetStudyIDFromMap(mapfilename):
+	"""
+	get the study_id value from the mapping file if it exists
+	otherwise, return False
+	"""
+
+	mf=open(mapfilename,'rU')
+	reader=csv.DictReader(mf,delimiter='\t')
+	cline=reader.next()
+	cline=au.dictupper(cline)
+	if 'STUDY_ID' in cline:
+		studyid=cline['STUDY_ID']
+	else:
+		au.Debug(6,"STUDY_ID not found in map file",mapfilename)
+		studyid=False
+	mf.close()
+	return studyid
+
+
+def AddMap(db,experimentname,mapfilename,studyid=False,deleteifpresent=False,samplesadded=False):
+	"""
+	Add a tsv mapping file to the database db mapping file and experiment tables
+
+	input:
+	db - the database
+	experimentname - name of the experiment (for the experiment table)
+	mapfilename - name of the mapping file to add
+	studyid - the id of the study or false to get from mapping file
+	"""
+
+	au.Debug(1,"Adding experiment to mapping database")
+	# get the studyid
+	if not studyid:
+		studyid=GetStudyIDFromMap(mapfilename)
+		if not studyid:
+			raise ValueError("study_id not supplied and not in mapping file")
+			return()
+
+	# test if studyid already in database:
+	db.cur.execute("SELECT * FROM Experiments WHERE StudyID=?",[studyid])
+	res=db.cur.fetchone()
+	if res:
+		if not deleteifpresent:
+			au.Debug(10,"Experiment",experimentname,"from mapfile",mapfilename,"already in database. id=",studyid)
+			return()
+		# if present and deleteifpresent - delete it!
+		else:
+			db.cur.execute("DELETE FROM Experiments WHERE StudyID=?",[studyid])
+			au.Debug(6,"Study already in database - deleted it",studyid)
+
+	# add study to Experiments table
+	db.cur.execute("INSERT INTO Experiments (StudyID,ExpName,MapFileName) VALUES (?,?,?)",(studyid,experimentname,mapfilename))
+	au.Debug(1,"Added experiment to experiments table")
+
+	mf=open(mapfilename,'rU')
+	reader=csv.DictReader(mf,delimiter='\t')
+	for cline in reader:
+		cline=au.dictupper(cline)
+		# get the sampleids and the studyid
+		try:
+			sampleid=cline['#SAMPLEID']
+			au.Debug(0,"SampleID",sampleid,"found in map",mapfilename)
+		except:
+			au.Debug(10,"#SampleID not found in map file",mapfilename)
+			return()
+		# if we have a list of samples with enough reads (from addbiomtable) and this sample didn't have enough reads - don't add it
+		if samplesadded:
+			if sampleid not in samplesadded:
+				continue
+		suid,isnew=GetSuidFromSampleID(db,sampleid=sampleid,expid=studyid,addnew=True)
+		if not isnew:
+			au.Debug(1,"Sample already exists - deleting mapping file entries")
+			db.cur.execute("DELETE FROM Maps WHERE SampleID=?",[suid])
+		for (field,val) in cline.items():
+			db.cur.execute("INSERT INTO Maps (SampleID,Field,Value) VALUES (?,?,?)",(suid,field,val))
+	mf.close()
+	db.con.commit()
+	au.Debug(1,"Added experiment to mapping database")
+
+
+def AddBiomToDb(db,studyid,tablename,seqlength=False):
+	"""
+	load a deblurred biom table into the database
+	input:
+	db
+	studyid - experiment for the biom table (studyid or other int)
+	tablename - the experiment biom table file name (needs to be deblurred!)
+	seqlength - False to use the actual lengths, >0 to clip all sequences to that length
+
+	output:
+	samplesadded - dict keyed with the samplenames of samples added to the database (i.e. >MINEXPREADS reads) value is the sampleid
+	"""
+
+	# minimal total number of reads per experiment in order to add to database
+	READTHRESHABS=4
+	# minimal mean number of reads per sample in order to add to database
+	READTHRESHPERC=4.0/(10000*100)
+	# minimal number of reads per sample in order to add sample to database
+	MINEXPREADS=1000
+
+	# load the biom table
+	table = biom.load_table(tablename)
+	samples=table.ids(axis='sample')
+	seqs=table.ids(axis='observation')
+	data=table.matrix_data.todense().A
+	totreads=np.sum(data,axis=0)
+	tottotreads=np.sum(totreads)
+	samplesadded={}
+	au.Debug(2,"Loaded table %s, %d sequences, %d samples" % (tablename,len(seqs),len(samples)))
+	for idx,csamp in enumerate(samples):
+		if totreads[idx]<MINEXPREADS:
+			au.Debug(1,"not enough reads in sample %s (%d)" % (csamp,totreads[idx]))
+			continue
+		suid,isnew=GetSuidFromSampleID(db,csamp,studyid,addnew=True)
+		samplesadded[csamp]=suid
+		# and delete reads if already in the database
+		if not isnew:
+			db.cur.execute("SELECT TotalReads FROM Samples WHERE SampleID = ?",[suid])
+			res=db.cur.fetchone()
+			if res>0:
+				au.Debug(6,"Sample already exists - deleting read file entries")
+				db.cur.execute("DELETE FROM Reads WHERE SampleID=?",[suid])
+		# and update the total reads
+		db.cur.execute("UPDATE Samples SET TotalReads=? WHERE SampleID=?",(totreads[idx],suid))
+
+	seqdict={}
+	for idx,cseq in enumerate(seqs):
+		if seqlength:
+			# trim the sequence
+			cseq=cseq[:seqlength]
+			# and make sure it is in upper case
+			cseq=cseq.upper()
+		if cseq not in seqdict:
+			seqdict[cseq]=[]
+		seqdict[cseq].append(idx)
+
+	au.Debug(2,"After trimming to len %s, %d sequences remaining" % (str(seqlength),len(seqdict)))
+	for k,v in seqdict.items():
+		if len(v)>1:
+			allfreq=np.sum(data[v,:],axis=0)
+		else:
+			allfreq=data[v,:].flatten()
+		au.Debug(1,"V is %s (%d)" % (v,len(v)))
+		au.Debug(1,"length of allfreq is %d" % np.size(allfreq,0))
+		# test if we have not enough reads don't save this sequence
+		ctot=np.sum(allfreq)
+		if ctot<READTHRESHABS or ctot<tottotreads*READTHRESHPERC:
+			au.Debug(1,"Not enough reads for sequence %s (%f)" % (k,ctot))
+			continue
+
+		seqID=GetSeqID(db,k,insert=True)
+		for sampidx,csamp in enumerate(samples):
+			au.Debug(0,"Sample %s" % csamp)
+			if csamp not in samplesadded:
+				continue
+			if allfreq[sampidx]==0:
+				continue
+			AddSample(db,samplesadded[csamp],seqID,np.float32(allfreq[sampidx])/totreads[sampidx])
+			au.Debug(1,"added sequence %s in sample (%s)" % (k,csamp))
+
+	au.Debug(2,"added biom table",tablename)
+	au.Debug(1,"deleting samples with not enough reads")
+	db.con.commit()
+	au.Debug(2,"Commited")
+	return samplesadded

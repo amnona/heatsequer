@@ -601,7 +601,8 @@ class AppWindow(QtGui.QMainWindow):
 			self.addexp(expdat)
 			# for biom table show the number of reads`
 			if tabletype=='biom':
-				analysis.analyzenumreads(expdat)
+#				analysis.analyzenumreads(expdat)
+				pass
 
 	def pickleload(self):
 		fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open pickle file'))
