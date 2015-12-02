@@ -889,7 +889,7 @@ class AppWindow(QtGui.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getDouble(self,'Filter Mean','Minimal mean fraction of reads per sample bacteria ',value=0.01,min=0,max=1,decimals=2)
+			val,ok=QtGui.QInputDialog.getDouble(self,'Filter Mean','Minimal mean fraction of reads per sample bacteria ',value=0.01,min=0,max=1,decimals=5)
 			if ok:
 				newexp=analysis.filtermean(cexp,meanval=val*10000)
 				newexp.studyname=newexp.studyname+'_fmean'
