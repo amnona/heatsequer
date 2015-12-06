@@ -29,15 +29,50 @@ from scipy import stats
 
 def initdb(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
 	db=dbstart()
-	db=LoadOntologies(db)
-	db=InitOntologyGraph(db,[0],'HOST_TAXID','NCBITAX')
-	db=InitOntologyGraph(db,[0],'ENV_MATTER','ENVO')
-	db=InitOntologyGraph(db,[0],'ENV_BIOM','ENVO')
-	db=InitOntologyGraph(db,[0],'ENV_FEATURE','ENVO')
-	db=InitOntologyGraph(db,[0],'COUNTRY','GAZ')
-	db=InitOntologyGraph(db,[0],'BODY_SITE','UBERON')
+	db=initontologies(db)
 	return db
 
+
+def getontonames(db):
+	"""
+	returns a list of all the ontology fields to load and their ontology types
+	input:
+	db : dbstruct
+	output:
+	ontonames : list of strings
+		the names of all fields to load for ontology plots
+	ontotypes : list of strings
+		the ontology name for each field
+	"""
+	ontonames=["HOST_TAXID","ENV_MATTER","ENV_FEATURE","ENV_BIOM","COUNTRY","BODY_SITE"]
+	ontotypes=["NCBITAX",   "ENVO",      "ENVO",       "ENVO",    "GAZ",    "UBERON"]
+	return ontonames,ontotypes
+
+
+def initontologies(db):
+	"""
+	load and preprocess the ontologies for the database
+	input:
+	db : dbstruct
+		the database (from dbstart())
+	output:
+	db : dbstruct
+		after loading and initializing ontologies
+	"""
+
+	db=LoadOntologies(db)
+	ontofields,ontonames = getontonames(db)
+	for contofield,contotype in zip(ontofields,ontonames):
+		db=InitOntologyGraph(db,[0],contofield,contotype)
+
+	# db=InitOntologyGraph(db,[0],'HOST_TAXID','NCBITAX')
+	# db=InitOntologyGraph(db,[0],'ENV_MATTER','ENVO')
+	# db=InitOntologyGraph(db,[0],'ENV_BIOM','ENVO')
+	# db=InitOntologyGraph(db,[0],'ENV_FEATURE','ENVO')
+	# db=InitOntologyGraph(db,[0],'COUNTRY','GAZ')
+	# db=InitOntologyGraph(db,[0],'BODY_SITE','UBERON')
+	db.ontologyinit=True
+	return db
 
 
 def dbconnect(db,dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
@@ -60,10 +95,13 @@ def dbconnect(db,dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
 
 class dbstruct:
 	def __init__(self):
+		# True if ontology is initialized, False if not ready yet (need to call InitOntologies)
+		self.ontologyinit=False
+
 		self.Ontology={}
 		self.OntologyNames={}
 		self.OntologyIDs={}
-	# hold the built graph structures for fast drawing (from InitOntoGraph())
+		# hold the built graph structures for fast drawing (from InitOntoGraph())
 		self.OntoGraph={}
 		self.dbfile=''
 		self.recPrecBalance=10
@@ -71,7 +109,12 @@ class dbstruct:
 def dbstart(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
 	'''
 	start the database structure and connect to database
-	dbname - the name of the database to connect to
+	input:
+	dbname : string
+		the name of the database to connect to
+	output:
+	db : dbstruct
+		the database variable
 	'''
 
 	db=dbstruct()
@@ -370,6 +413,11 @@ def PlotOntologyGraph(db,seq,field,tofig=False,toax=False):
 	"""
 
 	import networkx as nx
+
+	if not db.ontologyinit:
+		Debug(8,"Ontologies not initialized - initializing now (may take a minute)")
+		db=initontologies(db)
+		Debug(8,"Ontologies initialized")
 
 	pv=GetSeqVec(db,seq)
 	if len(pv)==0:

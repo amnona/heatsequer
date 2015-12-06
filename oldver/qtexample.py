@@ -126,15 +126,45 @@ class BiClusterWindow(QtGui.QDialog):
 		self.lNumBacteria.setText(str(len(self.seqs)))
 		self.lSamples.clear()
 		self.lBacteria.clear()
+
+		# get the new bacteria and sample order
+		allsamp=np.arange(len(self.cexp.samples))
+		allbact=np.arange(len(self.cexp.seqs))
+
+		x=np.setdiff1d(allsamp,self.samples)
+		sampo=np.concatenate((self.samples,x))
+		ubact=[]
+		for cseq in self.seqs:
+			ubact.append(self.cexp.seqdict[cseq])
+		bacto=np.concatenate((ubact,np.setdiff1d(allbact,ubact)))
+		self.cexp.bactorder=bacto
+		self.cexp.samporder=sampo
+
 		# if we have enough bacteria and samples, update the info list
 		if len(self.seqs)>=5 and len(self.samples)>=5:
 			sampmd=analysis.testmdenrichmentall(self.cexp,self.samples)
 			for cmd in sampmd:
-				self.lSamples.addItem("%s - %s (p:%f o:%d e:%f)" % (cmd['field'],cmd['val'],cmd['pval'],cmd['observed'],cmd['expected']))
+				if cmd['observed']<cmd['expected']:
+					ccolor=QtGui.QColor(155,0,0)
+				else:
+					ccolor=QtGui.QColor(0,155,0)
+				item = QtGui.QListWidgetItem()
+				item.setText("%s - %s (p:%f o:%d e:%f)" % (cmd['field'],cmd['val'],cmd['pval'],cmd['observed'],cmd['expected']))
+				item.setTextColor(ccolor)
+				self.lSamples.addItem(item)
 			if self.cooldb:
 				bmd=cooldb.testenrichment(self.cooldb,self.cexp.seqs,self.seqs)
+				bmd=analysis.sortenrichment(bmd)
 				for cbmd in bmd:
-					self.lBacteria.addItem("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
+					if cbmd['observed']<cbmd['expected']:
+						ccolor=QtGui.QColor(155,0,0)
+					else:
+						ccolor=QtGui.QColor(0,155,0)
+					item = QtGui.QListWidgetItem()
+					item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
+					item.setTextColor(ccolor)
+					self.lBacteria.addItem(item)
+	#					self.lBacteria.addItem("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
 
 
 	def view(self):
@@ -416,9 +446,11 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainFilterTaxonomy.clicked.connect(self.filtertaxonomy)
 		self.bFilterPresence.clicked.connect(self.filterpresence)
 		self.bFilterMean.clicked.connect(self.filtermean)
+		self.bSortAbundance.clicked.connect(self.sortabundance)
 		self.bJoinFields.clicked.connect(self.joinfields)
 		self.bJoinExps.clicked.connect(self.joinexps)
 		self.bBicluster.clicked.connect(self.bicluster)
+		self.bEnrichment.clicked.connect(self.enrichment)
 		self.bFilterFasta.clicked.connect(self.filterfasta)
 		self.bRenormalize.clicked.connect(self.renormalize)
 		self.bSubsample.clicked.connect(self.subsample)
@@ -726,6 +758,7 @@ class AppWindow(QtGui.QMainWindow):
 				if compareall:
 					value2=False
 				auc=analysis.BaysZeroClassifyTest(cexp,field,value1,value2,numiter=5)
+				au.Debug(6,"AUC is %f" % auc)
 
 	def filtersamples(self):
 		items=self.bMainList.selectedItems()
@@ -745,6 +778,29 @@ class AppWindow(QtGui.QMainWindow):
 				exclude=filtersampleswin.cExclude.checkState()
 				exact=filtersampleswin.cExact.checkState()
 				newexp=analysis.filtersamples(cexp,field,value,exclude=exclude,exact=exact)
+				if overwrite==0:
+					newexp.studyname=newname
+					self.addexp(newexp)
+				else:
+					self.replaceexp(newexp)
+
+	def sortabundance(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			filtersampleswin = FilterSamplesWindow(cexp)
+			res=filtersampleswin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				field=str(filtersampleswin.cField.currentText())
+				value=str(filtersampleswin.tValue.text())
+				newname=str(filtersampleswin.tNewName.text())
+				overwrite=filtersampleswin.cOverwrite.checkState()
+				exact=filtersampleswin.cExact.checkState()
+				newexp=analysis.sortbyfreq(cexp,field,value,exact=exact)
 				if overwrite==0:
 					newexp.studyname=newname
 					self.addexp(newexp)
@@ -806,7 +862,11 @@ class AppWindow(QtGui.QMainWindow):
 			biclusterwin = BiClusterWindow(cexp,cdb=self.cooldb,bdb=self.bactdb)
 			res=biclusterwin.exec_()
 			if res==QtGui.QDialog.Accepted:
-				print('lala')
+				newexp=analysis.reorderbacteria(cexp,cexp.bactorder)
+				newexp=analysis.reorderbacteria(newexp,cexp.samporder)
+				newexp.studyname=newexp.studyname+'_bicluster'
+				newexp.filters.append("bicluster")
+				self.addexp(newexp)
 
 #			newexp=analysis.bicluster(cexp,method='binary')
 #			newexp.studyname=newexp.studyname+'_bicluster'
@@ -815,6 +875,20 @@ class AppWindow(QtGui.QMainWindow):
 #			if len(newexp.samples)>5 and len(newexp.seqs)>5:
 #				pv=analysis.testbactenrichment(cexp,newexp.seqs,cdb=False,bdb=False,dbexpres=False,translatestudy=False)
 
+	def enrichment(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			if self.cooldb:
+				evals=cooldb.testenrichment(self.cooldb,[],cexp.seqs,freqs=np.log(1+np.mean(cexp.data,axis=1)))
+#				sevals=analysis.sortenrichment(evals,method='val')
+				sevals=analysis.sortenrichment(evals,method='single',epsilon=1)
+				for cval in sevals[::-1]:
+					print('%s - obs:%f catfreq:%f' % (cval['description'],cval['observed'],cval['expected']))
 
 	def joinexps(self):
 		items=self.bMainList.selectedItems()
@@ -903,6 +977,7 @@ class AppWindow(QtGui.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
+			analysis.analyzenumreads(cexp)
 			val,ok=QtGui.QInputDialog.getInt(self,'Subsample','Number of reads per sample',value=10000,min=0)
 			if ok:
 				newexp=analysis.subsample(cexp,numreads=val)
@@ -942,6 +1017,7 @@ def main():
 	app = QtGui.QApplication(sys.argv)
 	print("almost ready")
 	window = AppWindow()
+	window.show()
 	sys.exit(app.exec_())
 
 

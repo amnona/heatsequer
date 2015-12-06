@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
+# amnonscript
+
 """
-amnonscript
 analysis.py
 Analyze biom tables
 
@@ -16,7 +17,7 @@ exp=analysis.load(tablename='/Users/amnon/Projects/shorttime/short.clean.single.
 analysis.plotexp(exp)
 """
 
-__version__ = "0.2"
+__version__ = "0.9"
 
 import amnonutils as au
 
@@ -46,6 +47,7 @@ from pdb import set_trace as XXX
 import bactdb
 import cooldb
 #import plotgui
+
 
 class experiment:
 	def __init__(self):
@@ -479,8 +481,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	else:
 		newexp.ontofigname=False
 
-	print('lala')
-	# if want gui, open it
+	# if we want gui, open it
 	if usegui:
 		import plotgui
 		guiwin = plotgui.PlotGUIWindow(newexp)
@@ -1179,7 +1180,7 @@ def findmislabels(expdat,field,distmetric='bc'):
 
 def plotnumotus(expdat,newfig=True,threshold=0.001):
 	"""
-	normalized histogram of number of OTUs per sample
+	normalized histogram of number of OTUs per sample (alpha diversity)
 	input:
 	expdat
 	newfig - True to plot a new figure
@@ -1379,6 +1380,7 @@ def sortbyfreq(expdat,field=False,value=False,exact=False):
 	svals,sidx=au.isort(meanvals)
 
 	newexp=reorderbacteria(expdat,sidx)
+	newexp.filters.append("sort by freq field=%s value=%s" % (field,value))
 	return newexp
 
 
@@ -1805,7 +1807,7 @@ def filterfasta(expdat,filename,exclude=False,subseq=False):
 	newexp - the filtered experiment
 	"""
 
-	seqs=au.readfastaseqs(filename)
+	seqs,headers=au.readfastaseqs(filename)
 	newexp=filterseqs(expdat,seqs,exclude=exclude,subseq=subseq)
 	filt='Filter sequences from file '+filename
 	if exclude:
@@ -2031,11 +2033,11 @@ def testbicluster(expdat,numiter=5,numruns=100):
 	xlabel('# Samples in cluster')
 	ylabel('# Bacteria in cluster')
 
+
 def savebiom(expdat,filename):
 	"""
 	save experiment to text biom table and mapping file
 	"""
-
 	mf=open(filename+'.map.txt','w')
 	mf.write('#SampleID')
 	for cfield in expdat.fields:
@@ -2752,7 +2754,44 @@ def testmdenrichmentall(expdat,samples,maxpv=0.001,fdr=0.05):
 	for ckeep in keep:
 		upv.append(allpv[ckeep])
 		au.Debug(6,allpv[ckeep])
+
+	upv=sortenrichment(upv)
 	return upv
+
+
+
+def sortenrichment(enrich,method='bidirectional',epsilon=2):
+	"""
+	sort an enrichment list (with 'observed', 'expected' dict values) according to effect size
+	the effect size is abs(log(obs/(expected+EPS)))
+	input:
+	enrich - a list of dict with 'observed' abd 'expected' keys (i.e.e from testmdenrichmentall)
+	method:
+		bidirectional - use abs(log(o+EPS)/log(E+EPS))
+		single - use log(o)/log(E)
+		val - use o
+	epsilon - the value used to reduce effect of low counts (a+eps)/(b+eps)
+
+	output:
+	newenrich - the sorted list
+	"""
+
+	# get the effect size
+	effects=[]
+	for citem in enrich:
+		if method=='bidirectional':
+			lograt=np.log2((citem['observed']+epsilon)/(epsilon+citem['expected']))
+			effects.append(np.abs(lograt))
+		elif method=='single':
+			lograt=np.log2((citem['observed'])/np.log2(citem['expected'])+epsilon)
+			effects.append(lograt)
+		elif method=='val':
+			effects.append(citem['observed'])
+		else:
+			au.Debug('method %s not supported' % method)
+	si=np.argsort(effects)
+	newenrich=au.reorder(enrich,si[::-1])
+	return newenrich
 
 
 def toorigreads(expdat,inplace=False):
@@ -3079,7 +3118,10 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 		diff=np.vstack([diff,cdiff])
 		notnan=np.where(np.isfinite(cdiff))[0]
 		notnan=np.intersect1d(notnan,odiffnotnan)
-		cdiffsum=float(np.sum((cdiff[notnan]>0)==(odiff[notnan]>0)))/len(notnan)
+		if len(notnan)>0:
+			cdiffsum=float(np.sum((cdiff[notnan]>0)==(odiff[notnan]>0)))/len(notnan)
+		else:
+			cdiffsum=np.nan
 		diffsum.append(cdiffsum)
 	if sortit:
 		si=np.argsort(diff[0,:])
@@ -3143,3 +3185,65 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean'):
 		cdiff=np.log2(cval1/cval2)
 		diff.append(cdiff)
 	return diff
+
+def saveseqsforrdp(expdat,outfilename):
+	"""
+	save sequences of an experiment into a fasta file
+	with the header identical to the sequence (for easy reloading of rdp taxonomy)
+	input:
+	expdat
+	outfilename - name of the output fasta file
+	"""
+	fl=open(outfilename,'w')
+	for cseq in expdat.seqs:
+		fl.write('>'+cseq+'\n')
+		fl.write(cseq+'\n')
+	fl.close()
+
+
+def loadrdptax(expdat,rdpfilename,fastaname=False,threshold=60):
+	"""
+	load rdp taxonomy (the output of download allrank in the rdp classifier website) and add to biom table
+	input:
+	expdat - the biom table for which the taxonomy was assigned (sequenced were saved)
+	rdpfilename - name of the saved allrank rdp assignment
+	fastaname - name of fasta file used for rdp assignment (if it was not from saveseqsforrdp) or False if sequences are in the header of the fasta
+	threshold - the assignemt probability threshold under which to not include the assignment (for each level)
+	"""
+
+	if fastaname:
+		seqs,headers=au.readfastaseqs(fastaname)
+		hdict={}
+		for idx,chead in enumerate(headers):
+			hdict[chead]=seqs[idx]
+
+	fl=open(rdpfilename,'r')
+	for cline in fl:
+		cline=cline.rstrip()
+		cdat=cline.split(';')
+		# skip header lines
+		if len(cdat)<2:
+			continue
+		# check if sequence in experiment
+		cseq=cdat[0]
+		if fastaname:
+			if cdat[0] in hdict:
+				cseq=hdict[cseq]
+			else:
+				au.Debug(6,'sequence %s not found in fasta file' % cseq)
+		if not cseq in expdat.seqdict:
+			au.Debug(6,'sequence %s not found in experiment' % cseq)
+			XXX()
+			continue
+		cpos=expdat.seqdict[cseq]
+		ctax=''
+		for idx in np.arange(2,len(cdat),2):
+			cp=cdat[idx+1].rstrip('%')
+			if float(cp)<60:
+				break
+			ctax+=';'
+			ctax+=cdat[idx]
+		expdat.tax[cpos]=ctax
+	fl.close()
+	expdat.filters.append("loaded rdp taxonomy from file %s" % rdpfilename)
+	return(expdat)

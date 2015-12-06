@@ -102,7 +102,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -282,6 +282,19 @@
        <string>Renormalize</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="bSortAbundance">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>10</y>
+        <width>131</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Sort Abundance</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
@@ -324,6 +337,19 @@
       </property>
       <property name="text">
        <string>Classifier</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="bEnrichment">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>100</y>
+        <width>115</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Enrichment</string>
       </property>
      </widget>
     </widget>

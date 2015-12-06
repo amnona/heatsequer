@@ -43,6 +43,8 @@ class cooldb:
 		# True if we also loaded the greengenes ids from getggids
 		self.biomggloaded=False
 
+		# number of times each description appeats
+		self.numtimes={}
 
 def loaddb(dbname='./db/coolseqs.txt'):
 #def loaddb(dbname='./db/coolseqs.gg97-135.txt'):
@@ -256,28 +258,53 @@ def savedb(db,filename):
 	au.Debug(4,'Saved cooldb',filename)
 
 
-def testenrichment(db,allseqs,group,maxfval=0.05):
+def preparealldbvals(db):
+	"""
+	calculate the amount of times each description appears
+	inputL
+	db
+
+	output:
+	db - with the added db.numtimes dict for each description
+	"""
+	db.numtimes={}
+	for cdat in db.dat:
+		if cdat['bacteria_description'] in db.numtimes:
+			db.numtimes+=1
+		else:
+			db.numtimes=1
+	return db
+
+
+def testenrichment(db,allseqs=[],group=[],maxfval=0.05,freqs=[]):
 	"""
 	test for database entries enriched in sequences from group compared to allseqs (all the sequences)
 	input:
 	db - the coolseq database
-	allseqs - a list of all the sequences
+	allseqs - a list of all the sequences or [] to compare to all the database
 	group - a list of subgroup of sequences to test vs allseqs
 	maxfval - the maximal fdr value
+	freqs - the mean frequency of each sequence, or [] to not use frequency weighing
 
 	output:
 	newplist - a sorted list of dict for annotaions which are below fdr ('description','pval','observed','expected')
 	"""
 
-	alllen=len(allseqs)
+	if len(allseqs)>0:
+		alllen=len(allseqs)
+	else:
+		alllen=len(db.dat)
 	glen=len(group)
-	allshort=[]
-	for cseq in allseqs:
-		allshort.append(cseq[:89])
+
+	if len(allseqs)>0:
+		allshort=[]
+		for cseq in allseqs:
+			allshort.append(cseq[:89])
+		asdict=au.listtodict(allshort)
+
 	groupshort=[]
 	for cseq in group:
 		groupshort.append(cseq[:89])
-	asdict=au.listtodict(allshort)
 	gsdict=au.listtodict(groupshort)
 
 	dbdesc=[]
@@ -299,13 +326,16 @@ def testenrichment(db,allseqs,group,maxfval=0.05):
 				continue
 			usedseq[cseq]=True
 			cseqs=cseq[:89]
-			if not cseqs in asdict:
-				continue
-			for opos in asdict[cseqs]:
-				oseq=allseqs[opos]
-				mlen=min(len(oseq),len(cseq))
-				if not oseq[:mlen]==cseq[:mlen]:
+			if len(allseqs)>0:
+				if not cseqs in asdict:
 					continue
+				for opos in asdict[cseqs]:
+					oseq=allseqs[opos]
+					mlen=min(len(oseq),len(cseq))
+					if not oseq[:mlen]==cseq[:mlen]:
+						continue
+					allmatch+=1
+			else:
 				allmatch+=1
 			if not cseqs in gsdict:
 				continue
@@ -314,10 +344,16 @@ def testenrichment(db,allseqs,group,maxfval=0.05):
 				mlen=min(len(oseq),len(cseq))
 				if not oseq[:mlen]==cseq[:mlen]:
 					continue
-				groupmatch+=1
+				if len(freqs)>0:
+					groupmatch+=freqs[opos]
+				else:
+					groupmatch+=1
 		pnull=float(allmatch)/alllen
 #		p1=stats.binom.cdf(groupmatch,glen,pnull)
-		p2=stats.binom.cdf(glen-groupmatch,glen,1-pnull)
+		if len(allseqs)>0:
+			p2=stats.binom.cdf(glen-groupmatch,glen,1-pnull)
+		else:
+			p2=0
 #		p=min(p1,p2)
 		p=p2
 		allp.append(p)

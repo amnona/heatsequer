@@ -8,7 +8,7 @@ imported from plotwin.py when you plotexp() and set usegui=True
 
 # amnonscript
 
-__version__ = "0.9"
+__version__ = "0.91"
 
 
 import heatsequer as hs
@@ -48,7 +48,7 @@ class PlotGUIWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(PlotGUIWindow, self).__init__()
-		uic.loadUi('./plotguiwindow.py', self)
+		uic.loadUi('ui/plotguiwindow.py', self)
 		self.bGetSequence.clicked.connect(self.getsequence)
 		self.bExport.clicked.connect(self.export)
 		self.bView.clicked.connect(self.view)
@@ -68,7 +68,9 @@ class PlotGUIWindow(QtGui.QDialog):
 			self.cPlotXField.addItem(cfield)
 
 		if self.cexp.seqdb:
-			for conto in self.cexp.seqdb.OntoGraph.keys():
+			ontofields,ontonames=hs.bactdb.getontonames(self.cexp.seqdb)
+			for conto in ontofields:
+#			for conto in self.cexp.seqdb.OntoGraph.keys():
 				self.cOntology.addItem(conto)
 
 

@@ -60,12 +60,15 @@ def readfastaseqs(filename):
 
 	output:
 	seqs - a list of sequences
+	headers - a list of the headers
 	"""
 	fl=open(filename,"rU")
 	cseq=''
 	seqs=[]
+	headers=[]
 	for cline in fl:
 		if cline[0]=='>':
+			headers.append(cline[1:].rstrip())
 			if cseq:
 				seqs.append(cseq)
 				cseq=''
@@ -73,7 +76,7 @@ def readfastaseqs(filename):
 			cseq+=cline.strip()
 	if cseq:
 		seqs.append(cseq)
-	return seqs
+	return seqs,headers
 
 
 def isort(clist,reverse=False):

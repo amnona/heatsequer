@@ -31,8 +31,6 @@ class JoinWindow(QtGui.QDialog):
 		self.cexp=expdat
 		self.cField1.addItems(expdat.fields)
 		self.cField2.addItems(expdat.fields)
-#		self.bOK.clicked.connect(self.OK)
-#		self.bCancel.clicked.connect(self.cancel)
 
 
 
@@ -468,18 +466,15 @@ class AppWindow(QtGui.QMainWindow):
 		self.bactdb=False
 		self.cooldb=False
 		try:
-			hs.Debug(6,'Loading sequence database')
-			self.bactdb=pickle.load(open('dbtest2.pickle'))
-			self.bactdb=hs.bactdb.dbconnect(self.bactdb)
+			hs.Debug(6,'Connecting to sequence database')
+			self.bactdb=hs.bactdb.dbstart()
 		except:
-			hs.Debug(9,'BactDB file not found')
+			hs.Debug(9,'sequence database file not found')
 		try:
 			hs.Debug(6,'Loading coolseq database')
 			self.cooldb=hs.cooldb.loaddb()
 		except:
 			hs.Debug(9,'CoolDB file not found')
-
-#		self.cooldb=pickle.load(open('cooldb.pickle'))
 
 
 		# put some experiments:
@@ -504,6 +499,8 @@ class AppWindow(QtGui.QMainWindow):
 		menuinfo = self.listMenu.addAction("Info")
 		self.connect(menuinfo, QtCore.SIGNAL("triggered()"), self.expinfo)
 		parentPosition = self.bMainList.mapToGlobal(QtCore.QPoint(0, 0))
+		menusavecommands = self.listMenu.addAction("Save commands")
+		self.connect(menusavecommands, QtCore.SIGNAL("triggered()"), self.menuSaveCommands)
 		self.listMenu.move(parentPosition + QPos)
 		self.listMenu.show()
 
@@ -560,6 +557,11 @@ class AppWindow(QtGui.QMainWindow):
 #		exec(cm)
 #		hs.Debug(7,'exported',cname)
 
+	def menuSaveCommands(self):
+		cname=str(self.bMainList.currentItem().text())
+		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment python commands','.py'))
+		hs.savecommands(self.explist[cname],fname)
+		QtGui.QMessageBox.information(self,'Analysis','experiment %s commands saved to file:\n%s' % (cname,fname))
 
 	def addexp(self,expdat):
 		"""
@@ -579,7 +581,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainList.addItem(expdname)
 		self.bMainList.clearSelection()
 		self.bMainList.setCurrentRow(self.bMainList.count()-1)
-
+		expdat.seqdb=self.bactdb
 
 	def replaceexp(self,expdat):
 		"""
@@ -1026,6 +1028,4 @@ def main():
 
 
 if __name__ == '__main__':
-#	bdb=pickle.load(open('bactdb.pickle'))
-#	print(bdb.OntoGraph.keys())
 	main()
