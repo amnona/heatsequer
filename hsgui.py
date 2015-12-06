@@ -1,22 +1,26 @@
 #!/usr/bin/env python
 
+
 """
-amnonscript
-full gui for the heatmap analysis
+heatsequer full gui
 """
 
+# amnonscript
+
+__version__ = "0.91"
+
+import heatsequer as hs
+
+
 import sys
-import amnonutils as au
 from PyQt4 import QtGui, uic, QtCore
 # import cPickle as pickle
 import cPickle as pickle
 import matplotlib
 matplotlib.use('Qt4Agg')
-import analysis
-import bactdb
-import cooldb
 import os.path
 import numpy as np
+
 
 class JoinWindow(QtGui.QDialog):
 	cexp=[]
@@ -45,7 +49,7 @@ class MetaDataDetailsWindow(QtGui.QDialog):
 
 	def values(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue.setText(val)
 
@@ -119,7 +123,7 @@ class BiClusterWindow(QtGui.QDialog):
 		self.bView.clicked.connect(self.view)
 
 	def bicluster(self):
-		newexp,seqs,samples=analysis.bicluster(self.cexp,method='binary',sampkeep=0,bactkeep=0,justcount=True)
+		newexp,seqs,samples=hs.bicluster(self.cexp,method='binary',sampkeep=0,bactkeep=0,justcount=True)
 		self.samples=samples[0]
 		self.seqs=seqs[0]
 		self.lNumSamples.setText(str(len(self.samples)))
@@ -142,7 +146,7 @@ class BiClusterWindow(QtGui.QDialog):
 
 		# if we have enough bacteria and samples, update the info list
 		if len(self.seqs)>=5 and len(self.samples)>=5:
-			sampmd=analysis.testmdenrichmentall(self.cexp,self.samples)
+			sampmd=hs.testmdenrichmentall(self.cexp,self.samples)
 			for cmd in sampmd:
 				if cmd['observed']<cmd['expected']:
 					ccolor=QtGui.QColor(155,0,0)
@@ -153,8 +157,8 @@ class BiClusterWindow(QtGui.QDialog):
 				item.setTextColor(ccolor)
 				self.lSamples.addItem(item)
 			if self.cooldb:
-				bmd=cooldb.testenrichment(self.cooldb,self.cexp.seqs,self.seqs)
-				bmd=analysis.sortenrichment(bmd)
+				bmd=hs.cooldb.testenrichment(self.cooldb,self.cexp.seqs,self.seqs)
+				bmd=hs.sortenrichment(bmd)
 				for cbmd in bmd:
 					if cbmd['observed']<cbmd['expected']:
 						ccolor=QtGui.QColor(155,0,0)
@@ -179,9 +183,9 @@ class BiClusterWindow(QtGui.QDialog):
 			ubact.append(cexp.seqdict[cseq])
 		bacto=np.concatenate((ubact,np.setdiff1d(allbact,ubact)))
 
-		newexp=analysis.reorderbacteria(cexp,bacto)
-		newexp=analysis.reordersamples(newexp,sampo,inplace=True)
-		analysis.plotexp(newexp,seqdb=self.bactdb,sortby=False,numeric=False,usegui=True,cdb=self.cooldb,showline=False)
+		newexp=hs.reorderbacteria(cexp,bacto)
+		newexp=hs.reordersamples(newexp,sampo,inplace=True)
+		hs.plotexp(newexp,seqdb=self.bactdb,sortby=False,numeric=False,usegui=True,cdb=self.cooldb,showline=False)
 
 
 class AdvPlotWindow(QtGui.QDialog):
@@ -212,7 +216,7 @@ class AdvPlotWindow(QtGui.QDialog):
 
 	def fieldvalues(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 
 	def usesort(self):
 		# unchecked
@@ -245,7 +249,7 @@ class SortSamplesWindow(QtGui.QDialog):
 
 	def fieldvalues(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 
 	def overwrite(self):
 		# unchecked
@@ -276,13 +280,13 @@ class DiffExpWindow(QtGui.QDialog):
 
 	def fieldvalues1(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue1.setText(val)
 
 	def fieldvalues2(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue2.setText(val)
 
@@ -313,13 +317,13 @@ class ClassifyWindow(QtGui.QDialog):
 
 	def fieldvalues1(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue1.setText(val)
 
 	def fieldvalues2(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue2.setText(val)
 
@@ -353,7 +357,7 @@ class FilterSamplesWindow(QtGui.QDialog):
 
 	def fieldvalues(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(analysis.getfieldvals(self.cexp,cfield))))
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue.setText(val)
 
@@ -464,27 +468,27 @@ class AppWindow(QtGui.QMainWindow):
 		self.bactdb=False
 		self.cooldb=False
 		try:
-			au.Debug(6,'Loading sequence database')
+			hs.Debug(6,'Loading sequence database')
 			self.bactdb=pickle.load(open('dbtest2.pickle'))
-			self.bactdb=bactdb.dbconnect(self.bactdb)
+			self.bactdb=hs.bactdb.dbconnect(self.bactdb)
 		except:
-			au.Debug(9,'BactDB file not found')
+			hs.Debug(9,'BactDB file not found')
 		try:
-			au.Debug(6,'Loading coolseq database')
-			self.cooldb=cooldb.loaddb()
+			hs.Debug(6,'Loading coolseq database')
+			self.cooldb=hs.cooldb.loaddb()
 		except:
-			au.Debug(9,'CoolDB file not found')
+			hs.Debug(9,'CoolDB file not found')
 
 #		self.cooldb=pickle.load(open('cooldb.pickle'))
 
 
 		# put some experiments:
-		au.Debug(6,'Loading sample experiment')
+		hs.Debug(6,'Loading sample experiment')
 		try:
-			expdat=analysis.load('./test_data/bears.clean.new.withtax.biom','./test_data/map.txt')
+			expdat=hs.load('./test_data/bears.clean.new.withtax.biom','./test_data/map.txt')
 			self.addexp(expdat)
 		except:
-			au.Debug(6,'Sample experiment not found. sorry')
+			hs.Debug(6,'Sample experiment not found. sorry')
 
 
 	def listItemRightClicked(self, QPos):
@@ -549,12 +553,12 @@ class AppWindow(QtGui.QMainWindow):
 	def menuExport(self):
 		cname=str(self.bMainList.currentItem().text())
 		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as biom',''))
-		analysis.savebiom(self.explist[cname],fname)
+		hs.savebiom(self.explist[cname],fname)
 		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as biom table and mapping file' % cname)
 #		cname=str(self.bMainList.currentItem().text())
 #		cm='global %s;%s=self.explist[cname]' % (cname,cname)
 #		exec(cm)
-#		au.Debug(7,'exported',cname)
+#		hs.Debug(7,'exported',cname)
 
 
 	def addexp(self,expdat):
@@ -570,7 +574,7 @@ class AppWindow(QtGui.QMainWindow):
 			expname=expdat.studyname+str(cnum)
 			cnum+=1
 		expdat.studyname=expname
-		expdname='%s (%s-S, %s-B)' % (expname,au.nicenum(len(expdat.samples)),au.nicenum(len(expdat.sids)))
+		expdname='%s (%s-S, %s-B)' % (expname,hs.nicenum(len(expdat.samples)),hs.nicenum(len(expdat.sids)))
 		self.explist[expdname]=expdat
 		self.bMainList.addItem(expdname)
 		self.bMainList.clearSelection()
@@ -612,7 +616,7 @@ class AppWindow(QtGui.QMainWindow):
 				fieldname1=str(joinwin.cField1.currentText())
 				fieldname2=str(joinwin.cField2.currentText())
 				newfieldname=str(joinwin.lineEdit.text())
-				expdat=analysis.joinfields(cexp,fieldname1,fieldname2,newfieldname)
+				expdat=hs.joinfields(cexp,fieldname1,fieldname2,newfieldname)
 				self.addexp(expdat)
 
 
@@ -628,12 +632,12 @@ class AppWindow(QtGui.QMainWindow):
 				tabletype='meta'
 			else:
 				tabletype='biom'
-			expdat=analysis.load(tablefname,mapfname,tabletype=tabletype)
+			expdat=hs.load(tablefname,mapfname,tabletype=tabletype)
 			expdat.studyname=expname
 			self.addexp(expdat)
 			# for biom table show the number of reads`
 			if tabletype=='biom':
-#				analysis.analyzenumreads(expdat)
+#				hs.analyzenumreads(expdat)
 				pass
 
 	def pickleload(self):
@@ -641,10 +645,10 @@ class AppWindow(QtGui.QMainWindow):
 		if fname:
 			fl=open(fname,'r')
 			expdat=pickle.load(fl)
-			if isinstance(expdat,analysis.experiment):
+			if isinstance(expdat,hs.experiment):
 				self.addexp(expdat)
 			else:
-				au.Debug(9,'Not an experiment pickle!')
+				hs.Debug(9,'Not an experiment pickle!')
 				print(type(expdat))
 
 
@@ -652,7 +656,7 @@ class AppWindow(QtGui.QMainWindow):
 		items=self.bMainList.selectedItems()
 		for citem in items:
 			cname=str(citem.text())
-			analysis.plotexp(self.explist[cname],usegui=True,sortby=False,seqdb=self.bactdb,cdb=self.cooldb)
+			hs.plotexp(self.explist[cname],usegui=True,sortby=False,seqdb=self.bactdb,cdb=self.cooldb)
 
 
 	def advplot(self):
@@ -682,7 +686,7 @@ class AppWindow(QtGui.QMainWindow):
 					sortfield=False
 				else:
 					sortfield=str(dwin.cField.currentText())
-				analysis.plotexp(cexp,sortby=sortfield,numeric=numeric,showline=showline,minreads=minreads,usegui=True,cdb=self.cooldb,seqdb=self.bactdb)
+				hs.plotexp(cexp,sortby=sortfield,numeric=numeric,showline=showline,minreads=minreads,usegui=True,cdb=self.cooldb,seqdb=self.bactdb)
 
 
 	def filterfasta(self):
@@ -703,7 +707,7 @@ class AppWindow(QtGui.QMainWindow):
 				if not newname:
 					newname=cexp.studyname+'-ffa'
 				overwrite=filterfastawin.cOverwrite.checkState()
-				newexp=analysis.filterfasta(cexp,filename,exclude=exclude,subseq=pmatch)
+				newexp=hs.filterfasta(cexp,filename,exclude=exclude,subseq=pmatch)
 				if overwrite==0:
 					newexp.studyname=newname
 					self.addexp(newexp)
@@ -731,9 +735,9 @@ class AppWindow(QtGui.QMainWindow):
 				if compareall:
 					value2=False
 				if method=='all':
-					newexp=analysis.getdiffsigall(cexp,field,value1,value2)
+					newexp=hs.getdiffsigall(cexp,field,value1,value2)
 				else:
-					newexp=analysis.getdiffsig(cexp,field,value1,value2,method=method)
+					newexp=hs.getdiffsig(cexp,field,value1,value2,method=method)
 				if newexp:
 					newexp.studyname=newname+'_'+field
 					self.addexp(newexp)
@@ -757,8 +761,8 @@ class AppWindow(QtGui.QMainWindow):
 				compareall=classifywin.cAll.checkState()
 				if compareall:
 					value2=False
-				auc=analysis.BaysZeroClassifyTest(cexp,field,value1,value2,numiter=5)
-				au.Debug(6,"AUC is %f" % auc)
+				auc=hs.BaysZeroClassifyTest(cexp,field,value1,value2,numiter=5)
+				hs.Debug(6,"AUC is %f" % auc)
 
 	def filtersamples(self):
 		items=self.bMainList.selectedItems()
@@ -777,7 +781,7 @@ class AppWindow(QtGui.QMainWindow):
 				overwrite=filtersampleswin.cOverwrite.checkState()
 				exclude=filtersampleswin.cExclude.checkState()
 				exact=filtersampleswin.cExact.checkState()
-				newexp=analysis.filtersamples(cexp,field,value,exclude=exclude,exact=exact)
+				newexp=hs.filtersamples(cexp,field,value,exclude=exclude,exact=exact)
 				if overwrite==0:
 					newexp.studyname=newname
 					self.addexp(newexp)
@@ -800,7 +804,7 @@ class AppWindow(QtGui.QMainWindow):
 				newname=str(filtersampleswin.tNewName.text())
 				overwrite=filtersampleswin.cOverwrite.checkState()
 				exact=filtersampleswin.cExact.checkState()
-				newexp=analysis.sortbyfreq(cexp,field,value,exact=exact)
+				newexp=hs.sortbyfreq(cexp,field,value,exact=exact)
 				if overwrite==0:
 					newexp.studyname=newname
 					self.addexp(newexp)
@@ -827,7 +831,7 @@ class AppWindow(QtGui.QMainWindow):
 				else:
 					numeric=True
 				overwrite=sortsampleswin.cOverwrite.checkState()
-				newexp=analysis.sortsamples(cexp,field=field,numeric=numeric)
+				newexp=hs.sortsamples(cexp,field=field,numeric=numeric)
 				if overwrite==0:
 					newexp.studyname=newname
 					self.addexp(newexp)
@@ -845,7 +849,7 @@ class AppWindow(QtGui.QMainWindow):
 			cexp=self.explist[cname]
 			val,ok=QtGui.QInputDialog.getInt(self,'Cluster Bacteria','Minimal number of reads per bacteria',10,0,10000)
 			if ok:
-				newexp=analysis.clusterbacteria(cexp,minreads=val)
+				newexp=hs.clusterbacteria(cexp,minreads=val)
 				newexp.studyname=newexp.studyname+'_cb'
 				self.addexp(newexp)
 
@@ -862,18 +866,18 @@ class AppWindow(QtGui.QMainWindow):
 			biclusterwin = BiClusterWindow(cexp,cdb=self.cooldb,bdb=self.bactdb)
 			res=biclusterwin.exec_()
 			if res==QtGui.QDialog.Accepted:
-				newexp=analysis.reorderbacteria(cexp,cexp.bactorder)
-				newexp=analysis.reorderbacteria(newexp,cexp.samporder)
+				newexp=hs.reorderbacteria(cexp,cexp.bactorder)
+				newexp=hs.reorderbacteria(newexp,cexp.samporder)
 				newexp.studyname=newexp.studyname+'_bicluster'
 				newexp.filters.append("bicluster")
 				self.addexp(newexp)
 
-#			newexp=analysis.bicluster(cexp,method='binary')
+#			newexp=hs.bicluster(cexp,method='binary')
 #			newexp.studyname=newexp.studyname+'_bicluster'
 #			self.addexp(newexp)
 
 #			if len(newexp.samples)>5 and len(newexp.seqs)>5:
-#				pv=analysis.testbactenrichment(cexp,newexp.seqs,cdb=False,bdb=False,dbexpres=False,translatestudy=False)
+#				pv=hs.testbactenrichment(cexp,newexp.seqs,cdb=False,bdb=False,dbexpres=False,translatestudy=False)
 
 	def enrichment(self):
 		items=self.bMainList.selectedItems()
@@ -884,9 +888,9 @@ class AppWindow(QtGui.QMainWindow):
 			cname=str(citem.text())
 			cexp=self.explist[cname]
 			if self.cooldb:
-				evals=cooldb.testenrichment(self.cooldb,[],cexp.seqs,freqs=np.log(1+np.mean(cexp.data,axis=1)))
-#				sevals=analysis.sortenrichment(evals,method='val')
-				sevals=analysis.sortenrichment(evals,method='single',epsilon=1)
+				evals=hs.cooldb.testenrichment(self.cooldb,[],cexp.seqs,freqs=np.log(1+np.mean(cexp.data,axis=1)))
+#				sevals=hs.sortenrichment(evals,method='val')
+				sevals=hs.sortenrichment(evals,method='single',epsilon=1)
 				for cval in sevals[::-1]:
 					print('%s - obs:%f catfreq:%f' % (cval['description'],cval['observed'],cval['expected']))
 
@@ -903,7 +907,7 @@ class AppWindow(QtGui.QMainWindow):
 			for citem in items[1:]:
 				cname=str(citem.text())
 				cexp=self.explist[cname]
-				baseexp=analysis.joinexperiments(baseexp,cexp,missingval='NA',origfieldname=newfieldname)
+				baseexp=hs.joinexperiments(baseexp,cexp,missingval='NA',origfieldname=newfieldname)
 				allexpname+='+'+cexp.studyname
 			baseexp.studyname=allexpname
 			self.addexp(baseexp)
@@ -920,7 +924,7 @@ class AppWindow(QtGui.QMainWindow):
 			cexp=self.explist[cname]
 			val,ok=QtGui.QInputDialog.getInt(self,'Filter Original Reads','Minimal number of reads per sample',5000,0,100000)
 			if ok:
-				newexp=analysis.filterorigreads(cexp,minreads=val)
+				newexp=hs.filterorigreads(cexp,minreads=val)
 				newexp.studyname=newexp.studyname+'_for'
 				self.addexp(newexp)
 
@@ -935,7 +939,7 @@ class AppWindow(QtGui.QMainWindow):
 			cexp=self.explist[cname]
 			val,ok=QtGui.QInputDialog.getInt(self,'Filter min reads','Minimal number of reads per bacteria',10,0,10000)
 			if ok:
-				newexp=analysis.filterminreads(cexp,minreads=val)
+				newexp=hs.filterminreads(cexp,minreads=val)
 				newexp.studyname=newexp.studyname+'_fmr'
 				self.addexp(newexp)
 
@@ -950,7 +954,7 @@ class AppWindow(QtGui.QMainWindow):
 			cexp=self.explist[cname]
 			val,ok=QtGui.QInputDialog.getDouble(self,'Filter presence','Minimal fraction of samples per bacteria',value=0.5,min=0,max=1,decimals=2)
 			if ok:
-				newexp=analysis.filterpresence(cexp,frac=val)
+				newexp=hs.filterpresence(cexp,frac=val)
 				newexp.studyname=newexp.studyname+'_fp'
 				self.addexp(newexp)
 
@@ -965,7 +969,7 @@ class AppWindow(QtGui.QMainWindow):
 			cexp=self.explist[cname]
 			val,ok=QtGui.QInputDialog.getDouble(self,'Filter Mean','Minimal mean fraction of reads per sample bacteria ',value=0.01,min=0,max=1,decimals=5)
 			if ok:
-				newexp=analysis.filtermean(cexp,meanval=val*10000)
+				newexp=hs.filtermean(cexp,meanval=val*10000)
 				newexp.studyname=newexp.studyname+'_fmean'
 				self.addexp(newexp)
 
@@ -977,10 +981,10 @@ class AppWindow(QtGui.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			analysis.analyzenumreads(cexp)
+			hs.analyzenumreads(cexp)
 			val,ok=QtGui.QInputDialog.getInt(self,'Subsample','Number of reads per sample',value=10000,min=0)
 			if ok:
-				newexp=analysis.subsample(cexp,numreads=val)
+				newexp=hs.subsample(cexp,numreads=val)
 				newexp.studyname=newexp.studyname+'_sub'
 				self.addexp(newexp)
 
@@ -995,7 +999,7 @@ class AppWindow(QtGui.QMainWindow):
 			cexp=self.explist[cname]
 			val,ok=QtGui.QInputDialog.getText(self,'Filter taxonomy','Taxonomy to filter')
 			if ok:
-				newexp=analysis.filtertaxonomy(cexp,tax=str(val),exact=False)
+				newexp=hs.filtertaxonomy(cexp,tax=str(val),exact=False)
 				newexp.studyname=newexp.studyname+'_ftax'
 				self.addexp(newexp)
 
@@ -1007,7 +1011,7 @@ class AppWindow(QtGui.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			newexp=analysis.normalizereads(cexp)
+			newexp=hs.normalizereads(cexp)
 			newexp.studyname=newexp.studyname+'_norm'
 			self.addexp(newexp)
 
