@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 import sklearn.metrics
 import sklearn.cross_validation
-
+import copy
 
 def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
 	"""
@@ -685,7 +685,7 @@ def testmdenrichmentall(expdat,samples,maxpv=0.001,fdr=0.05):
 	justp=[]
 	allpv=[]
 	for cfield in expdat.fields:
-		vals=getfieldvals(expdat,cfield)
+		vals=hs.getfieldvals(expdat,cfield)
 		uvals=list(set(vals))
 		if len(uvals)>10:
 			continue
