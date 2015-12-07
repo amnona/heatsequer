@@ -10,7 +10,7 @@ Installation
 ------------
 The easiest way to install is:
 
-1. Install anaconda ( https://www.continuum.io/downloads ). HeatSequer is tested to work with Python 2.7
+1. Install miniconda (http://conda.pydata.org/miniconda.html) or anaconda ( https://www.continuum.io/downloads ). HeatSequer is tested to work with Python 2.7
 
 2. Create a virtual environment for heatsequer:
 
@@ -37,8 +37,7 @@ from the direcroty where heatsequer is downloaded to type:
 
 activate heatsequer
 
-python qtexample.py
-
+python hsgui.py
 
 
 Basic Usage:
