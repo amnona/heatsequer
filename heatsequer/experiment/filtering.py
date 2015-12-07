@@ -255,7 +255,7 @@ def clearexp(expdat):
 	return newexp
 
 
-def filterseqs(expdat,seqs,exclude=False,subseq=False):
+def filterseqs(expdat,seqs,exclude=False,subseq=False,logit=True):
 	"""
 	filter sequences from the list seqs (keeping sequences appearing in the list)
 	input:
@@ -266,6 +266,8 @@ def filterseqs(expdat,seqs,exclude=False,subseq=False):
 		True to filter away instead of keep, False to keep
 	subseq : bool
 		if true, the sequences can be subsequence (slower). False - look only for exact match.
+	logit : bool
+		True to add to command log, false to not log it (if called from other heatsequer function)
 
 	output:
 	newexp : Experiment
@@ -293,8 +295,35 @@ def filterseqs(expdat,seqs,exclude=False,subseq=False):
 	if exclude:
 		keeplist=list(set(range(len(expdat.seqs))).difference(keeplist))
 	newexp=hs.reorderbacteria(expdat,keeplist)
-	newexp.filters.append('filter sequences')
-	hs.addcommand(newexp,"filterseqs",params=params,replaceparams={'expdat':expdat})
+	if logit:
+		newexp.filters.append('filter sequences')
+		hs.addcommand(newexp,"filterseqs",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+def filterseqsfromexp(expdat,filtexp,exclude=False,subseq=False,logit=True):
+	"""
+	filter sequences from expdat using the sequences in filtexp experiment (keeping sequences appearing in the other experiment)
+	input:
+	expdat : Experiment
+	filtexp : string
+		an experiment from which to decide which sequences to filter
+	exclude : bool
+		True to filter away instead of keep, False to keep
+	subseq : bool
+		if true, the sequences can be subsequence (slower). False - look only for exact match.
+	logit : bool
+		True to add to command log, false to not log it (if called from other heatsequer function)
+
+	output:
+	newexp : Experiment
+		the filtered experiment
+	"""
+	params=locals()
+	newexp=hs.filterseqs(expdat,filtexp.seqs,exclude=exclude,subseq=subseq,logit=False)
+	if logit:
+		newexp.filters.append('filter sequences')
+		hs.addcommand(newexp,"filterseqsfromexp",params=params,replaceparams={'expdat':expdat,'filtexp':filtexp})
 	return newexp
 
 

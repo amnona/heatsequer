@@ -582,6 +582,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainList.clearSelection()
 		self.bMainList.setCurrentRow(self.bMainList.count()-1)
 		expdat.seqdb=self.bactdb
+		expdat.cooldb=self.cooldb
 
 	def replaceexp(self,expdat):
 		"""

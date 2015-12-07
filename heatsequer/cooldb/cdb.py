@@ -9,7 +9,7 @@ heatsequer cooldb manual curation database functions
 
 __version__ = "0.9"
 
-from ..utils.amnonutils import mlhash,Debug
+from ..utils.amnonutils import mlhash,Debug,listtodict,fdr
 
 import numpy as np
 import biom

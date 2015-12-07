@@ -9,7 +9,8 @@ get info from the bacterial database
 
 __version__ = "1.0"
 
-from ..utils.amnonutils import Debug,dictupper
+from ..utils.amnonutils import Debug,dictupper,delete
+from ..utils.graphutils import simplifygraph
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -392,6 +393,13 @@ def InitOntologyGraph(db,pv,field,ontohashname):
 			G.add_node(lastpos)
 			G.add_edge(lastpos,a)
 			lastpos+=1
+
+	# # remove non informative nodes (1 in 1 out)
+	# delpos=simplifygraph(G)
+	# nodes=delete(nodes,delpos)
+	# sizes=delete(sizes,delpos)
+	# for cdel in delpos:
+	# 	del ndict[cdel]
 
 	# and save the taxonomy tree data
 	db.OntoGraph[field]={}

@@ -194,10 +194,10 @@ def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore',sampkee
 	for crun in range(numruns):
 		if bactkeep==0:
 			bactkeep=np.random.uniform(0.1,0.5)
-			au.Debug(6,"bactkeep %f" % bactkeep)
+			hs.Debug(6,"bactkeep %f" % bactkeep)
 		if sampkeep==0:
 			sampkeep=np.random.uniform(0.25,0.75)
-			au.Debug(6,"sampkeep %f" % sampkeep)
+			hs.Debug(6,"sampkeep %f" % sampkeep)
 		if startb:
 			ubact=[]
 			for cbact in startb:
@@ -294,7 +294,7 @@ def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore',sampkee
 				print('number of bacteria: %d' % len(ubact))
 
 			else:
-				au.Debug(9,"biclustering method %s not supported")
+				hs.Debug(9,"biclustering method %s not supported")
 				return
 
 		x=np.setdiff1d(allsamp,usamp)
@@ -359,7 +359,7 @@ def getexpdbsources(expdat,seqdb=False):
 
 	if not seqdb:
 		if not expdat.seqdb:
-			au.Debug(9,'No sequence database loaded')
+			hs.Debug(9,'No sequence database loaded')
 			return
 		else:
 			seqdb=expdat.seqdb
@@ -509,7 +509,7 @@ def BayZeroClassify(expdat,valexp,field,val1,val2=False,istreeexpand=False):
 	# the prediction log ratio scores
 	lrscores=[]
 	for vidx,vsamp in enumerate(valexp.samples):
-		au.Debug(2,"Classifying sample %s" % vsamp)
+		hs.Debug(2,"Classifying sample %s" % vsamp)
 		cvdat=valexp.data[:,vidx]
 		vzero=np.where(cvdat==0)[0]
 		crat0=np.sum(lograt0[vzero])
@@ -700,19 +700,19 @@ def testmdenrichmentall(expdat,samples,maxpv=0.001,fdr=0.05):
 
 	# do the fdr if needed
 	if fdr:
-		fval=au.fdr(justp)
+		fval=hs.fdr(justp)
 		keep=np.where(np.array(fval)<=fdr)
 		keep=keep[0]
 	else:
 		keep=np.arange(len(justp))
 
 	if len(keep)==0:
-		au.Debug(6,'No significant cateogries found')
+		hs.Debug(6,'No significant cateogries found')
 
 	upv=[]
 	for ckeep in keep:
 		upv.append(allpv[ckeep])
-		au.Debug(6,allpv[ckeep])
+		hs.Debug(6,allpv[ckeep])
 
 	upv=sortenrichment(upv)
 	return upv
@@ -747,9 +747,9 @@ def sortenrichment(enrich,method='bidirectional',epsilon=2):
 		elif method=='val':
 			effects.append(citem['observed'])
 		else:
-			au.Debug('method %s not supported' % method)
+			hs.Debug('method %s not supported' % method)
 	si=np.argsort(effects)
-	newenrich=au.reorder(enrich,si[::-1])
+	newenrich=hs.reorder(enrich,si[::-1])
 	return newenrich
 
 
@@ -804,10 +804,10 @@ def testenrichment(data,group,method='binary',fdr=0.05,twosided=False,printit=Tr
 			allpv.append(pv)
 			justp.append(p)
 		else:
-			au.Debug(9,'testenrichment method not supported',method)
+			hs.Debug(9,'testenrichment method not supported',method)
 			return False
 	if fdr:
-		fval=au.fdr(justp)
+		fval=hs.fdr(justp)
 		keep=np.where(np.array(fval)<=fdr)
 		keep=keep[0]
 	else:
@@ -898,7 +898,7 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean'):
 			cval2=np.mean(expdat.data[seqpos,pos2]>0)
 			threshold=0.001
 		else:
-			au.Debug(9,"Unknown method %s for getdiff" % method)
+			hs.Debug(9,"Unknown method %s for getdiff" % method)
 			return False
 		if cval1<=threshold and cval2<=threshold:
 			diff.append(np.nan)

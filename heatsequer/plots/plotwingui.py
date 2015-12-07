@@ -54,6 +54,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		self.bView.clicked.connect(self.view)
 		self.bSave.clicked.connect(self.save)
 		self.bDBSave.clicked.connect(self.dbsave)
+		self.bEnrich.clicked.connect(self.enrich)
 		self.connect(self.cSampleField, QtCore.SIGNAL('activated(QString)'), self.samplefield)
 		self.FigureTab.connect(self.FigureTab, QtCore.SIGNAL("currentChanged(int)"),self.tabchange)
 		self.cSampleField.setCurrentIndex(0)
@@ -150,6 +151,28 @@ class PlotGUIWindow(QtGui.QDialog):
 			for cid in self.selection:
 				seqs.append(self.cexp.seqs[cid])
 			hs.savecoolseqs(self.cexp,self.cexp.cdb,seqs,val)
+
+	def enrich(self):
+		"""
+		check for annotation enrichment for selected sequences (compared to other sequences in this experiment)
+		"""
+		if self.cexp.cooldb:
+			selseqs=[]
+			for cid in self.selection:
+				selseqs.append(self.cexp.seqs[cid])
+			bmd=hs.cooldb.testenrichment(self.cexp.cooldb,self.cexp.seqs,selseqs)
+			bmd=hs.sortenrichment(bmd)
+			for cbmd in bmd:
+				# if cbmd['observed']<cbmd['expected']:
+				# 	ccolor=QtGui.QColor(155,0,0)
+				# else:
+				# 	ccolor=QtGui.QColor(0,155,0)
+				# item = QtGui.QListWidgetItem()
+				# item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
+				# item.setTextColor(ccolor)
+				# self.lBacteria.addItem(item)
+				print("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
+
 
 	def save(self):
 		"""

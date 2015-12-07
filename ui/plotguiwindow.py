@@ -157,8 +157,8 @@
   <widget class="QPushButton" name="bExport">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>360</y>
+     <x>0</x>
+     <y>370</y>
      <width>71</width>
      <height>32</height>
     </rect>
@@ -170,8 +170,8 @@
   <widget class="QPushButton" name="bView">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>360</y>
+     <x>140</x>
+     <y>370</y>
      <width>71</width>
      <height>32</height>
     </rect>
@@ -183,8 +183,8 @@
   <widget class="QPushButton" name="bSave">
    <property name="geometry">
     <rect>
-     <x>140</x>
-     <y>360</y>
+     <x>60</x>
+     <y>370</y>
      <width>71</width>
      <height>32</height>
     </rect>
@@ -329,8 +329,8 @@
   <widget class="QPushButton" name="bDBSave">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>360</y>
+     <x>200</x>
+     <y>340</y>
      <width>71</width>
      <height>32</height>
     </rect>
@@ -444,6 +444,19 @@
    </property>
    <property name="text">
     <string>?</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="bEnrich">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>370</y>
+     <width>71</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Enrich</string>
    </property>
   </widget>
  </widget>
