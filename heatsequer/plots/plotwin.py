@@ -116,6 +116,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	ax.lastselect=-1
 	ax.sampline=''
 	ax.ofig=f
+	ax.labelson=False
+	ax.labelnames=[]
 	f.canvas.mpl_connect('button_press_event', onplotmouseclick)
 	f.canvas.mpl_connect('key_press_event', onplotkeyclick)
 #	show()
@@ -222,26 +224,7 @@ def onplotkeyclick(event):
 		cax.ofig.canvas.draw()
 	# show taxonomies
 	if event.key=='h':
-		contamlist=[]
-		cax.set_yticks(np.array(range(len(cexp.seqs))))
-		labs=hs.clipstrings(cexp.tax,25,reverse=True)
-		if cexp.cdb:
-			for idx,cseq in enumerate(cexp.seqs):
-				info=hs.cooldb.getseqinfo(cexp.cdb,cseq)
-				if len(info)>0:
-					for cinfo in info:
-						if "ontamination" in cinfo:
-							contamlist.append(idx)
-					labs[idx]+='*'
-		cax.tick_params(axis='y', which='major', labelsize=8)
-		cax.set_yticklabels(labs)
-		for idx,clab in enumerate(cax.get_yticklabels()):
-			if idx in contamlist:
-				clab.set_color("red")
-		cax.set_ylim(cylim[0], cylim[1])
-		cax.set_xlim(cxlim[0], cxlim[1])
-		tight_layout()
-		cax.ofig.canvas.draw()
+		showtaxonomies(cexp,cax)
 	# nice taxonomies (genus+species)
 	if event.key=='n':
 		labs=[]
@@ -253,6 +236,66 @@ def onplotkeyclick(event):
 		cax.set_ylim(cylim[0], cylim[1])
 		tight_layout()
 		cax.ofig.canvas.draw()
+
+
+def getlabelnames(cexp,showdb=True,showcontam=True):
+	"""
+	Get the sequence label list for an experiment
+
+	input:
+	"""
+	pass
+
+def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=50):
+	"""
+	show the y-lables (taxonomies) for the plot window
+
+	input:
+	cexp : Experiment
+	cax : axis (matplotlib)
+		the plot window axis
+	show : bool
+		True (default) to show the labels, False to remove them
+	showdb : bool
+		True (default) to add '*' to sequences in the cooldb database, False to not add '*'
+	showcontam : bool
+		True (default) to show suspected contamination bacteria in red, False to not color separately
+	maxtax : int
+		Maximal number of taxonomies to show (to prevent slow repsonse when looking at big experiment) or 0 to show all
+	"""
+
+	cylim=cax.get_ylim()
+	cxlim=cax.get_xlim()
+
+	# check if we show too many bacteria - don't show taxonomy labels
+	if maxtax>0:
+		if cylim[1]-cylim[0]>maxtax:
+			cax.set_yticklabels([])
+			return
+
+	contamlist=[]
+	labs=hs.clipstrings(cexp.tax,25,reverse=True)
+	if showdb or contam:
+		if cexp.cdb:
+			for idx,cseq in enumerate(cexp.seqs):
+				info=hs.cooldb.getseqinfo(cexp.cdb,cseq)
+				if len(info)>0:
+					for cinfo in info:
+						if "ontamination" in cinfo:
+							contamlist.append(idx)
+					if showdb:
+						labs[idx]+='*'
+	cax.set_yticks(np.array(range(len(cexp.seqs))))
+	cax.tick_params(axis='y', which='major', labelsize=8)
+	cax.set_yticklabels(labs)
+	if showcontam:
+		for idx,clab in enumerate(cax.get_yticklabels()):
+			if idx in contamlist:
+				clab.set_color("red")
+	cax.set_ylim(cylim[0], cylim[1])
+	cax.set_xlim(cxlim[0], cxlim[1])
+	tight_layout()
+	cax.ofig.canvas.draw()
 
 
 def onplotmouseclick(event):

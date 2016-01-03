@@ -296,6 +296,23 @@ class DiffExpWindow(QtGui.QDialog):
 			self.tValue2.setReadOnly(True)
 
 
+class CorrelationWindow(QtGui.QDialog):
+	cexp=[]
+
+	def __init__(self,expdat):
+		super(CorrelationWindow, self).__init__()
+		uic.loadUi('./ui/correlation.py', self)
+		self.cexp=expdat
+		self.cField.addItems(expdat.fields)
+		self.bFieldValues1.clicked.connect(self.fieldvalues1)
+		self.tNewName.setText(self.cexp.studyname+'_de')
+
+
+	def fieldvalues1(self):
+		cfield=str(self.cField.currentText())
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+
+
 class ClassifyWindow(QtGui.QDialog):
 	cexp=[]
 
@@ -440,6 +457,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainAdvancedPlot.clicked.connect(self.advplot)
 		self.bMainFilterSamples.clicked.connect(self.filtersamples)
 		self.bDiffExp.clicked.connect(self.diffexp)
+		self.bCorrelation.clicked.connect(self.correlation)
 		self.bClassifier.clicked.connect(self.classify)
 		self.bFilterOrigReads.clicked.connect(self.filterorigreads)
 		self.bMainSortSamples.clicked.connect(self.sortsamples)
@@ -743,6 +761,27 @@ class AppWindow(QtGui.QMainWindow):
 					newexp=hs.getdiffsig(cexp,field,value1,value2,method=method)
 				if newexp:
 					newexp.studyname=newname+'_'+field
+					self.addexp(newexp)
+
+
+	def correlation(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			diffexpwin = CorrelationWindow(cexp)
+			res=diffexpwin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				field=str(diffexpwin.cField.currentText())
+				newname=str(diffexpwin.tNewName.text())
+				method=str(diffexpwin.cMethod.currentText())
+				numeric=diffexpwin.cNumeric.checkState()
+				newexp=hs.getsigcorr(cexp,field,numeric=numeric,method=method)
+				if newexp:
+					newexp.studyname=newname+'_cor_'+field
 					self.addexp(newexp)
 
 

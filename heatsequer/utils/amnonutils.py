@@ -343,3 +343,16 @@ def dictupper(dat):
 
 	newdat = {k.upper(): v for k,v in dat.iteritems()}
 	return newdat
+
+def listupper(dat):
+	"""
+	turn a list of strings to upper case
+	input:
+	dat : list of strings
+	output:
+	newdat : list of strings
+		- in uppercase
+	"""
+
+	newdat = [cstr.upper() for cstr in dat]
+	return newdat

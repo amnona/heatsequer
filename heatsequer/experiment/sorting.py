@@ -110,7 +110,7 @@ def clustersamples(exp,minreads=0):
 	return newexp
 
 
-def sortsamples(exp,field,numeric=False):
+def sortsamples(exp,field,numeric=False,logit=True):
 	"""
 	sort samples according to field
 	input:
@@ -131,8 +131,9 @@ def sortsamples(exp,field,numeric=False):
 	svals,sidx=hs.isort(fvals)
 	newexp=hs.reordersamples(exp,sidx)
 
-	hs.addcommand(newexp,"sortsamples",params=params,replaceparams={'exp':exp})
-	newexp.filters.append('sorted samples by field %s' % field)
+	if logit:
+		hs.addcommand(newexp,"sortsamples",params=params,replaceparams={'exp':exp})
+		newexp.filters.append('sorted samples by field %s' % field)
 	return newexp
 
 
@@ -167,6 +168,42 @@ def sortbyfreq(expdat,field=False,value=False,exact=False):
 	newexp=hs.reorderbacteria(expdat,sidx)
 	newexp.filters.append("sort by freq field=%s value=%s" % (field,value))
 	hs.addcommand(newexp,"sortbyfreq",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+def sortbyvariance(expdat,field=False,value=False,exact=False,norm=False):
+	"""
+	sort bacteria by their variance
+	sorting is performed based on a subset of samples (field/val/exact) and then
+	all the experiment is sorted according to them
+	input:
+	expdat : Experiment
+	field : string
+		name of the field to filter samples for freq. sorting or False for all samples
+	value : string
+		value of samples to use for the freq. sorting
+	exact : bool
+		is the value exact or partial string
+	norm : bool
+		- False to sort by varinace, True to sort by variance/mean
+	output:
+	newexp : Experiment
+		the experiment with bacteria sorted according to subgroup freq.
+	"""
+	params=locals()
+
+	if field:
+		texp=hs.filtersamples(expdat,field,value,exact=exact)
+	else:
+		texp=copy.deepcopy(expdat)
+
+	svals=np.std(texp.data,axis=1)
+	if norm:
+		svals=svals/np.mean(texp.data,axis=1)
+	svals,sidx=hs.isort(svals)
+
+	newexp=hs.reorderbacteria(expdat,sidx)
+	newexp.filters.append("sort by variance field=%s value=%s normalize=%s" % (field,value,norm))
+	hs.addcommand(newexp,"sortbyvariance",params=params,replaceparams={'expdat':expdat})
 	return newexp
 
 

@@ -9,7 +9,7 @@ get info from the bacterial database
 
 __version__ = "1.0"
 
-from ..utils.amnonutils import Debug,dictupper,delete
+from ..utils.amnonutils import Debug,dictupper,listupper,delete
 from ..utils.graphutils import simplifygraph
 
 import numpy as np
@@ -617,6 +617,7 @@ def GetSeqID(db,osequence,insert=False):
 			seqid=0
 	return(seqid)
 
+
 def GetSeqIDVec(db,seqid):
 	'''
 	Get the read vector from the database for a given sequence id
@@ -1164,6 +1165,62 @@ def GetStudyIDFromMap(mapfilename):
 		studyid=False
 	mf.close()
 	return studyid
+
+
+def GetSamplesFromValues(db,fvdict):
+	"""
+	Get a list of samples that have values in their fields matching fv dict (all of the fields, any of the values in each field)
+	input:
+	db - dbstruct
+	fvdict - dict
+		keyd by field, value is a list of possible values for the field
+	output:
+	oksamps : list of int
+		positions (in samples vector) that for all fields have one of the values matching. sampleids are the int+1
+	"""
+
+	# get # of reads
+	db.cur.execute("SELECT MAX(SampleID) FROM Samples")
+	res=db.cur.fetchone()
+	numsamples=res[0]
+	Debug(0,"Maximal SampleID is",numsamples)
+
+	# convert keys and values to upper case
+	fvdict=dictupper(fvdict)
+	for k,v in fvdict.items():
+		fvdict[k]=listupper(fvdict[k])
+
+	# take all reads for the seqID
+	Debug(0,"Getting reads")
+	oksamps=[]
+	totfound=0
+	totnotfound=0
+	for csample in range(numsamples):
+		db.cur.execute("SELECT Field,Value FROM Maps WHERE SampleID=?",[csample+1])
+		allvals=db.cur.fetchall()
+		foundit={}
+		for k in fvdict.keys():
+			foundit[k]=False
+		for cres in allvals:
+			if not cres[0]:
+				continue
+			if not cres[1]:
+				continue
+			cfield=cres[0].upper()
+			cval=cres[1].upper()
+			if cfield in fvdict:
+				if cval in fvdict[cfield]:
+					foundit[cfield]=True
+		foundall=True
+		for v in foundit.values():
+			foundall=foundall and v
+		if foundall:
+			oksamps.append(csample)
+			totfound+=1
+		else:
+			totnotfound+=1
+	Debug(6,"Found %d matching samples, %d non matching" % (totfound,totnotfound))
+	return oksamps
 
 
 def AddMap(db,experimentname,mapfilename,studyid=False,deleteifpresent=False,samplesadded=False):

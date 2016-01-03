@@ -352,6 +352,19 @@
        <string>Enrichment</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="bCorrelation">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>10</y>
+        <width>115</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Correlation</string>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

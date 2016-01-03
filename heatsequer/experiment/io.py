@@ -483,3 +483,19 @@ def savecommands(expdat,filename):
 
 	hs.savelisttofile(expdat.commands,filename,delimiter='\n')
 	hs.Debug(6,"%d Commands saved to file %s" % (len(expdat.commands),filename))
+
+
+def saveseqstolinefile(seqs,filename):
+	"""
+	save experiment sequeces to a file with 1 sequence per line
+	input:
+	seqs : list of strings
+		The sequences to save
+	filename : string
+		File to save to
+	"""
+
+	fl=open(filename,'w')
+	for cseq in seqs:
+		fl.write('%s\n' % cseq)
+	fl.close()

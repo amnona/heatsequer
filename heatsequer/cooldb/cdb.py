@@ -73,7 +73,7 @@ def savecoolseqs(expdat,cdb,seqs,description):
 	for cseq in seqs:
 		if cseq in expdat.seqdict:
 			seqpos=expdat.seqdict[cseq]
-			cooldb.saveseq(db=cdb,seq=cseq,ggid=expdat.sids[seqpos],taxonomy=expdat.tax[seqpos],filename=expdat.tablefilename,expdescription=expdat.studyname,description=description)
+			saveseq(db=cdb,seq=cseq,ggid=expdat.sids[seqpos],taxonomy=expdat.tax[seqpos],filename=expdat.tablefilename,expdescription=expdat.studyname,description=description)
 			numwritten+=1
 		else:
 			Debug(9,'sequence:\n%s\nnot in experiment!!!' % cseq)

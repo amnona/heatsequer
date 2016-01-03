@@ -16,6 +16,9 @@ import matplotlib as mpl
 mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
+import copy
+
+from pdb import set_trace as XXX
 
 
 def plotseqfreq(expdat,seqs,toaxis=False,xfield=False,normalizey=False):
@@ -133,7 +136,7 @@ def plotnucdistribution(expdat,position):
 
 
 
-def plotdiffsummary2(expdatlist1,expdatlist2,seqs1,seqs2,field,val1,val2=False,method='mean',sortit=True):
+def plotdiffsummary2(expdatlist1,expdatlist2,seqs1,seqs2,field,val1,val2=False,method='mean',sortit=True,threshold=0.1):
 	"""
 	plot a heat map for 2 results (i.e. 16s and KO predictions) for zech chinese ibd study
 	input:
@@ -146,8 +149,8 @@ def plotdiffsummary2(expdatlist1,expdatlist2,seqs1,seqs2,field,val1,val2=False,m
 		- mean - calculate the difference in the mean of the 2 groups
 	sortit - True to sort according to difference in the first expdat, False to use the order in seqs
 	"""
-	diff1=plotdiffsummary(expdatlist1,seqs1,field,val1,val2,method,sortit)
-	diff2=plotdiffsummary(expdatlist2,seqs2,field,val1,val2,method,sortit)
+	diff1,names1=plotdiffsummary(expdatlist1,seqs1,field,val1,val2,method,sortit,threshold=threshold)
+	diff2,names2=plotdiffsummary(expdatlist2,seqs2,field,val1,val2,method,sortit,threshold=threshold)
 	print(np.shape(diff1))
 	print(np.shape(diff2))
 	diff=np.vstack([diff1,diff2])
@@ -157,10 +160,11 @@ def plotdiffsummary2(expdatlist1,expdatlist2,seqs1,seqs2,field,val1,val2=False,m
 	colorbar()
 	title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
 	plot([-0.5,len(expdatlist1)-0.5],[np.shape(diff1)[0]-0.5,np.shape(diff1)[0]-0.5],'k')
+	xticks(np.arange(len(names1)),names1,rotation=90)
 	autoscale(tight=True)
 
 
-def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=True):
+def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=True,threshold=0.1,ptitle=False):
 	"""
 	plot a heat map for the fold change in each experiment in expdatlist
 	for the log2 foldchange between the 2 groups (val1,val2 values in field)
@@ -174,9 +178,13 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 	method:
 		- mean - calculate the difference in the mean of the 2 groups
 	sortit - True to sort according to difference in the first expdat, False to use the order in seqs
+	threshold - minimum value of stat for ratio calculation (otherwise rounded up to threshold)
+	ptitle - name of figure of False for auto title
 
 	output:
 	diffsum - the same as the plotted heatmap (row per otu, column per experiment)
+	expnames - names (studyname) of the experiments plotted (for label)
+	otus - the otu sequences for the rows
 	"""
 
 	if not(type(val1) is list):
@@ -189,12 +197,12 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 		val2=[]
 		for cexp in expdatlist:
 			val2.append(tval2)
-	diff=np.array(getdiffsummary(expdatlist[0],seqs,field,val1[0],val2[0],method))
+	diff=np.array(hs.getdiffsummary(expdatlist[0],seqs,field,val1[0],val2[0],method,threshold=threshold))
 	odiff=copy.copy(diff)
 	odiffnotnan=np.where(np.isfinite(odiff))[0]
 	diffsum=[]
 	for cidx,cexp in enumerate(expdatlist[1:]):
-		cdiff=np.array(getdiffsummary(cexp,seqs,field,val1[cidx+1],val2[cidx+1],method))
+		cdiff=np.array(hs.getdiffsummary(cexp,seqs,field,val1[cidx+1],val2[cidx+1],method,threshold=threshold))
 		diff=np.vstack([diff,cdiff])
 		notnan=np.where(np.isfinite(cdiff))[0]
 		notnan=np.intersect1d(notnan,odiffnotnan)
@@ -203,13 +211,29 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 		else:
 			cdiffsum=np.nan
 		diffsum.append(cdiffsum)
+
+	# remove all NaN lines (not enough reads for threshold)
+	nanlines=np.where(~np.isnan(diff).all(axis=0))[0]
+	diff=diff[:,nanlines]
+	otus=hs.reorder(seqs,nanlines)
+
 	if sortit:
 		si=np.argsort(diff[0,:])
 		diff=diff[:,si]
+		otus=hs.reorder(otus,si)
 	figure()
 	maxdiff=np.nanmax(np.abs(diff))
 	diff=np.transpose(diff)
 	imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
 	colorbar()
-	title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
-	return diff
+	if ptitle:
+		title(ptitle)
+	else:
+		title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
+	expnames=[]
+	for cexp in expdatlist:
+		expnames.append(cexp.studyname)
+	xticks(np.arange(len(expnames)),expnames,rotation=45)
+	tight_layout()
+	show()
+	return diff,expnames,otus

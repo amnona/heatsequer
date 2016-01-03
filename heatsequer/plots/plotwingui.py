@@ -150,7 +150,7 @@ class PlotGUIWindow(QtGui.QDialog):
 			seqs=[]
 			for cid in self.selection:
 				seqs.append(self.cexp.seqs[cid])
-			hs.savecoolseqs(self.cexp,self.cexp.cdb,seqs,val)
+			hs.cooldb.savecoolseqs(self.cexp,self.cexp.cdb,seqs,val)
 
 	def enrich(self):
 		"""

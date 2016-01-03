@@ -12,6 +12,9 @@ __version__ = "0.9"
 import heatsequer as hs
 
 import numpy as np
+from scipy import stats
+from scipy import spatial
+from collections import defaultdict
 import matplotlib as mpl
 mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
@@ -30,6 +33,7 @@ def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
 	output:
 	newexp - the new experiment with bacteria significantly differentiating the 2 groups by at least 1 method
 	"""
+	params=locals()
 
 	methods=['mean','binary','ranksum','freqpres']
 	res=[]
@@ -140,12 +144,100 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	seqlist=[]
 	for cidx in keep[0]:
 		seqlist.append(cexp.seqs[cidx])
-	newexp=hs.filterseqs(expdat,seqlist)
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
 	odif=odif[keep[0]]
 	sv,si=hs.isort(odif)
 	newexp=hs.reorderbacteria(newexp,si)
 	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
 	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
+	return newexp
+
+
+def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='ranksum'):
+	"""
+	find bacteria significantly associated with a mapping file sortable field
+	input:
+	expdat
+	field : string
+		the field to sort experiment by, or false to use current order
+	numeric : bool
+		True if values in field are numeric, False if not (for ascii sort)
+	method - the test to compare the 2 groups:
+		'ranksum' - ranksum correlation
+	numperm - number of random permutations to run
+	maxfval - the maximal f-value (FDR) for a bacteria to keep
+
+	output:
+	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
+	"""
+	params=locals()
+
+	minthresh=2
+	if field:
+		cexp=hs.sortsamples(expdat,field,numeric,logit=False)
+
+	numseqs=len(cexp.seqs)
+	numsamps=len(cexp.samples)
+
+	dat=cexp.data
+	dat[dat<minthresh]=minthresh
+	dat=np.log2(dat)
+	dat=dat-np.mean(dat,axis=1,keepdims=True)
+
+	eps=0.000001
+
+	if method=='ranksum':
+		compareto=np.arange(numsamps)
+		compareto=compareto-np.mean(compareto,keepdims=True)
+#		compareto=compareto-np.mean(compareto,axis=1,keepdims=True)
+		# calculate the rank
+		for idx in range(numseqs):
+			dat[idx,:]=stats.rankdata(dat[idx,:])
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+	odif=np.zeros(numseqs)
+	for idx in range(numseqs):
+		odif[idx]=np.sum(dat[idx,:]*compareto)
+#		odif[idx]=spatial.distance.correlation(dat[idx,:],compareto)
+
+	alldif=np.zeros([len(cexp.sids),numperm])
+	for x in range(numperm):
+		rp=np.random.permutation(numsamps)
+		diff=np.zeros(numseqs)
+		for idx in range(numseqs):
+#			diff[idx]=spatial.distance.correlation(dat[idx,rp],compareto)
+			diff[idx]=np.sum(dat[idx,rp]*compareto)
+		alldif[:,x]=diff
+
+	pval=[]
+	for crow in range(len(odif)):
+		cdat=alldif[crow,:]
+		cdat=cdat[np.logical_not(np.isnan(cdat))]
+		cnumperm=len(cdat)
+		if cnumperm==0:
+			pval.append(1)
+			continue
+		cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/cnumperm
+		# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
+		cpval=min(cpval+(1.0/cnumperm),1)
+		pval.append(cpval)
+	# NOTE: maybe use better fdr (this one not tested...)
+	fval=hs.fdr(pval)
+	keep=np.where(np.array(fval)<=maxfval)
+	seqlist=[]
+	for cidx in keep[0]:
+		seqlist.append(cexp.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(odif)
+	newexp=hs.reorderbacteria(newexp,si)
+	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('significant correlation %s for field %s' % (method,field))
 	return newexp
 
 
@@ -396,7 +488,7 @@ def getexpdbsources(expdat,seqdb=False):
 
 
 
-def BaysZeroClassifyTest(oexpdat,field,val1,val2=False,n_folds=10,istreeexpand=False,randseed=False,numiter=1):
+def BaysZeroClassifyTest(oexpdat,field,val1,val2=False,n_folds=10,istreeexpand=False,randseed=False,numiter=1,method='kfold'):
 	"""
 	Test the baysian zero inflated classifier by doing n_fold cross validation on a given dataset
 	input:
@@ -408,6 +500,9 @@ def BaysZeroClassifyTest(oexpdat,field,val1,val2=False,n_folds=10,istreeexpand=F
 	istreeexpand - True if we want to use the tree shrinkage on each training set (if the exp is from addsubtrees)
 	randseed - if non False, use the specified random seed for the test/validation division
 	numiter - the number of times to run the cross validation
+	method : string
+		- 'kfold' - k-fold cross validation (using n_folds variable) (default)
+		- 'loo' - leave one out cross validation
 
 	output:
 	auc - the auc of each iteration
@@ -417,7 +512,7 @@ def BaysZeroClassifyTest(oexpdat,field,val1,val2=False,n_folds=10,istreeexpand=F
 
 	# we want only to keep the 2 classes
 	if val2:
-		oexpdat=filtersamples(oexpdat,field,[val1,val2])
+		oexpdat=hs.filtersamples(oexpdat,field,[val1,val2])
 
 	# remove the validation samples and keep them in a different experiment valexp
 	ind1=hs.findsamples(oexpdat,field,val1)
@@ -426,25 +521,49 @@ def BaysZeroClassifyTest(oexpdat,field,val1,val2=False,n_folds=10,istreeexpand=F
 	types[ind1]=True
 	aucres=[]
 	for citer in range(numiter):
-		rs = sklearn.cross_validation.StratifiedKFold(types, n_folds=n_folds,shuffle=True)
-		for trainidx,testidx in rs:
-			valexp=hs.reordersamples(oexpdat,testidx)
-			expdat=hs.reordersamples(oexpdat,trainidx)
-			# classify
-			lrscores=hs.BayZeroClassify(expdat,valexp,field,val1,val2,istreeexpand)
+		if method=='kfold':
+			rs = sklearn.cross_validation.StratifiedKFold(types, n_folds=n_folds,shuffle=True)
+			for trainidx,testidx in rs:
+				valexp=hs.reordersamples(oexpdat,testidx)
+				expdat=hs.reordersamples(oexpdat,trainidx)
+				# classify
+				lrscores=hs.BayZeroClassify(expdat,valexp,field,val1,val2,istreeexpand)
 
-			# prepare the correct answer list
-			typeis1=[]
-			for vsamp in valexp.samples:
-				if valexp.smap[vsamp][field]==val1:
-					vtype=1
-				else:
-					vtype=2
-				typeis1.append(vtype==1)
+				# prepare the correct answer list
+				typeis1=[]
+				for vsamp in valexp.samples:
+					if valexp.smap[vsamp][field]==val1:
+						vtype=1
+					else:
+						vtype=2
+					typeis1.append(vtype==1)
+				cauc=sklearn.metrics.roc_auc_score(typeis1, lrscores, average='macro', sample_weight=None)
+				hs.Debug(4,"auc=%f" % cauc)
+				aucres.append(cauc)
+		elif method=='loo':
+			rs = sklearn.cross_validation.LeaveOneOut(len(types))
+			predlist=[]
+			groundtruthlist=[]
+			for trainidx,testidx in rs:
+				valexp=hs.reordersamples(oexpdat,testidx)
+				expdat=hs.reordersamples(oexpdat,trainidx)
+				# classify
+				lrscores=hs.BayZeroClassify(expdat,valexp,field,val1,val2,istreeexpand)
 
+				# prepare the correct answer list
+				for vsamp in valexp.samples:
+					if valexp.smap[vsamp][field]==val1:
+						vtype=1
+					else:
+						vtype=2
+					groundtruthlist.append(vtype==1)
+				predlist.append(lscores[0])
 			cauc=sklearn.metrics.roc_auc_score(typeis1, lrscores, average='macro', sample_weight=None)
 			hs.Debug(4,"auc=%f" % cauc)
 			aucres.append(cauc)
+		else:
+			hs.Debug(9,'Crossvalidation Method %s not supported' % method)
+			return
 
 	hs.Debug(8,"mean is : %f" % np.mean(aucres))
 	hs.Debug(8,"s.err is : %f" % (np.std(aucres)/np.sqrt(len(aucres))))
@@ -643,7 +762,7 @@ def testmdenrichment(expdat,samples,field,numeric=False):
 	numeric - True if the field is numeric (test mean)
 	"""
 
-	vals=getfieldvals(expdat,field)
+	vals=hs.getfieldvals(expdat,field)
 	numsamps=len(vals)
 	numgroup=len(samples)
 	uvals=list(set(vals))
@@ -859,7 +978,7 @@ def testbactenrichment(expdat,seqs,cdb=False,bdb=False,dbexpres=False,translates
 	return dbexpres
 
 
-def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean'):
+def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean',threshold=0.1):
 	"""
 	get the fold change between 2 groups in each of the sequences in seqs
 	for zech chinese ibd paper
@@ -870,7 +989,10 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean'):
 	val1 - value of the field for group 1
 	val2 - value of the field for group 2 or False for all the rest (not val1)
 	method:
-		- mean - calculate the difference in the mean of the 2 groups
+		- 'mean' - calculate the difference in the mean of the 2 groups
+		- 'binary' - calculate the difference in the presence/abscence of the 2 groups
+	threshold : float
+		the detection limit (out of 10k reads) - round up means below this number. should be ~10k/rarefaction
 
 	output:
 	diff - a list of the difference between the 2 groups for each sequence
@@ -892,11 +1014,9 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean'):
 		if method=='mean':
 			cval1=np.mean(expdat.data[seqpos,pos1])
 			cval2=np.mean(expdat.data[seqpos,pos2])
-			threshold=0.1
 		elif method=='binary':
 			cval1=np.mean(expdat.data[seqpos,pos1]>0)
 			cval2=np.mean(expdat.data[seqpos,pos2]>0)
-			threshold=0.001
 		else:
 			hs.Debug(9,"Unknown method %s for getdiff" % method)
 			return False
@@ -910,3 +1030,92 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean'):
 		cdiff=np.log2(cval1/cval2)
 		diff.append(cdiff)
 	return diff
+
+
+
+def fastpermute(dat,tfunc,group1,group2,numperm=1000,maxpv=0.05):
+	"""
+	NOT WORKING!!!! need to think
+	do a fast iterative permutation test for data in dat (each row is tested independently)
+	by skipping the row if it is clearly above the p-value
+	input:
+	dat : 2d np array
+		row per bacteria, column per sample. NOTE it needs to be preprocessed for the appropriate method (i.e. binary,ranksum, etc)
+	tfunc : the test function (takes dat, group1 and group2 and returns a vector of values (1 per row))
+	maxpv : float
+		the maximal p-value to test
+	group1,group2 : list of integers
+		the indices of group1,group2 in the data
+	numperm - maximal number of permutations to run
+	output:
+	pvals - np array of floats
+		p-value for each row (approximate if high)
+	"""
+
+	numbact=np.shape(dat)[0]
+	numsamps=np.shape(dat)[1]
+	numg1=len(group1)
+	numg2=len(group2)
+	if numg1+numg2!=numsamps:
+		hs.Debug(8,"num of samples in data (%d) != groups1 (%d) + group2 (%d)" % (numsamps,numg1,numg2))
+	# calculate the true difference
+	odif=tfunc(dat,group1,group2)
+
+	# start the permutations
+	alldif=np.empty([numbact,numperm])
+	alldif=np.nan
+	usebact=np.arange(numbact)
+	for x in range(numperm):
+		rp=np.random.permutation(len1+len2)
+		m1=np.nanmean(dat[:,rp[0:len1]],axis=1)
+		m2=np.nanmean(dat[:,rp[len1:]],axis=1)
+		diff=(m1-m2)/(m1+m2+eps)
+#		diff[np.isnan(diff)]=0
+		alldif[:,x]=diff
+
+	pval=[]
+	for crow in range(len(odif)):
+		cdat=alldif[crow,:]
+		cdat=cdat[np.logical_not(np.isnan(cdat))]
+		cnumperm=len(cdat)
+		if cnumperm==0:
+			pval.append(1)
+			continue
+		cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/cnumperm
+		# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
+		cpval=min(cpval+(1.0/cnumperm),1)
+		pval.append(cpval)
+	# NOTE: maybe use better fdr (this one not tested...)
+
+def getsimilarfreqseqs(expdat,seqs):
+	"""
+	get a list if sequences with similar frequency distribution to seqs
+
+	input:
+	expdat : Experiment
+		the experiment containing the sequences
+	seqs : list of sequences ('ACGT')
+		the list of sequences to which we are looking for simiar sequences
+
+	output:
+	simseqs : list of sequences ('ACGT')
+		a list of sequences with frequency distribution similar to seqs
+	"""
+
+	# get the original sequence frequency histogram
+	ofreqs=np.zeros(len(seqs))
+	for idx,cseq in enumerate(seqs):
+		cseqpos=expdat.seqdict[cseq]
+		ofreqs[idx]=np.mean(expdat.data[cseqpos,:])
+	ffrac,edges=np.histogram(ofreqs,normed=False)
+	hist(ofreqs,normed=False)
+
+	allfreqs=np.mean(expdat.data,axis=1)
+	cpos=[]
+	for idx,cfreq in enumerate(ffrac):
+		cpos.append(np.where(np.logical_and(allfreqs>edges[idx],allfreqs<=edges[idx+1]))[0])
+	done=False
+	simseqs=[]
+	for idx,cc in enumerate(cpos):
+		print("num in seqs %d, num in all %d" % (ffrac[idx], len(cpos[idx])))
+	print(edges)
