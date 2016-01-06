@@ -61,16 +61,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	mapsamples = []
 	if mapname:
 		# if mapping file supplied, load it
-		hs.Debug(6,'Loading mapping file')
-		mapf = open(mapname, 'rU')
-		reader = csv.DictReader(mapf, delimiter='\t')
-		fields = reader.fieldnames
-		for cline in reader:
-			cid = cline['#SampleID']
-			smap[cid] = cline
-			mapsamples.append(cid)
-		mapf.close()
-		hs.Debug(6,'number of samples in map is %d' % len(mapsamples))
+		mapsamples,smap,fields=loadmap(mapname)
 	else:
 		# no mapping file, so just create the #SampleID field
 		hs.Debug(6,'No mapping file supplied - using just sample names')
@@ -499,3 +490,36 @@ def saveseqstolinefile(seqs,filename):
 	for cseq in seqs:
 		fl.write('%s\n' % cseq)
 	fl.close()
+
+
+def loadmap(mapfilename,sampidfield='#SampleID'):
+	"""
+	load a tab separated mapping file and store the values and samples (from #SampleID field)
+	input:
+	mapfilename : string
+		name of the mapping file
+	sampidfield : string
+		name of the field containing the sample id (default is #SampleID)
+
+	output:
+	mapsamples : list of strings
+		the sampleids (in order) - the values in sampidfield
+	smap : dict of dict of strings
+		indexed by sampleid, then by field name (i.e. 'ENV_MATTER' etc.), values are the actual value of the field for the sample
+	fields : list of strings
+		names of the mapping file fields (i.e 'ENV_MATTER' etc)
+	"""
+
+	smap = {}
+	mapsamples = []
+	hs.Debug(6,'Loading mapping file %s' % mapfilename)
+	mapf = open(mapfilename, 'rU')
+	reader = csv.DictReader(mapf, delimiter='\t')
+	fields = reader.fieldnames
+	for cline in reader:
+		cid = cline[sampidfield]
+		smap[cid] = cline
+		mapsamples.append(cid)
+	mapf.close()
+	hs.Debug(6,'number of samples in map is %d' % len(mapsamples))
+	return mapsamples,smap,fields
