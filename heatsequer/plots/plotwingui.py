@@ -29,6 +29,21 @@ from pdb import set_trace as XXX
 for the GUI
 """
 
+class SListWindow(QtGui.QDialog):
+	def __init__(self,listdata=[],listname=''):
+		"""
+		create a list window with items in the list and the listname as specified
+		input:
+		listdata - the data to show in the list (a list)
+		listname - name to display above the list
+		"""
+		super(SListWindow, self).__init__()
+		uic.loadUi('./ui/listwindow.py', self)
+		for citem in listdata:
+			self.lList.addItem(citem)
+		if listname:
+			self.lLabel.setText(listname)
+
 
 class MyMplCanvas(FigureCanvas):
 	"""Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
@@ -55,6 +70,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		self.bSave.clicked.connect(self.save)
 		self.bDBSave.clicked.connect(self.dbsave)
 		self.bEnrich.clicked.connect(self.enrich)
+		self.bSampleInfo.clicked.connect(self.sampleinfo)
 		self.connect(self.cSampleField, QtCore.SIGNAL('activated(QString)'), self.samplefield)
 		self.FigureTab.connect(self.FigureTab, QtCore.SIGNAL("currentChanged(int)"),self.tabchange)
 		self.cSampleField.setCurrentIndex(0)
@@ -89,6 +105,17 @@ class PlotGUIWindow(QtGui.QDialog):
 		self.mpl_toolbar = NavigationToolbar(self.dc, self)
 		layout2.addWidget(self.mpl_toolbar)
 		self.setLayout(layout)
+
+	def sampleinfo(self):
+		if not self.csamp:
+			return
+		csamp=self.cexp.samples[self.csamp]
+		cmap=self.cexp.smap[csamp]
+		info=[]
+		for k,v in cmap.items():
+			info.append(k+':'+v)
+		slistwin = SListWindow(info,cmap['#SampleID'])
+		slistwin.exec_()
 
 
 	def tabchange(self,newtab):
