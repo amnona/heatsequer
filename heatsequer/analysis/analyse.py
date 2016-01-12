@@ -22,6 +22,8 @@ from matplotlib.pyplot import *
 import sklearn.metrics
 import sklearn.cross_validation
 import copy
+from pdb import set_trace as XXX
+
 
 def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
 	"""
@@ -157,7 +159,7 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 
 def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='ranksum'):
 	"""
-	find bacteria significantly associated with a mapping file sortable field
+	find bacteria significantly associated (correlated) with a mapping file sortable field
 	input:
 	expdat
 	field : string
@@ -738,6 +740,7 @@ def randomizeexp(expdat,normalize=False):
 	output:
 	newexp - the permuted experiment
 	"""
+	params=locals()
 
 	newexp=copyexp(expdat)
 	numsamps=len(newexp.samples)
@@ -1033,62 +1036,285 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean',threshold=0.1
 
 
 
-def fastpermute(dat,tfunc,group1,group2,numperm=1000,maxpv=0.05):
+def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1000],maxfval=0.1,mineffect=0.1):
 	"""
-	NOT WORKING!!!! need to think
-	do a fast iterative permutation test for data in dat (each row is tested independently)
-	by skipping the row if it is clearly above the p-value
+	test the differential expression between 2 groups (val1 and val2 in field field)
+	for bacteria that have a high difference.
+	using the fast permutation test (see fastpermutepv)
+	input:
+	expdat
+	field - the field for the 2 categories
+	val1 - values for the first group
+	val2 - value for the second group or false to compare to all other
+	method - the test to compare the 2 groups:
+		mean - absolute difference in mean frequency
+		binary - abs diff in binary presence/absence
+		ranksum - abs diff in rank order (to ignore outliers)
+		freqpres - abs diff in frequency only in samples where bacteria is present (NOT SUPPORTED YET)
+	numperm - a list of the number of random permutations to run in each step (small to large)
+	maxfval - the maximal f-value (FDR) for a bacteria to keep
+	mineffect : float
+		the minimal effect size to keep (abs(diff)/mean)
+
+	output:
+	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
+	"""
+	params=locals()
+
+	exp1=hs.filtersamples(expdat,field,val1,exact=True)
+	if val2:
+		exp2=hs.filtersamples(expdat,field,val2,exact=True)
+	else:
+		exp2=hs.filtersamples(expdat,field,val1,exact=True,exclude=True)
+	cexp=hs.joinexperiments(exp1,exp2)
+
+	pos1=hs.findsamples(cexp,field,val1)
+	if val2:
+		pos2=hs.findsamples(cexp,field,val2)
+	else:
+		pos2=hs.findsamples(cexp,field,val1,exclude=True)
+
+	minthresh=2
+	dat=cexp.data
+	dat[dat<minthresh]=minthresh
+	dat=np.log2(dat)
+	numseqs=len(cexp.seqs)
+
+	if method=='mean':
+		pass
+	elif method=='ranksum':
+		for idx in range(numseqs):
+			dat[idx,:]=stats.rankdata(dat[idx,:])
+	elif method=='binary':
+		dat=(dat>np.log2(minthresh))
+	elif method=='freqpres':
+		hs.Debug(9,"Method not supported yet")
+		return
+#		dat[dat<=minthresh]=np.nan
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+
+	pval,odif=fastpermutepv(dat,meanfunc,pos1,pos2,numperm=numperm,maxpval=maxfval,mineffect=mineffect)
+
+	# do fdr
+	fval=hs.fdr(pval)
+	keep=np.where(np.array(fval)<=maxfval)
+	seqlist=[]
+	for cidx in keep[0]:
+		seqlist.append(cexp.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(odif)
+	newexp=hs.reorderbacteria(newexp,si)
+	hs.addcommand(newexp,"diffexpfastpermute",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('fast differential expression (%s) in %s between %s and %s, min effect=%d, fdr=%f' % (method,field,val1,val2,mineffect,maxfval))
+	return newexp
+
+
+def fastpermutepv(dat,tfunc,group1,group2,numperm=[100,1000],maxpval=0.05,mineffect=0.1):
+	"""
+	do a fast iterative permutation test for differential expression dat (each row is tested independently)
+	by skipping the row if it is clearly above the p-value or if the effect size is not big enough
 	input:
 	dat : 2d np array
 		row per bacteria, column per sample. NOTE it needs to be preprocessed for the appropriate method (i.e. binary,ranksum, etc)
-	tfunc : the test function (takes dat, group1 and group2 and returns a vector of values (1 per row))
+	tfunc : the test function (takes dat and returns a vector of values (1 per row))
 	maxpv : float
 		the maximal p-value to test
 	group1,group2 : list of integers
 		the indices of group1,group2 in the data
-	numperm - maximal number of permutations to run
+	numperm : list of integers
+		number of permutations in each step
+	mineffect - the minimal effect size (abs(group difference)/mean) - keep only bacteria with at least this effect size or 0 to use all
 	output:
 	pvals - np array of floats
 		p-value for each row (approximate if high)
+	odif - np array of floats
+		the statistic for the original (non-permuted) groups
 	"""
 
 	numbact=np.shape(dat)[0]
-	numsamps=np.shape(dat)[1]
 	numg1=len(group1)
 	numg2=len(group2)
-	if numg1+numg2!=numsamps:
-		hs.Debug(8,"num of samples in data (%d) != groups1 (%d) + group2 (%d)" % (numsamps,numg1,numg2))
 	# calculate the true difference
-	odif=tfunc(dat,group1,group2)
+	val1=tfunc(dat[:,group1])
+	val2=tfunc(dat[:,group2])
+	odif=val1-val2
+	oeffect=np.abs(odif)/((val1+val2)/2)
 
-	# start the permutations
-	alldif=np.empty([numbact,numperm])
-	alldif=np.nan
-	usebact=np.arange(numbact)
-	for x in range(numperm):
-		rp=np.random.permutation(len1+len2)
-		m1=np.nanmean(dat[:,rp[0:len1]],axis=1)
-		m2=np.nanmean(dat[:,rp[len1:]],axis=1)
-		diff=(m1-m2)/(m1+m2+eps)
-#		diff[np.isnan(diff)]=0
-		alldif[:,x]=diff
+	odat=copy.copy(dat)
 
-	pval=[]
-	for crow in range(len(odif)):
-		cdat=alldif[crow,:]
-		cdat=cdat[np.logical_not(np.isnan(cdat))]
-		cnumperm=len(cdat)
-		if cnumperm==0:
-			pval.append(1)
-			continue
-		cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/cnumperm
-		# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
-		cpval=min(cpval+(1.0/cnumperm),1)
-		pval.append(cpval)
-	# NOTE: maybe use better fdr (this one not tested...)
+	# init for the first permutations
+	pval=np.ones(numbact)
+	pval[oeffect>=mineffect]=0
+
+	# go over permutation numbers
+	for cnumperm in numperm:
+		alldif=np.empty([numbact,cnumperm])
+		alldif[:]=np.nan
+		usebact=np.where(pval<2*maxpval)[0]
+		notusebact=np.where(pval>=2*maxpval)[0]
+		print("cnumperm %d, numbact %d, numnotuse %d" % (cnumperm,len(usebact),len(notusebact)))
+		dat=odat[usebact,:]
+		# do permutations
+		for x in range(cnumperm):
+			rp=np.random.permutation(numg1+numg2)
+			val1=tfunc(dat[:,rp[0:numg1]])
+			val2=tfunc(dat[:,rp[numg1:]])
+			diff=val1-val2
+			alldif[usebact,x]=diff
+
+		# calculate the p-values
+		pval=np.ones([numbact])
+		for crow in range(numbact):
+			cdat=alldif[crow,:]
+			cdat=cdat[np.logical_not(np.isnan(cdat))]
+			ccnumperm=len(cdat)
+			if ccnumperm==0:
+				pval[crow]=1
+				continue
+			cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/ccnumperm
+			# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
+			cpval=min(cpval+(1.0/ccnumperm),1)
+			pval[crow]=cpval
+	return pval,odif
+
+
+def fastpermutecorr(expdat,field,numeric=True,method='ranksum',numperm=[100,1000],maxfval=0.05,mineffect=0.1):
+	"""
+	do a fast iterative permutation test for correlation to continuous field in the experiment (each row is tested independently)
+	by skipping the row if it is clearly above the p-value or if the effect size is not big enough
+	input:
+	dat : 2d np array
+		row per bacteria, column per sample. NOTE it needs to be preprocessed for the appropriate method (i.e. binary,ranksum, etc)
+	tfunc : the test function (takes dat and returns a vector of values (1 per row))
+	maxfv : float
+		the maximal f-value to keep
+	group1,group2 : list of integers
+		the indices of group1,group2 in the data
+	numperm : list of integers
+		number of permutations in each step
+	mineffect - the minimal effect size (abs correlation of the true data) - keep only bacteria with at least this effect size or 0 to use all
+	output:
+	pvals - np array of floats
+		p-value for each row (approximate if high)
+	odif - np array of floats
+		the statistic for the original (non-permuted) groups
+	"""
+	params=locals()
+
+	minthresh=2
+	if field:
+		cexp=hs.sortsamples(expdat,field=field,numeric=numeric,logit=False)
+
+	numbact=len(cexp.seqs)
+	numsamps=len(cexp.samples)
+
+	dat=cexp.data
+	dat[dat<minthresh]=minthresh
+	dat=np.log2(dat)
+	dat=dat-np.mean(dat,axis=1,keepdims=True)
+
+	if method=='ranksum':
+		compareto=np.arange(numsamps)
+		compareto=compareto-np.mean(compareto,keepdims=True)
+		# calculate the rank
+		for idx in range(numbact):
+			dat[idx,:]=stats.rankdata(dat[idx,:])
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+	odif=corrfunc(dat,compareto)
+	oeffect=np.abs(odif)
+
+	odat=copy.copy(dat)
+
+	# init for the first permutations
+	pval=np.ones(numbact)
+	pval[oeffect>=mineffect]=0
+
+	# go over permutation numbers
+	for cnumperm in numperm:
+		alldif=np.empty([numbact,cnumperm])
+		alldif[:]=np.nan
+		usebact=np.where(pval<2*maxfval)[0]
+		notusebact=np.where(pval>=2*maxfval)[0]
+		print("cnumperm %d, numbact %d, numnotuse %d" % (cnumperm,len(usebact),len(notusebact)))
+		dat=odat[usebact,:]
+		# do permutations
+		for x in range(cnumperm):
+			rp=np.random.permutation(numsamps)
+			diff=corrfunc(dat[:,rp],compareto)
+			alldif[usebact,x]=diff
+
+		# calculate the p-values
+		pval=np.ones([numbact])
+		for crow in range(numbact):
+			cdat=alldif[crow,:]
+			cdat=cdat[np.logical_not(np.isnan(cdat))]
+			ccnumperm=len(cdat)
+			if ccnumperm==0:
+				pval[crow]=1
+				continue
+			cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/ccnumperm
+			# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
+			cpval=min(cpval+(1.0/ccnumperm),1)
+			pval[crow]=cpval
+
+	# calculate the fdr
+	fval=hs.fdr(pval)
+	keep=np.where(np.array(fval)<=maxfval)
+	seqlist=[]
+	for cidx in keep[0]:
+		seqlist.append(cexp.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(odif)
+	newexp=hs.reorderbacteria(newexp,si)
+	hs.addcommand(newexp,"fastpermutecorr",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('fast significant correlation %s for field %s' % (method,field))
+	return newexp
+
+
+def meanfunc(dat,axis=1):
+	"""
+	calculate the mean of each row
+	for the permutation tests
+	"""
+	return np.mean(dat,axis=axis)
+
+
+def corrfunc(dat,compareto):
+	"""
+	calculate the partial correlation between dat and compareto
+	for the permutation tests
+	"""
+	numseqs=np.shape(dat)[0]
+	odif=np.zeros([numseqs])
+	for idx in range(numseqs):
+		odif[idx]=np.sum(dat[idx,:]*compareto)
+	return odif
+
+
+def corrfunc2(dat,compareto):
+	"""
+	calculate the partial correlation between dat and compareto
+	for the permutation tests
+	TESTING. NOT WORKING!!!!
+	"""
+	numseqs=np.shape(dat)[0]
+	ct=np.tile(compareto,[numseqs,1])
+	return dat*ct
+
 
 def getsimilarfreqseqs(expdat,seqs):
 	"""
+	NOT READY YET!!!!
 	get a list if sequences with similar frequency distribution to seqs
 
 	input:
@@ -1119,3 +1345,4 @@ def getsimilarfreqseqs(expdat,seqs):
 	for idx,cc in enumerate(cpos):
 		print("num in seqs %d, num in all %d" % (ffrac[idx], len(cpos[idx])))
 	print(edges)
+
