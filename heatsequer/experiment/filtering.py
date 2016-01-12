@@ -13,6 +13,7 @@ __version__ = "0.9"
 import heatsequer as hs
 
 import numpy as np
+from pdb import set_trace as XXX
 
 
 def filterminreads(exp,minreads,logit=True):
@@ -366,16 +367,17 @@ def filtersamplesfromfile(expdat,filename,field='#SampleID',exclude=False):
 	input:
 	expdat
 	filename - name of the text file (1 line per sample)
-	field - field that the file contains
+	field - field for the experiment that the file contains
 	exclude - true to throw away instead of keep
 	output:
 	newexp - the filtered experiment
 	"""
 	params=locals()
 
-	fl=open(filename,'r')
+	fl=open(filename,'rU')
 	vals=[]
 	for cline in fl:
+		cline=cline.strip()
 		vals.append(cline)
 	fl.close()
 
@@ -383,6 +385,7 @@ def filtersamplesfromfile(expdat,filename,field='#SampleID',exclude=False):
 	for cidx,csamp in enumerate(expdat.samples):
 		keepit=False
 		if expdat.smap[csamp][field] in vals:
+			hs.Debug(3,'found file value %s in sample %s' % (expdat.smap[csamp][field],csamp))
 			keepit=True
 		# if exclude reverse the decision
 		if exclude:

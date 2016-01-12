@@ -274,6 +274,7 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=50):
 			return
 
 	contamlist=[]
+	pathogenlist=[]
 	labs=hs.clipstrings(cexp.tax,25,reverse=True)
 	if showdb or contam:
 		if cexp.cdb:
@@ -283,6 +284,8 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=50):
 					for cinfo in info:
 						if "ontamination" in cinfo:
 							contamlist.append(idx)
+						if "patric" in cinfo:
+							pathogenlist.append(idx)
 					if showdb:
 						labs[idx]+='*'
 	cax.set_yticks(np.array(range(len(cexp.seqs))))
@@ -292,6 +295,9 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=50):
 		for idx,clab in enumerate(cax.get_yticklabels()):
 			if idx in contamlist:
 				clab.set_color("red")
+			if idx in pathogenlist:
+				clab.set_color("blue")
+				print("patric pathogen found")
 	cax.set_ylim(cylim[0], cylim[1])
 	cax.set_xlim(cxlim[0], cxlim[1])
 	tight_layout()

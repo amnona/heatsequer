@@ -37,7 +37,7 @@ class cooldb:
 		# the data (one line per sequence)
 		self.dat=[]
 
-		# 89 bp hash of sequences pointing to location in dat
+		# short bp hash of sequences pointing to location in dat (self.dictlen length of each sequence)
 		self.shortseqdict={}
 
 		# True if we also loaded the greengenes ids from getggids
@@ -46,18 +46,21 @@ class cooldb:
 		# number of times each description appeats
 		self.numtimes={}
 
+		# length of the short sequence dict (longer is faster but won't work on shorter sequences)
+		self.dictlen=100
+
 def loaddb(dbname='./db/coolseqs.txt'):
 #def loaddb(dbname='./db/coolseqs.gg97-135.txt'):
 	db=cooldb()
 	db.dbfile=dbname
-	au.Debug(0,'Loadding coolseq database',db.dbfile)
+	au.Debug(0,'Loading coolseq database',db.dbfile)
 	dbf = open(db.dbfile, 'rU')
 	reader = csv.DictReader(dbf, delimiter='\t')
 	idx=0
 	for cline in reader:
 		db.dat.append(cline)
 		cseq=cline['sequence']
-		cseq=cseq[:89]
+		cseq=cseq[:db.dictlen]
 		if cseq in db.shortseqdict:
 			db.shortseqdict[cseq].append(idx)
 		else:
@@ -70,7 +73,7 @@ def loaddb(dbname='./db/coolseqs.txt'):
 
 def getseqinfo(db,seq):
 	'''
-	get all known information for a given sequence (minimum length 89bp)
+	get all known information for a given sequence (minimum length dictlen=100)
 	input:
 	db - from loaddb()
 	seq - the sequence to search for
@@ -93,7 +96,7 @@ def getseqinfo(db,seq):
 	# not a ggid so look for the sequence
 	au.Debug(0,'Looking for info for sequence',seq)
 	info=[]
-	sseq=seq[0:89]
+	sseq=seq[0:db.dictlen]
 	if not sseq in db.shortseqdict:
 		au.Debug(0,'sequence not found in short hash')
 		return info
@@ -130,15 +133,15 @@ def saveseq(db,seq,taxonomy,filename,description,ggid=False,expdescription=False
 		ggid=au.mlhash(seq)
 	if not expdescription:
 		expdescription=description
-	seq89=seq[:89]
-	ggid89=au.mlhash(seq89)
+	seqshort=seq[:db.dictlen]
+	ggidshort=au.mlhash(seqshort)
 	ctime=datetime.date.today()
 	fl=open(db.dbfile,'a')
 	fl.write('%s\t' % str(ggid))
 	fl.write('%d\t' % len(seq))
 	fl.write('%s\t' % seq)
-	fl.write('%s\t' % str(ggid89))
-	fl.write('%s\t' % seq89)
+	fl.write('%s\t' % str(ggidshort))
+	fl.write('%s\t' % seqshort)
 	fl.write('%s\t' % taxonomy)
 	fl.write('%s\t' % filename)
 	fl.write('%s\t' % expdescription)
@@ -150,8 +153,8 @@ def saveseq(db,seq,taxonomy,filename,description,ggid=False,expdescription=False
 	cdat['GGID']=str(ggid)
 	cdat['length']=str(len(seq))
 	cdat['sequence']=seq
-	cdat['ggid89']=str(ggid89)
-	cdat['seq89']=seq89
+	cdat['ggidshort']=str(ggidshort)
+	cdat['seqshort']=seqshort
 	cdat['taxonomy']=taxonomy
 	cdat['filename']=filename
 	cdat['exp_description']=expdescription
@@ -160,10 +163,10 @@ def saveseq(db,seq,taxonomy,filename,description,ggid=False,expdescription=False
 
 	idx=len(db.dat)
 	db.dat.append(cdat)
-	if seq89 in db.shortseqdict:
-		db.shortseqdict[seq89].append(idx)
+	if seqshort in db.shortseqdict:
+		db.shortseqdict[seqshort].append(idx)
 	else:
-		db.shortseqdict[seq89]=[idx]
+		db.shortseqdict[seqshort]=[idx]
 
 	return db
 
@@ -207,7 +210,7 @@ def getggids(db,biomname):
 	for cseq in tseqs:
 		# find the position of the sequence in cooldb
 		spos=-1
-		sseq=cseq[0:89]
+		sseq=cseq[0:db.dictlen]
 		if not sseq in db.shortseqdict:
 			au.Debug(8,'sequence %s not found in database short hash' % cseq)
 			return db
@@ -299,12 +302,12 @@ def testenrichment(db,allseqs=[],group=[],maxfval=0.05,freqs=[]):
 	if len(allseqs)>0:
 		allshort=[]
 		for cseq in allseqs:
-			allshort.append(cseq[:89])
+			allshort.append(cseq[:db.dictlen])
 		asdict=au.listtodict(allshort)
 
 	groupshort=[]
 	for cseq in group:
-		groupshort.append(cseq[:89])
+		groupshort.append(cseq[:db.dictlen])
 	gsdict=au.listtodict(groupshort)
 
 	dbdesc=[]
@@ -325,7 +328,7 @@ def testenrichment(db,allseqs=[],group=[],maxfval=0.05,freqs=[]):
 			if cseq in usedseq:
 				continue
 			usedseq[cseq]=True
-			cseqs=cseq[:89]
+			cseqs=cseq[:db.dictlen]
 			if len(allseqs)>0:
 				if not cseqs in asdict:
 					continue

@@ -137,7 +137,7 @@ def sortsamples(exp,field,numeric=False,logit=True):
 	return newexp
 
 
-def sortbyfreq(expdat,field=False,value=False,exact=False):
+def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale=True):
 	"""
 	sort bacteria in experiment according to frequency
 	sorting is performed based on a subset of samples (field/val/exact) and then
@@ -150,6 +150,10 @@ def sortbyfreq(expdat,field=False,value=False,exact=False):
 		value of samples to use for the freq. sorting
 	exact : bool
 		is the value exact or partial string
+	exclude : bool
+		True to sort on all samples except the field/value ones, False to sort only on field/value samples (default=False)
+	logscale : bool
+		True (default) to use log2 transform for frequencies before mean and sorting, False to use original values
 
 	output:
 	newexp : Experiment
@@ -158,10 +162,12 @@ def sortbyfreq(expdat,field=False,value=False,exact=False):
 	params=locals()
 
 	if field:
-		texp=hs.filtersamples(expdat,field,value,exact=exact)
+		texp=hs.filtersamples(expdat,field,value,exact=exact,exclude=exclude)
 	else:
 		texp=copy.deepcopy(expdat)
-
+	if logscale:
+		texp.data[texp.data<2]=2
+		texp.data=np.log2(texp.data)
 	meanvals=np.mean(texp.data,axis=1)
 	svals,sidx=hs.isort(meanvals)
 

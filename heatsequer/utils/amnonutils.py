@@ -51,6 +51,33 @@ def complement(seq):
 def revcomp(seq):
 	return reverse(complement(seq))
 
+def iterfastaseqs(filename):
+	"""
+	iterate a fasta file and return header,sequence
+	input:
+	filename - the fasta file name
+
+	output:
+	seq - the sequence
+	header - the header
+	"""
+
+	fl=open(filename,"rU")
+	cseq=''
+	chead=''
+	for cline in fl:
+		if cline[0]=='>':
+			if chead:
+				yield(cseq,chead)
+			cseq=''
+			chead=cline[1:].rstrip()
+		else:
+			cseq+=cline.strip()
+	if cseq:
+		yield(cseq,chead)
+	fl.close()
+
+
 
 def readfastaseqs(filename):
 	"""

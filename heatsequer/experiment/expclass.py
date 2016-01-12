@@ -486,7 +486,7 @@ def addsubtrees(expdat,tree,inplace=False):
 		newexp,newpos=insertbacteria(newexp,freqs=newfreq,seq=newname,tax=newtax,logit=False)
 
 	newexp.filters.append("Add subtrees")
-	hs.addcommand(expdat,"addsubtrees",params=params,replaceparams={'expdat':expdat})
+	hs.addcommand(newexp,"addsubtrees",params=params,replaceparams={'expdat':expdat})
 	return(newexp)
 
 
@@ -505,3 +505,35 @@ def findseqsinexp(expdat,seqs):
 	for cseq in seqs:
 		res.append(expdat.seqdict[cseq])
 	return res
+
+
+def samplemeanpervalue(expdat,field):
+	"""
+	create a new experiment, with 1 sample per value in field, containing the mean of all samples with that value
+
+	input:
+	expdat : Experiment
+	field : string
+		the field to use (i.e. 'ENV_MATTER')
+
+	output:
+	newexp : Experiment
+		The new experiment with 1 sample per unique value of field
+	"""
+	params=locals()
+
+	uvals=hs.getfieldvals(expdat,field,ounique=True)
+	vals=hs.getfieldvals(expdat,field,ounique=False)
+
+	vdict=hs.listtodict(vals)
+	nsamps=[]
+	for cval in uvals:
+		nsamps.append(vdict[cval][0])
+	newexp=hs.reordersamples(expdat,nsamps)
+	for idx,cval in enumerate(uvals):
+		cdat=expdat.data[:,vdict[cval]]
+		mv=np.mean(cdat,axis=1)
+		newexp.data[:,idx]=mv
+	newexp.filters.append('samplemeanpervalue for field %s' % field)
+	hs.addcommand(newexp,"samplemeanpervalue",params=params,replaceparams={'expdat':expdat})
+	return(newexp)
