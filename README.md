@@ -35,7 +35,15 @@ To run the program:
 -------------------
 from the direcroty where heatsequer is downloaded to type:
 
+on windows:
+
 activate heatsequer
+
+on mac/unix:
+
+source activate heatsequer
+
+and then (on win/mac/unix):
 
 python hsgui.py
 
