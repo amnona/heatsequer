@@ -343,8 +343,8 @@ def savebiom(expdat,filename):
 	"""
 	save experiment to text biom table and mapping file
 	"""
-	mapfilename=filename+'.map.txt','w'
-	mf=open(mapfilename)
+	mapfilename=filename+'.map.txt'
+	mf=open(mapfilename,'w')
 	mf.write('#SampleID')
 	for cfield in expdat.fields:
 		if cfield=='#SampleID':
@@ -361,8 +361,8 @@ def savebiom(expdat,filename):
 		mf.write('\n')
 	mf.close()
 
-	tablefilename=filename+'.table.txt','w'
-	tf=open(tablefilename)
+	tablefilename=filename+'.table.txt'
+	tf=open(tablefilename,'w')
 	tf.write('# Saved biom table from python analysis\n')
 	tf.write('#OTUID')
 	for csamp in expdat.samples:
