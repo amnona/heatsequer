@@ -434,6 +434,46 @@ def testbicluster(expdat,numiter=5,numruns=100):
 	ylabel('# Bacteria in cluster')
 
 
+def getbigfreqsource(expdat,seqdb):
+	"""
+	get the most common automatic db annotation for each sequence in the experiment
+
+	input:
+	expdat : Experiment
+		the experiment with sequences to annotate
+	seqdb : BactDB
+		the automatic bacterial database (from bactdb.load())
+
+	output:
+	newep : Experiment
+		the annotated experiment (source instead of taxonomy for each bacteria)
+	"""
+	hs.Debug(6,"Getting db info for all sequences")
+	dat=hs.bactdb.GetDBSource(seqdb,expdat.seqs)
+
+	# get the metadata info about each sample
+	hs.Debug(6,"Getting metadata info")
+	sampinfo=hs.bactdb.GetAllSampleInfo(seqdb,['ENV_MATTER','HOST_TAXID'])
+	hs.Debug(6,"Got info. Processing")
+	# count number of appearance in each category for each bacteria
+	numcat=np.zeros([len(expdat.seqs),0])
+	cats=[]
+	for k,v in sampinfo.items():
+		if len(v)>1:
+			numcat=np.hstack([numcat,(np.sum(dat[:,v]>0.001,axis=1,keepdims=True)+0.0)/max(10,len(v))])
+		else:
+			numcat=np.hstack([numcat,((dat[:,v]>0.001)+0.0)/10])
+		cats.append(k)
+
+	newexp=hs.copyexp(expdat)
+	for idx,cbact in enumerate(expdat.seqs):
+		si=np.argmax(numcat[idx,:])
+		sv=numcat[idx,si]
+		mcat=cats[si]
+#		newexp.tax[idx]=mcat+'-%f' % sv
+		newexp.tax[idx]=mcat
+
+	return newexp
 
 def getexpdbsources(expdat,seqdb=False):
 	'''

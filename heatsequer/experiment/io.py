@@ -15,6 +15,8 @@ import numpy as np
 import csv
 import biom
 import os
+from pdb import set_trace as XXX
+
 
 def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname=''):
 	"""
@@ -244,7 +246,7 @@ def loadrdptax(expdat,rdpfilename,fastaname=False,threshold=60):
 	"""
 	load rdp taxonomy (the output of download allrank in the rdp classifier website) and add to biom table
 	input:
-	expdat - the biom table for which the taxonomy was assigned (sequenced were saved)
+	expdat - the biom table for which the taxonomy was assigned (sequenced were `d)
 	rdpfilename - name of the saved allrank rdp assignment
 	fastaname - name of fasta file used for rdp assignment (if it was not from saveseqsforrdp) or False if sequences are in the header of the fasta
 	threshold - the assignemt probability threshold under which to not include the assignment (for each level)
@@ -357,7 +359,8 @@ def savebiom(expdat,filename):
 			if cfield=='#SampleID':
 				continue
 			mf.write('\t')
-			mf.write(expdat.smap[csamp][cfield])
+#			print(csamp,cfield,expdat.smap[csamp][cfield])
+			mf.write(str(expdat.smap[csamp][cfield]))
 		mf.write('\n')
 	mf.close()
 
@@ -367,7 +370,7 @@ def savebiom(expdat,filename):
 	tf.write('#OTUID')
 	for csamp in expdat.samples:
 		tf.write('\t%s' % csamp)
-	tf.write('\tTaxonomy\n')
+	tf.write('\ttaxonomy\n')
 	for idxseq,cseq in enumerate(expdat.seqs):
 		tf.write('%s' % cseq)
 		for idx,csamp in enumerate(expdat.samples):

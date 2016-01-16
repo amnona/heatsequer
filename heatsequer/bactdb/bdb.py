@@ -2,6 +2,7 @@
 
 """
 amnonscript
+heatsequer
 bactdb.py
 
 get info from the bacterial database
@@ -1167,6 +1168,46 @@ def GetStudyIDFromMap(mapfilename):
 	return studyid
 
 
+def GetAllSampleInfo(db,fields):
+	"""
+	get the values of fields for every sample in database
+	input:
+	db - dbstruct
+	fields : list of strings
+		the list of fields to get the values for
+	output:
+	valsdict : dict of list of ints, keyed by concatanation of field values
+		the positions for each value (concatanation of fields)
+	"""
+	db.cur.execute("SELECT MAX(SampleID) FROM Samples")
+	res=db.cur.fetchone()
+	numsamples=res[0]
+	Debug(0,"Maximal SampleID is",numsamples)
+
+	# get the values for each sample
+	fields=listupper(fields)
+	valsdict={}
+	for csample in range(numsamples):
+		db.cur.execute("SELECT Field,Value FROM Maps WHERE SampleID=?",[csample+1])
+		allvals=db.cur.fetchall()
+		cresdict={}
+		for cres in allvals:
+			cfield=cres[0].upper()
+			cval=cres[1]
+			cresdict[cfield]=cval
+		cans=""
+		for cfield in fields:
+			if cfield in cresdict:
+				cans+=cresdict[cfield]
+			else:
+				cans+="NF"
+			cans+=';'
+		if cans not in valsdict:
+			valsdict[cans]=[]
+		valsdict[cans].append(csample)
+	return valsdict
+
+
 def GetSamplesFromValues(db,fvdict):
 	"""
 	Get a list of samples that have values in their fields matching fv dict (all of the fields, any of the values in each field)
@@ -1178,7 +1219,6 @@ def GetSamplesFromValues(db,fvdict):
 	oksamps : list of int
 		positions (in samples vector) that for all fields have one of the values matching. sampleids are the int+1
 	"""
-
 	# get # of reads
 	db.cur.execute("SELECT MAX(SampleID) FROM Samples")
 	res=db.cur.fetchone()

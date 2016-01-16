@@ -2070,7 +2070,26 @@ def savebiom(expdat,filename):
 
 
 
+def getbigfreqsource(expdat,seqdb):
+	hs.Debug(6,"Getting db info for all sequences")
+	dat=hs.GetDBSource(expdat,expdat.seqs)
+	hs.Debug(6,"Got info. Processing")
+
+
 def getexpdbsources(expdat,seqdb=False):
+	"""
+	EXPERIMENTAL
+	get the source (from the automatic bactdb) for each bacteria in the experiment
+	using the sample with the most otus in the experiment (iteratively)
+
+	input:
+	expdat
+	seqdb - the bactdb
+
+	output:
+	newexp : Experiment
+		with the name of the study with the closest sample for each bacteria instead of the taxonomy
+	"""
 	if not seqdb:
 		if not expdat.seqdb:
 			au.Debug(9,'No sequence database loaded')
@@ -2078,9 +2097,9 @@ def getexpdbsources(expdat,seqdb=False):
 		else:
 			seqdb=expdat.seqdb
 
-	dat=bactdb.GetDBSource(seqdb,expdat.seqs)
+	dat=hs.GetDBSource(seqdb,expdat.seqs)
 
-	newexp=copy.deepcopy(expdat)
+	newexp=hs.copyexp(expdat)
 
 	THRESH=0.001
 	used=np.arange(np.size(dat,0))
