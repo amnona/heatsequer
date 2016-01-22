@@ -4,6 +4,7 @@
 amnonscript
 amnonutils.py
 
+heatsequer
 various utility functions
 """
 

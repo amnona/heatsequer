@@ -354,6 +354,7 @@ def saveexpseqs(expdat,filename):
 def savebiom(expdat,filename):
 	"""
 	save experiment to text biom table and mapping file
+	DEPRACATED - use savetobiom instead!
 	"""
 	savemap(expdat,filename+'.map.txt')
 	tablefilename=filename+'.table.txt'
