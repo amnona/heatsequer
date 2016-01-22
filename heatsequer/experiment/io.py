@@ -237,8 +237,18 @@ def gettaxfromtable(table,seq):
 		if 'taxonomy' in md:
 			tax = md['taxonomy']
 			if not isinstance(tax,str):
-				tax=[x[3:] if x[2]=='_' else x for x in tax]
-				tax = ';'.join(tax)
+				newtax=''
+				for x in tax:
+					if len(x)>2:
+						if x[2]=='_':
+							newtax+=x[3:]
+						else:
+							newtax+=x
+					else:
+						newtax+=x
+#					tax=[x[3:] if x[2]=='_' else x for x in tax]
+#					tax = ';'.join(tax)
+				tax=newtax
 	return tax
 
 
@@ -345,25 +355,7 @@ def savebiom(expdat,filename):
 	"""
 	save experiment to text biom table and mapping file
 	"""
-	mapfilename=filename+'.map.txt'
-	mf=open(mapfilename,'w')
-	mf.write('#SampleID')
-	for cfield in expdat.fields:
-		if cfield=='#SampleID':
-			continue
-		mf.write('\t%s' % cfield)
-	mf.write('\n')
-	for csamp in expdat.samples:
-		mf.write('%s' % csamp)
-		for cfield in expdat.fields:
-			if cfield=='#SampleID':
-				continue
-			mf.write('\t')
-#			print(csamp,cfield,expdat.smap[csamp][cfield])
-			mf.write(str(expdat.smap[csamp][cfield]))
-		mf.write('\n')
-	mf.close()
-
+	savemap(expdat,filename+'.map.txt')
 	tablefilename=filename+'.table.txt'
 	tf=open(tablefilename,'w')
 	tf.write('# Saved biom table from python analysis\n')
@@ -378,6 +370,26 @@ def savebiom(expdat,filename):
 		tf.write('\t%s\n' % expdat.tax[idxseq])
 	tf.close()
 	hs.Debug(6,'Saved experiment to biom table %s and mapping %s' % (tablefilename,mapfilename))
+
+
+def savemap(expdat,filename):
+	hs.Debug(1,"Saving mapping file %s" % filename)
+	mf=open(filename,'w')
+	mf.write('#SampleID')
+	for cfield in expdat.fields:
+		if cfield=='#SampleID':
+			continue
+		mf.write('\t%s' % cfield)
+	mf.write('\n')
+	for csamp in expdat.samples:
+		mf.write('%s' % csamp)
+		for cfield in expdat.fields:
+			if cfield=='#SampleID':
+				continue
+			mf.write('\t')
+			mf.write(str(expdat.smap[csamp][cfield]))
+		mf.write('\n')
+	mf.close()
 
 
 def savetsvtable(expdat,filename,logtransform=True):
@@ -526,3 +538,54 @@ def loadmap(mapfilename,sampidfield='#SampleID'):
 	mapf.close()
 	hs.Debug(6,'number of samples in map is %d' % len(mapsamples))
 	return mapsamples,smap,fields
+
+
+
+def createbiomtablefromexp(expdat):
+	"""
+	Create a biom table from an experiment
+	input:
+	expdat : Experiment
+
+	output:
+	table - the biom table (with taxonomy)
+	"""
+
+	# init the table
+	table=biom.table.Table(expdat.data,expdat.seqs,expdat.samples)
+	# and add metabolite name as taxonomy:
+	taxdict={}
+	for idx,cseq in enumerate(expdat.seqs):
+		taxdict[cseq]={'taxonomy': expdat.tax[idx]}
+	table.add_metadata(taxdict,axis='observation')
+	return table
+
+
+def savetobiom(expdat,filename,format='hdf5'):
+	"""
+	Save an experiment to a biom table
+	input:
+	expdat : Experiment
+	filename : string
+		Name of the file to save to
+	format : string
+		Format of the file ('hdf5','json','txt')
+	"""
+	savemap(expdat,filename+'.map.txt')
+	hs.Debug(1,'Saving biom table %s' % filename)
+	tab=createbiomtablefromexp(expdat)
+	if format=='hdf5':
+		with biom.util.biom_open(filename, 'w') as f:
+			tab.to_hdf5(f, "heatsequer")
+	elif format=='json':
+		with open(filename,'w') as f:
+			tab.to_json("heatsequer",f)
+	elif format=='txt':
+		s=tab.to_tsv()
+		with open(filename,'w') as f:
+			f.write(s)
+	else:
+		hs.Debug(9,'file format not supported')
+		return
+	hs.Debug(6,'table saved to file %s' % filename)
+	return
