@@ -474,6 +474,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bFilterFasta.clicked.connect(self.filterfasta)
 		self.bRenormalize.clicked.connect(self.renormalize)
 		self.bSubsample.clicked.connect(self.subsample)
+		self.cDebugMode.stateChanged.connect(self.debugmode)
 
 
 		# the main list right mouse menu
@@ -1056,6 +1057,15 @@ class AppWindow(QtGui.QMainWindow):
 			newexp=hs.normalizereads(cexp)
 			newexp.studyname=newexp.studyname+'_norm'
 			self.addexp(newexp)
+
+	def debugmode(self):
+		# unchecked
+		if self.cDebugMode.checkState()==0:
+			hs.Debug(9,"Debug mode off")
+			hs.amnonutils.DebugLevel=5
+		else:
+			hs.Debug(9,"Debug mode on")
+			hs.amnonutils.DebugLevel=0
 
 
 def main():

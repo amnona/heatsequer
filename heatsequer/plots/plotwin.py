@@ -43,24 +43,34 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	ax - the plot axis
 	"""
 
+	hs.Debug(1,"Plot experiment %s" % exp.studyname)
+	hs.Debug(1,"Commands:")
+	for ccommand in exp.commands:
+		hs.Debug(1,"%s" % ccommand)
 	vals=[]
 	if sortby:
+		hs.Debug(1,"Sorting by field %s" % sortby)
 		for csamp in exp.samples:
 			vals.append(exp.smap[csamp][sortby])
 		if numeric:
+			hs.Debug(1,"(numeric sort)")
 			vals=hs.tofloat(vals)
 		svals,sidx=hs.isort(vals)
 		newexp=hs.reordersamples(exp,sidx)
 	else:
+		hs.Debug(1,"No sample sorting")
 		svals=hs.getfieldvals(exp,'#SampleID')
 		newexp=hs.copyexp(exp)
+	hs.Debug(1,"Filtering min reads. original bacteria - %d" % len(newexp.seqs))
 	newexp=hs.filterminreads(newexp,minreads)
+	hs.Debug(1,"New number of bacteria %d" % len(newexp.seqs))
 	newexp.seqdb=seqdb
 	newexp.cdb=cdb
 
 #	ldat=ldat[:,sidx]
 	ldat=newexp.data
 	if uselog:
+		hs.Debug(1,"Using log, cutoff at 1")
 		ldat[np.where(ldat<1)]=1
 		ldat=np.log2(ldat)
 	oldparams=plt.rcParams
@@ -69,11 +79,14 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	mpl.rc('keymap',all_axes='A')
 	f=figure()
 	if rangeall:
+		hs.Debug(1,"colormap range is all")
 		iax=imshow(ldat,interpolation='nearest',aspect='auto')
 	else:
+		hs.Debug(1,"colormap range is 0,10")
 		iax=imshow(ldat,interpolation='nearest',aspect='auto',clim=[0,10])
 
 	if not ptitle:
+		hs.Debug(1,"Showing filters in title")
 		if (len(newexp.filters))>4:
 			cfilters=[newexp.filters[0],'...',newexp.filters[-2],newexp.filters[-1]]
 		else:
@@ -84,6 +97,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	ax=iax.get_axes()
 	ax.autoscale(False)
 	if showline:
+		hs.Debug(1,"Showing lines")
 		labs=[]
 		labpos=[]
 		linepos=[]
@@ -96,18 +110,22 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			minpos=idx+1
 			linepos.append(idx+0.5)
 			labs.append(cval)
+		hs.Debug(1,"number of lines is %d" % len(linepos))
 		ax.set_xticks(labpos)
 		ax.set_xticklabels(labs,rotation=45,ha='right')
 		for cx in linepos:
 			plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'k',linewidth=2)
 	else:
+		hs.Debug(1,"Not showing lines")
 		if showxall or len(newexp.samples)<=10:
+			hs.Debug(1,"less than 10 samples, showing all sample names")
 			ax.set_xticklabels(svals,rotation=90)
 			ax.set_xticks(range(len(newexp.samples)))
 	tight_layout()
 	ax.set_ylim(-0.5,np.size(ldat,0)+0.5)
 
 	if showcolorbar:
+		hs.Debug(1,"Showing colorbar")
 		cb=colorbar(ticks=list(np.log2([2,10,100,500,1000])))
 		cb.ax.set_yticklabels(['<0.02%','0.1%','1%','5%','>10%'])
 
@@ -125,12 +143,14 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 
 	# if want the ontology analysis for a given category:
 	if ontofig:
+		hs.Debug(1,"Ontofig is set")
 		newexp.ontofigname=ontofig
 	else:
 		newexp.ontofigname=False
 
 	# if we want gui, open it
 	if usegui:
+		hs.Debug(1,"Using the GUI window")
 		import plotwingui
 		guiwin = plotwingui.PlotGUIWindow(newexp)
 		ax.guiwin=guiwin
@@ -142,6 +162,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		hs.Debug(7,'Not using gui')
 
 	if newexp.plotmetadata:
+		hs.Debug(1,"Experiment has metadata attached for plotting (%d points)" % len(newexp.plotmetadata))
 		for cmet in newexp.plotmetadata:
 			addplotmetadata(newexp,field=cmet[0],value=cmet[1],color=cmet[2],inverse=cmet[3],beforesample=cmet[4])
 	show()
@@ -175,6 +196,14 @@ def onplotkeyclick(event):
 		cax.set_ylim(cylim[1],cylim[1]+(cylim[1]-cylim[0]))
 		tight_layout()
 		cax.ofig.canvas.draw()
+	if event.key=='left':
+		cax.set_xlim(cxlim[0]-(cxlim[1]-cxlim[0]), cxlim[0])
+		tight_layout()
+		cax.ofig.canvas.draw()
+	if event.key=='right':
+		cax.set_xlim(cxlim[1],cxlim[1]+(cxlim[1]-cxlim[0]))
+		tight_layout()
+		cax.ofig.canvas.draw()
 	if event.key==',':
 	# select next bacteria
 		cax.guiwin.clearselection()
@@ -204,7 +233,7 @@ def onplotkeyclick(event):
 					print (cinfo)
 				sys.stdout.flush()
 
-	if event.key=='left':
+	if event.key=='<':
 		cx=cax.guiwin.csamp
 		cx=cx-1
 		cy=cax.guiwin.cseq
@@ -213,7 +242,7 @@ def onplotkeyclick(event):
 		cax.sampline=cax.plot([cx,cx],[-0.5,len(cexp.sids)-0.5],':w')[0]
 		cax.guiwin.updateinfo(cx,cy)
 		cax.ofig.canvas.draw()
-	if event.key=='right':
+	if event.key=='>':
 		cx=cax.guiwin.csamp
 		cx=cx+1
 		cy=cax.guiwin.cseq
@@ -246,7 +275,7 @@ def getlabelnames(cexp,showdb=True,showcontam=True):
 	"""
 	pass
 
-def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=50):
+def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 	"""
 	show the y-lables (taxonomies) for the plot window
 
@@ -297,7 +326,6 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=50):
 				clab.set_color("red")
 			if idx in pathogenlist:
 				clab.set_color("blue")
-				print("patric pathogen found")
 	cax.set_ylim(cylim[0], cylim[1])
 	cax.set_xlim(cxlim[0], cxlim[1])
 	tight_layout()
@@ -318,7 +346,7 @@ def onplotmouseclick(event):
 			ax.lines.remove(ax.sampline)
 		ax.sampline=ax.plot([rx,rx],[-0.5,len(cexp.sids)-0.5],':w')[0]
 		if event.key:
-			if not 'super' in event.key:
+			if 'super' not in event.key:
 				ax.guiwin.clearselection()
 			if 'shift' in event.key:
 				p1=min(ry,ax.lastselect)

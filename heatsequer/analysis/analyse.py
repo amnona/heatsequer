@@ -782,7 +782,7 @@ def randomizeexp(expdat,normalize=False):
 	"""
 	params=locals()
 
-	newexp=copyexp(expdat)
+	newexp=hs.copyexp(expdat)
 	numsamps=len(newexp.samples)
 	for idx,cseq in enumerate(newexp.seqs):
 		rp=np.random.permutation(numsamps)
@@ -791,7 +791,7 @@ def randomizeexp(expdat,normalize=False):
 		newexp=hs.normalizereads(newexp,inplace=True,fixorig=False)
 
 	newexp.filters.append("RANDOMIZED!!! normalize = %s" % normalize)
-	hs.addcommand(randomizeexp,"keeptreebest",params=params,replaceparams={'expdat':expdat})
+	hs.addcommand(newexp,"randomizeexp",params=params,replaceparams={'expdat':expdat})
 	return newexp
 
 
@@ -1321,6 +1321,8 @@ def fastpermutecorr(expdat,field,numeric=True,method='ranksum',numperm=[100,1000
 	return newexp
 
 
+
+
 def meanfunc(dat,axis=1):
 	"""
 	calculate the mean of each row
@@ -1386,3 +1388,245 @@ def getsimilarfreqseqs(expdat,seqs):
 		print("num in seqs %d, num in all %d" % (ffrac[idx], len(cpos[idx])))
 	print(edges)
 
+
+def FindSimValBact(expdat,field):
+	"""
+	EXPERIMENTAL
+	find bacteria showing similar behavior on same value in field (i.e. same family)
+	input:
+	expdat : Experiment
+	field : string
+		the field containing the values to group by
+
+	output:
+	newexp : Experiment
+		sorted by effect size
+	"""
+	cdat=expdat.data>0
+	totgvar=np.zeros([len(expdat.seqs)])
+	totmean=np.mean(cdat,axis=1)
+	uvals=hs.getfieldvals(expdat,field,ounique=True)
+	for cval in uvals:
+		cpos=hs.findsamples(expdat,field,cval)
+		if not len(cpos)==2:
+			continue
+		cvar=(cdat[:,cpos[0]]-totmean)*(cdat[:,cpos[1]]-totmean)
+		totgvar+=cvar
+
+	totvar=np.var(cdat,axis=1)
+	rat=totgvar/totvar
+	sind=np.argsort(rat)
+	newexp=hs.reorderbacteria(expdat,sind)
+	return newexp
+
+
+def fastpermutegroupsim(expdat,field,method='binary',numperm=[100,1000],maxfval=0.05,mineffect=2):
+	"""
+	do a fast iterative permutation test for group similarity (like twins)
+	by skipping the row if it is clearly above the p-value or if the effect size is not big enough
+	input:
+	expdat : Experiment
+	field : string
+		Name of the field containing the per-group identifier
+	numperm : list of integers
+		number of permutations in each step
+	output:
+	newexp : Experiment
+	"""
+	params=locals()
+
+	numbact=len(expdat.seqs)
+	numsamps=len(expdat.samples)
+	if method=='binary':
+		dat=expdat.data>0
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+
+	uvals=hs.getfieldvals(expdat,field,ounique=True)
+	groups=[]
+	for cval in uvals:
+		cpos=hs.findsamples(expdat,field,cval)
+		if len(cpos)<2:
+			continue
+		if len(cpos)>2:
+			cpos=cpos[:2]
+		groups.append(cpos)
+	hs.Debug(6,'Found %d group pairs' % len(groups))
+
+	odif=groupfunc(dat,groups)
+	oeffect=np.abs(odif)
+
+	odat=copy.copy(dat)
+
+	# init for the first permutations
+	pval=np.ones(numbact)
+	pval[oeffect>=mineffect]=0
+
+	# go over permutation numbers
+	for cnumperm in numperm:
+		alldif=np.empty([numbact,cnumperm])
+		alldif[:]=np.nan
+		usebact=np.where(pval<2*maxfval)[0]
+		notusebact=np.where(pval>=2*maxfval)[0]
+		print("cnumperm %d, numbact %d, numnotuse %d" % (cnumperm,len(usebact),len(notusebact)))
+		dat=odat[usebact,:]
+		# do permutations
+		for x in range(cnumperm):
+			rp=np.random.permutation(numsamps)
+			diff=groupfunc(dat[:,rp],groups)
+			alldif[usebact,x]=diff
+
+		# calculate the p-values
+		pval=np.ones([numbact])
+		for crow in range(numbact):
+			cdat=alldif[crow,:]
+			cdat=cdat[np.logical_not(np.isnan(cdat))]
+			ccnumperm=len(cdat)
+			if ccnumperm==0:
+				pval[crow]=1
+				continue
+			cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/ccnumperm
+			# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
+			cpval=min(cpval+(1.0/ccnumperm),1)
+			pval[crow]=cpval
+
+	# calculate the fdr
+	fval=hs.fdr(pval)
+	keep=np.where(np.array(fval)<=maxfval)
+	seqlist=[]
+	for cidx in keep[0]:
+		seqlist.append(expdat.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(pval[keep[0]])
+	newexp=hs.reorderbacteria(newexp,si)
+	hs.addcommand(newexp,"fastpermutecorr",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('fast significant correlation %s for field %s' % (method,field))
+	return newexp
+
+
+def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method='binary',numperm=[100,1000],maxfval=0.05,mineffect=2):
+	"""
+	do a fast iterative permutation test for group similarity (like twins)
+	by skipping the row if it is clearly above the p-value or if the effect size is not big enough
+	compare the values in the 2 groups and see where it is bigger in one group
+	input:
+	expdat1,expdat2 : Experiment
+		the experiments to test (a division of 1 experiment)
+	field : string
+		Name of the field containing the per-group identifier
+	numperm : list of integers
+		number of permutations in each step
+	output:
+	newexp : Experiment
+	"""
+	params=locals()
+
+	expdat1=hs.filtersamples(expdat,twofield,twoval1)
+	if twoval2:
+		expdat2=hs.filtersamples(expdat,twofield,twoval2)
+	else:
+		expdat2=hs.filtersamples(expdat,twofield,twoval1,exclude=True)
+
+
+	numbact=len(expdat1.seqs)
+	numsamps1=len(expdat1.samples)
+	numsamps2=len(expdat2.samples)
+	if method=='binary':
+		dat1=expdat1.data>0
+		dat2=expdat2.data>0
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+
+	uvals1=hs.getfieldvals(expdat1,field,ounique=True)
+	groups1=[]
+	for cval in uvals1:
+		cpos=hs.findsamples(expdat1,field,cval)
+		if len(cpos)<2:
+			continue
+		if len(cpos)>2:
+			cpos=cpos[:2]
+		groups1.append(cpos)
+	hs.Debug(6,'Found %d group pairs' % len(groups1))
+
+	uvals2=hs.getfieldvals(expdat2,field,ounique=True)
+	groups2=[]
+	for cval in uvals2:
+		cpos=hs.findsamples(expdat2,field,cval)
+		if len(cpos)<2:
+			continue
+		if len(cpos)>2:
+			cpos=cpos[:2]
+		groups2.append(cpos)
+	hs.Debug(6,'Found %d group pairs' % len(groups1))
+
+	odif1=(groupfunc(dat1,groups1)+0.0)/len(groups1)
+	odif2=(groupfunc(dat2,groups2)+0.0)/len(groups2)
+	odif=odif1-odif2
+	oeffect=np.abs(odif)
+
+	odat1=copy.copy(dat1)
+	odat2=copy.copy(dat2)
+
+	# init for the first permutations
+	pval=np.ones(numbact)
+	pval[oeffect>=mineffect]=0
+
+	# go over permutation numbers
+	for cnumperm in numperm:
+		alldif=np.empty([numbact,cnumperm])
+		alldif[:]=np.nan
+		usebact=np.where(pval<2*maxfval)[0]
+		notusebact=np.where(pval>=2*maxfval)[0]
+		print("cnumperm %d, numbact %d, numnotuse %d" % (cnumperm,len(usebact),len(notusebact)))
+		dat1=odat1[usebact,:]
+		dat2=odat2[usebact,:]
+		# do permutations
+		for x in range(cnumperm):
+			rp1=np.random.permutation(numsamps1)
+			rp2=np.random.permutation(numsamps2)
+			diff1=(groupfunc(dat1[:,rp1],groups1)+0.0)/len(groups1)
+			diff2=(groupfunc(dat2[:,rp2],groups2)+0.0)/len(groups2)
+			diff=diff1-diff2
+			alldif[usebact,x]=diff
+
+		# calculate the p-values
+		pval=np.ones([numbact])
+		for crow in range(numbact):
+			cdat=alldif[crow,:]
+			cdat=cdat[np.logical_not(np.isnan(cdat))]
+			ccnumperm=len(cdat)
+			if ccnumperm==0:
+				pval[crow]=1
+				continue
+			cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/ccnumperm
+			# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
+			cpval=min(cpval+(1.0/ccnumperm),1)
+			pval[crow]=cpval
+
+	# calculate the fdr
+	fval=hs.fdr(pval)
+	keep=np.where(np.array(fval)<=maxfval)
+	seqlist=[]
+	for cidx in keep[0]:
+		seqlist.append(expdat.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(pval[keep[0]])
+	newexp=hs.reorderbacteria(newexp,si)
+	hs.addcommand(newexp,"fastpermutecorr",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('fast significant correlation %s for field %s' % (method,field))
+	return newexp
+
+
+def groupfunc(dat,groups):
+	odat=np.zeros([np.shape(dat)[0]])
+	for cgroup in groups:
+		odat += dat[:,cgroup[0]]*dat[:,cgroup[1]]
+	return odat
