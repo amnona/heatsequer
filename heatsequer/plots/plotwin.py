@@ -91,6 +91,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			cfilters=[newexp.filters[0],'...',newexp.filters[-2],newexp.filters[-1]]
 		else:
 			cfilters=newexp.filters
+		cfilters=hs.clipstrings(cfilters,30)
 		ptitle='\n'.join(cfilters)
 	title(ptitle,fontsize=10)
 
@@ -205,7 +206,7 @@ def onplotkeyclick(event):
 		tight_layout()
 		cax.ofig.canvas.draw()
 	if event.key==',':
-	# select next bacteria
+		# select next bacteria
 		cax.guiwin.clearselection()
 		cax.lastselect+=1
 		cax.guiwin.selectbact([cax.lastselect])
@@ -219,7 +220,7 @@ def onplotkeyclick(event):
 					print (cinfo)
 				sys.stdout.flush()
 	if event.key=='.':
-	# select prev bacteria
+		# select prev bacteria
 		cax.guiwin.clearselection()
 		cax.lastselect-=1
 		cax.guiwin.selectbact([cax.lastselect])
@@ -275,6 +276,7 @@ def getlabelnames(cexp,showdb=True,showcontam=True):
 	"""
 	pass
 
+
 def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 	"""
 	show the y-lables (taxonomies) for the plot window
@@ -300,6 +302,7 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 	if maxtax>0:
 		if cylim[1]-cylim[0]>maxtax:
 			cax.set_yticklabels([])
+			hs.Debug(7,'Too many bacteria - zoom in to show labels')
 			return
 
 	contamlist=[]
