@@ -541,7 +541,14 @@ def filtersimilarsamples(expdat,field,method='mean'):
 			continue
 		if method=='random':
 			keep.append(cpos[np.random.randint(len(cpos))])
-		elif method=='mean':
+			continue
+		# set the mapping file values
+		cmap=expdat.smap[expdat.samples[cpos[0]]]
+		for ccpos in cpos[1:]:
+			for cfield in cmap.keys():
+				if cmap[cfield]!=expdat.smap[expdat.samples[ccpos]][cfield]:
+					cmap[cfield]='NA'
+		if method=='mean':
 			cval=np.mean(expdat.data[:,cpos],axis=1)
 			newexp.data[:,cpos[0]]=cval
 			keep.append(cpos[0])
@@ -549,6 +556,10 @@ def filtersimilarsamples(expdat,field,method='mean'):
 			cval=np.median(expdat.data[:,cpos],axis=1)
 			newexp.data[:,cpos[0]]=cval
 			keep.append(cpos[0])
+		else:
+			hs.Debug(9,'method %s not supported' % method)
+			return False
+		newexp.smap[expdat.samples[cpos[0]]]=cmap
 	newexp=hs.reordersamples(newexp,keep)
 	newexp.filters.append('Filter similar samples field %s method %s' % (field,method))
 	hs.addcommand(newexp,"filtersimilarsamples",params=params,replaceparams={'expdat':expdat})
