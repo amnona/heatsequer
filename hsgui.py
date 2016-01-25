@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 """
 heatsequer full gui
 """
@@ -296,6 +295,23 @@ class DiffExpWindow(QtGui.QDialog):
 			self.tValue2.setReadOnly(True)
 
 
+class FilterSimilarSamplesWindow(QtGui.QDialog):
+	cexp=[]
+
+	def __init__(self,expdat):
+		super(FilterSimilarSamplesWindow, self).__init__()
+		uic.loadUi('./ui/filtersimilarsamples.py', self)
+		self.cexp=expdat
+		self.cField.addItems(expdat.fields)
+		self.bFieldValues1.clicked.connect(self.fieldvalues1)
+		self.tNewName.setText(self.cexp.studyname+'_fss')
+
+
+	def fieldvalues1(self):
+		cfield=str(self.cField.currentText())
+		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+
+
 class CorrelationWindow(QtGui.QDialog):
 	cexp=[]
 
@@ -458,6 +474,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainFilterSamples.clicked.connect(self.filtersamples)
 		self.bDiffExp.clicked.connect(self.diffexp)
 		self.bCorrelation.clicked.connect(self.correlation)
+		self.bFilterSimilarSamples.clicked.connect(self.filtersimilarsamples)
 		self.bClassifier.clicked.connect(self.classify)
 		self.bFilterOrigReads.clicked.connect(self.filterorigreads)
 		self.bMainSortSamples.clicked.connect(self.sortsamples)
@@ -762,6 +779,26 @@ class AppWindow(QtGui.QMainWindow):
 					newexp=hs.getdiffsig(cexp,field,value1,value2,method=method)
 				if newexp:
 					newexp.studyname=newname+'_'+field
+					self.addexp(newexp)
+
+
+	def filtersimilarsamples(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			filtersimsampwin = FilterSimilarSamplesWindow(cexp)
+			res=diffexpwin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				field=str(filtersimsampwin.cField.currentText())
+				newname=str(filtersimsampwin.tNewName.text())
+				method=str(filtersimsampwin.cMethod.currentText())
+				newexp=hs.filtersimilarsamples(cexp,field=field,method=method)
+				if newexp:
+					newexp.studyname=newname
 					self.addexp(newexp)
 
 

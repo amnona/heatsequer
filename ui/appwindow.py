@@ -102,7 +102,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -184,6 +184,19 @@
       </property>
       <property name="text">
        <string>Subsample</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="bFilterSimilarSamples">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>180</y>
+        <width>121</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Filter SimSamp</string>
       </property>
      </widget>
     </widget>
