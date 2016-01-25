@@ -791,7 +791,7 @@ class AppWindow(QtGui.QMainWindow):
 			cname=str(citem.text())
 			cexp=self.explist[cname]
 			filtersimsampwin = FilterSimilarSamplesWindow(cexp)
-			res=diffexpwin.exec_()
+			res=filtersimsampwin.exec_()
 			if res==QtGui.QDialog.Accepted:
 				field=str(filtersimsampwin.cField.currentText())
 				newname=str(filtersimsampwin.tNewName.text())
