@@ -511,3 +511,46 @@ def filterannotations(expdat,annotation,cdb,exclude=False):
 	hs.addcommand(newexp,"filterannotations",params=params,replaceparams={'expdat':expdat})
 	hs.Debug(6,'%d bacteria found' % len(keeplist))
 	return newexp
+
+
+def filtersimilarsamples(expdat,field,method='mean'):
+	"""
+	join similar samples into one sample (i.e. to remove samples of same individual)
+	input:
+	expdat : Experiment
+	field : string
+		Name of the field containing the values (for which similar values will be joined)
+	method : string
+		What to do with samples with similar value. options:
+		'mean' - replace with a sample containing the mean of the samples
+		'median'- replace with a sample containing the median of the samples
+		'random' - replace with a sinlge random sample out of these samples
+	output:
+	newexp : Experiment
+		like the input experiment but only one sample per unique value in field
+	"""
+	params=locals()
+
+	newexp=hs.copyexp(expdat)
+	uvals=hs.getfieldvals(expdat,field,ounique=True)
+	keep=[]
+	for cval in uvals:
+		cpos=hs.findsamples(expdat,field,cval)
+		if len(cpos)==1:
+			keep.append(cpos[0])
+			continue
+		if method=='random':
+			keep.append(cpos[np.random.randint(len(cpos))])
+		elif method=='mean':
+			cval=np.mean(expdat.data[:,cpos],axis=1)
+			newexp.data[:,cpos[0]]=cval
+			keep.append(cpos[0])
+		elif method=='median':
+			cval=np.median(expdat.data[:,cpos],axis=1)
+			newexp.data[:,cpos[0]]=cval
+			keep.append(cpos[0])
+	newexp=hs.reordersamples(newexp,keep)
+	newexp.filters.append('Filter similar samples field %s method %s' % (field,method))
+	hs.addcommand(newexp,"filtersimilarsamples",params=params,replaceparams={'expdat':expdat})
+	hs.Debug(6,'%d samples before filtering, %d after' % (len(expdat.samples),len(newexp.samples)))
+	return newexp
