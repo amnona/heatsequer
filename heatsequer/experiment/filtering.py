@@ -565,3 +565,43 @@ def filtersimilarsamples(expdat,field,method='mean'):
 	hs.addcommand(newexp,"filtersimilarsamples",params=params,replaceparams={'expdat':expdat})
 	hs.Debug(6,'%d samples before filtering, %d after' % (len(expdat.samples),len(newexp.samples)))
 	return newexp
+
+
+def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,direction='both'):
+	"""
+	filter bacteria, keeping only ones that show a consecutive region of samples with higher/lower mean than other samples
+	Done by scanning all windowlen/startpos options for each bacteria
+	input:
+	expdat : Experiment
+	field : string
+		The field to sort by or False to skip sorting
+	numeric : bool
+		For the sorting according to field (does not matter if field is False)
+	minfold : float
+		The minimal fold change for the window compared to the rest in order to keep
+	minlen : int
+		The minimal window len for over/under expression testing
+	direction : string
+		'both' - test both over and under expression in the window
+		'up' - only overexpressed
+		'down' - only underexpressed
+
+	output:
+	newexp : Experiment
+		The filtered experiment, sorted according to window start samples position
+	"""
+	params=locals()
+
+	# sort if needed
+	if field:
+		newexp=hs.sortsamples(expdat,field,numeric=numeric)
+	else:
+		newexp=hs.copyexp(expdat)
+
+	numsamples=len(newexp.samples)
+	for startpos in range(numsamples-minlen):
+		for cwin in np.range(startpos,numsamples):
+			meanin=np.mean(newexp.data[:,startpos:startpos+cwin])
+	newexp.filters.append('Filter wave field=%s minlen=%d' % (field,minlen))
+	hs.addcommand(newexp,"filterwave",params=params,replaceparams={'expdat':expdat})
+	hs.Debug(6,'%d samples before filtering, %d after' % (len(expdat.samples),len(newexp.samples)))

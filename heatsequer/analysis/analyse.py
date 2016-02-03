@@ -436,6 +436,7 @@ def testbicluster(expdat,numiter=5,numruns=100):
 
 def getbigfreqsource(expdat,seqdb):
 	"""
+	EXPERIMENTAL
 	get the most common automatic db annotation for each sequence in the experiment
 
 	input:
@@ -989,11 +990,12 @@ def testenrichment(data,group,method='binary',fdr=0.05,twosided=False,printit=Tr
 
 def testbactenrichment(expdat,seqs,cdb=False,bdb=False,dbexpres=False,translatestudy=False):
 	"""
+	EXPERIMENTAL
 	test for enrichment in bacteria database categories for the bacteria in the list seqs
 	enrichment is tested against manual curation (if cdb not False) and automatic curation (if bactdb not false)
 
 	input:
-	expdat
+	expdat : Experiment
 	seqs - the sequences in the cluster
 	cdb - the cooldb (manual curation) or false to skip
 	bactdb - the automatic database or false to skip

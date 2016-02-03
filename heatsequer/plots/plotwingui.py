@@ -183,22 +183,28 @@ class PlotGUIWindow(QtGui.QDialog):
 		"""
 		check for annotation enrichment for selected sequences (compared to other sequences in this experiment)
 		"""
-		if self.cexp.cooldb:
-			selseqs=[]
-			for cid in self.selection:
-				selseqs.append(self.cexp.seqs[cid])
-			bmd=hs.cooldb.testenrichment(self.cexp.cooldb,self.cexp.seqs,selseqs)
+		if not self.cexp.cdb:
+			hs.Debug(8,'No cooldb loaded')
+			return		
+		selseqs=[]
+		for cid in self.selection:
+			selseqs.append(self.cexp.seqs[cid])
+		bmd=hs.cooldb.testenrichment(self.cexp.cdb,self.cexp.seqs,selseqs)
+		hs.Debug(6,'found %d items' % len(bmd))
+		if len(bmd)>0:
+			slistwin = SListWindow(listname='Enrichment')
 			bmd=hs.sortenrichment(bmd)
 			for cbmd in bmd:
-				# if cbmd['observed']<cbmd['expected']:
-				# 	ccolor=QtGui.QColor(155,0,0)
-				# else:
-				# 	ccolor=QtGui.QColor(0,155,0)
-				# item = QtGui.QListWidgetItem()
-				# item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
-				# item.setTextColor(ccolor)
-				# self.lBacteria.addItem(item)
+				if cbmd['observed']<cbmd['expected']:
+					ccolor=QtGui.QColor(155,0,0)
+				else:
+					ccolor=QtGui.QColor(0,155,0)
+				item = QtGui.QListWidgetItem()
+				item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
+				item.setTextColor(ccolor)
+				slistwin.lList.addItem(item)
 				print("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
+			slistwin.exec_()
 
 
 	def save(self):

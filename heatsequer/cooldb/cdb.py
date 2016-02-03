@@ -10,6 +10,7 @@ heatsequer cooldb manual curation database functions
 __version__ = "0.9"
 
 from ..utils.amnonutils import mlhash,Debug,listtodict,fdr
+from ..utils.sequence import seqdist
 
 import numpy as np
 import biom
@@ -119,6 +120,29 @@ def getseqinfo(db,seq):
 			continue
 		info.append(db.dat[cpos]['bacteria_description'])
 		Debug(0,'found in position',cpos)
+	return info
+
+
+def getcloseseqinfo(db,oseq,maxdist):
+	"""
+	get database info from all sequences in database close up to maxdist mismatches from oseq
+	input:
+	db - the initiated database file
+	oseq : sequence (ACGT string)
+		the sequence to find neoghbors of in the database
+	maxdist : integer
+		find only sequences with hamming<=maxdist
+	output:
+	info : list of strings
+		database entries of all close sequences
+	"""
+	info=[]
+	for cdbent in db.dat:
+		cseq=cdbent['sequence']
+		cdist=seqdist(oseq,cseq)
+		if cdist<=maxdist:
+			info.append('(%d) %s' % (cdist,cdbent['bacteria_description']))
+			Debug(1,'Found similar sequence dist %d' % cdist)
 	return info
 
 
@@ -288,9 +312,9 @@ def preparealldbvals(db):
 	return db
 
 
-def testenrichment(db,allseqs=[],group=[],maxfval=0.05,freqs=[]):
+def testenrichment(db,allseqs=[],group=[],maxfval=0.1,freqs=[]):
 	"""
-	test for database entries enriched in sequences from group compared to allseqs (all the sequences)
+	test for database entries enriched in sequences from group compared to allseqs (all the sequences) or all the database
 	input:
 	db - the coolseq database
 	allseqs - a list of all the sequences or [] to compare to all the database
@@ -304,8 +328,10 @@ def testenrichment(db,allseqs=[],group=[],maxfval=0.05,freqs=[]):
 
 	if len(allseqs)>0:
 		alllen=len(allseqs)
+		Debug(6,'comparing list of %d seqs to %d sequences' % (alllen,len(group)))
 	else:
 		alllen=len(db.dat)
+		Debug(6,'comparing list of %d seqs to all %d sequences' % (alllen,len(group)))
 	glen=len(group)
 
 	if len(allseqs)>0:
@@ -331,6 +357,8 @@ def testenrichment(db,allseqs=[],group=[],maxfval=0.05,freqs=[]):
 		allmatch=0
 		groupmatch=0
 		usedseq={}
+		usedseq2={}
+		usedseq3={}
 		for cdatidx in v:
 			cdat=db.dat[cdatidx]
 			cseq=cdat['sequence']
@@ -339,35 +367,44 @@ def testenrichment(db,allseqs=[],group=[],maxfval=0.05,freqs=[]):
 			usedseq[cseq]=True
 			cseqs=cseq[:89]
 			if len(allseqs)>0:
-				if not cseqs in asdict:
+				if cseqs not in asdict:
 					continue
 				for opos in asdict[cseqs]:
 					oseq=allseqs[opos]
 					mlen=min(len(oseq),len(cseq))
 					if not oseq[:mlen]==cseq[:mlen]:
 						continue
+					if oseq in usedseq2:
+						continue
 					allmatch+=1
+					usedseq2[oseq]=True
 			else:
 				allmatch+=1
-			if not cseqs in gsdict:
+			if cseqs not in gsdict:
 				continue
 			for opos in gsdict[cseqs]:
 				oseq=group[opos]
 				mlen=min(len(oseq),len(cseq))
 				if not oseq[:mlen]==cseq[:mlen]:
 					continue
+				if oseq in usedseq3:
+					continue
+				usedseq3[oseq]=True
 				if len(freqs)>0:
 					groupmatch+=freqs[opos]
 				else:
 					groupmatch+=1
+		if allmatch==0:
+			continue
 		pnull=float(allmatch)/alllen
-#		p1=stats.binom.cdf(groupmatch,glen,pnull)
+		p1=1-stats.binom.cdf(groupmatch-1,glen,pnull)
 		if len(allseqs)>0:
 			p2=stats.binom.cdf(glen-groupmatch,glen,1-pnull)
 		else:
-			p2=0
+			p2=stats.binom.cdf(glen-groupmatch,glen,1-pnull)
 #		p=min(p1,p2)
-		p=p2
+#		p=p2
+		p=p1
 		allp.append(p)
 		cpv={}
 		cpv['pval']=p

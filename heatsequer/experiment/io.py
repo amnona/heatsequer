@@ -91,6 +91,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	removemap=[]
 	for idx,cmap in enumerate(mapsamples):
 		if cmap not in tablesamples:
+			hs.Debug(2,'Map sample %s not in table' % cmap)
 			removemap.append(idx)
 			try:
 				del smap[cmap]
@@ -542,27 +543,33 @@ def loadmap(mapfilename,sampidfield='#SampleID'):
 
 
 
-def createbiomtablefromexp(expdat):
+def createbiomtablefromexp(expdat,addtax=True):
 	"""
 	Create a biom table from an experiment
 	input:
 	expdat : Experiment
+	addtax : bool
+		True to add taxonomy metadata, False to not add
 
 	output:
 	table - the biom table (with taxonomy)
 	"""
 
 	# init the table
-	table=biom.table.Table(expdat.data,expdat.seqs,expdat.samples)
+	table=biom.table.Table(expdat.data,expdat.seqs,expdat.samples,type="OTU table")
 	# and add metabolite name as taxonomy:
-	taxdict={}
-	for idx,cseq in enumerate(expdat.seqs):
-		taxdict[cseq]={'taxonomy': expdat.tax[idx]}
-	table.add_metadata(taxdict,axis='observation')
+	if addtax:
+		taxdict={}
+		for idx,cseq in enumerate(expdat.seqs):
+			ctax=str(expdat.tax[idx])
+			if len(ctax)==0:
+				ctax='NA'
+			taxdict[cseq]={'taxonomy': ctax}
+		table.add_metadata(taxdict,axis='observation')
 	return table
 
 
-def savetobiom(expdat,filename,format='hdf5'):
+def savetobiom(expdat,filename,format='hdf5',addtax=True):
 	"""
 	Save an experiment to a biom table
 	input:
@@ -571,10 +578,12 @@ def savetobiom(expdat,filename,format='hdf5'):
 		Name of the file to save to
 	format : string
 		Format of the file ('hdf5','json','txt')
+	addtax : bool
+		True to add taxonomy metadata, False to not add
 	"""
 	savemap(expdat,filename+'.map.txt')
 	hs.Debug(1,'Saving biom table %s' % filename)
-	tab=createbiomtablefromexp(expdat)
+	tab=createbiomtablefromexp(expdat,addtax=addtax)
 	if format=='hdf5':
 		with biom.util.biom_open(filename, 'w') as f:
 			tab.to_hdf5(f, "heatsequer")

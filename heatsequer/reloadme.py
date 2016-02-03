@@ -12,6 +12,7 @@ def reloadme():
 	reload(hs.experiment.normalization)
 	reload(hs.experiment)
 	reload(hs.utils.amnonutils)
+	reload(hs.utils.sequence)
 	reload(hs.utils)
 #	reload(hs.plots.plotwingui)
 	reload(hs.plots.plotwin)

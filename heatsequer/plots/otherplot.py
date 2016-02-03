@@ -164,7 +164,7 @@ def plotdiffsummary2(expdatlist1,expdatlist2,seqs1,seqs2,field,val1,val2=False,m
 	autoscale(tight=True)
 
 
-def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=True,threshold=0.1,ptitle=False):
+def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=True,threshold=0.1,ptitle=False,showallfirstexp=True):
 	"""
 	plot a heat map for the fold change in each experiment in expdatlist
 	for the log2 foldchange between the 2 groups (val1,val2 values in field)
@@ -180,6 +180,8 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 	sortit - True to sort according to difference in the first expdat, False to use the order in seqs
 	threshold - minimum value of stat for ratio calculation (otherwise rounded up to threshold)
 	ptitle - name of figure of False for auto title
+	showallfirstexp : bool
+		True - show all sequences, False - show only sequences present in at least one other study except the first
 
 	output:
 	diffsum - the same as the plotted heatmap (row per otu, column per experiment)
@@ -213,7 +215,10 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 		diffsum.append(cdiffsum)
 
 	# remove all NaN lines (not enough reads for threshold)
-	nanlines=np.where(~np.isnan(diff).all(axis=0))[0]
+	if showallfirstexp:
+		nanlines=np.where(~np.isnan(diff).all(axis=0))[0]
+	else:
+		nanlines=np.where(~np.isnan(diff[1:,:]).all(axis=0))[0]
 	diff=diff[:,nanlines]
 	otus=hs.reorder(seqs,nanlines)
 

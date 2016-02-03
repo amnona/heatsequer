@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True):
 	"""
 	Plot an experiment
 	input:
@@ -37,6 +37,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	showcolorbar - True to plot the colorbar. False to not plot
 	ptitle - name of the figure or False to show processing history as name
 	lowcutoff - minimal value for read (for 0 log transform) - the minimal resolution - could be 10000*2/origreads
+	showxlabel : bool
+		True to show the x label (default), False to hide it
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)
@@ -112,8 +114,9 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			linepos.append(idx+0.5)
 			labs.append(cval)
 		hs.Debug(1,"number of lines is %d" % len(linepos))
-		ax.set_xticks(labpos)
-		ax.set_xticklabels(labs,rotation=45,ha='right')
+		if showxlabel:
+			ax.set_xticks(labpos)
+			ax.set_xticklabels(labs,rotation=45,ha='right')
 		for cx in linepos:
 			plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'k',linewidth=2)
 	else:
