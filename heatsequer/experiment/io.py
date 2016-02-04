@@ -18,7 +18,7 @@ import os
 from pdb import set_trace as XXX
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname=''):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -33,6 +33,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		'biom' - a biom table
 		'meta' - a metabolomics table (row per sample, col per metabolite, can contain duplicate metaboliteids)
 	normalize - True to normalize to 10k reads per sample, False to not normalize (change to mean 10k reads/sample)
+	keepzero : bool
+		True (default) to keep samples with 0 reads, False to throw away
+	removefrom : string
+		if non empty - cut table sample name after (and including) the first occurance of removefrom
 	output:
 	an experiment class for the current experiment
 	"""
@@ -49,6 +53,26 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	else:
 		hs.Debug(9,'Table type %s not supported' % tabletype)
 		return False
+
+	# if need to cut table sample names
+	if removefrom:
+		idtable={}
+		foundids={}
+		ids=table.ids(axis='sample')
+		for cid in ids:
+			if removefrom in cid:
+				tid=cid[:cid.find(removefrom)]
+			else:
+				hs.Debug(6,'%s not found in sample name %s (removefrom)' % (removefrom,cid))
+				tid=cid
+			if tid in foundids:
+				hs.Debug(6,'already have id %s' % cid)
+				idtable[cid]=tid+str(foundids[tid])
+				foundids[tid]+=1
+			else:
+				foundids[tid]=1
+				idtable[cid]=tid
+		table=table.update_ids(idtable,axis='sample')
 
 	# if need to add constant string to sample names in table
 	if addsname!='':
@@ -82,26 +106,30 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 			removelist.append(cid)
 			hs.Debug(6,'Table sample %s not found in mapping file' % cid)
 	hs.Debug(6,'removing %s samples' % len(removelist))
-	table=table.filter(removelist,axis='sample',invert=True)
+	if len(removelist)>0:
+		table=table.filter(removelist,axis='sample',invert=True)
 
 	tablesamples = table.ids(axis='sample')
 	hs.Debug(6,'deleted. number of samples in table is now %d' % len(tablesamples))
 
 	# remove samples not in table from mapping file
 	removemap=[]
+	addlist=[]
 	for idx,cmap in enumerate(mapsamples):
 		if cmap not in tablesamples:
 			hs.Debug(2,'Map sample %s not in table' % cmap)
-			removemap.append(idx)
-			try:
-				del smap[cmap]
-			except:
-				hs.Debug(8,'Duplicate SampleID %s in mapping file' % cmap)
+			if not keepzero:
+				removemap.append(idx)
+				try:
+					del smap[cmap]
+				except:
+					hs.Debug(8,'Duplicate SampleID %s in mapping file' % cmap)
+			else:
+				addlist.append(cmap)
 	if len(removemap)>0:
 		hs.Debug(7,'removing %d samples from mapping file' % len(removemap))
 		mapsamples=hs.delete(mapsamples,removemap)
 	hs.Debug(7,'number of samples in mapping file is now %d' % len(mapsamples))
-
 
 	# get info about the sequences
 	tableseqs = table.ids(axis='observation')
@@ -126,6 +154,11 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	exp=hs.Experiment()
 	exp.datatype=tabletype
 	exp.data=table.matrix_data.todense().A
+	# check if need to add the 0 read samples to the data
+	if len(addlist)>0:
+		tablesamples=list(tablesamples)
+		tablesamples=tablesamples+addlist
+		exp.data=np.hstack([exp.data,np.zeros([np.shape(exp.data)[0],len(addlist)])])
 	exp.smap=smap
 	exp.samples=tablesamples
 	exp.seqs=tableseqs
@@ -151,7 +184,8 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	okreads=np.where(colsum>0)
 	if np.size(colsum)-np.size(okreads[1])>0:
 		print("Samples with 0 reads: %d" % (np.size(colsum)-np.size(okreads[1])))
-		exp=hs.reordersamples(exp,okreads[1])
+		if not keepzero:
+			exp=hs.reordersamples(exp,okreads[1])
 		colsum=np.sum(exp.data,axis=0,keepdims=True)
 	if tabletype=='meta':
 		normalize=False
@@ -247,6 +281,7 @@ def gettaxfromtable(table,seq):
 							newtax+=x
 					else:
 						newtax+=x
+					newtax+=';'
 #					tax=[x[3:] if x[2]=='_' else x for x in tax]
 #					tax = ';'.join(tax)
 				tax=newtax
