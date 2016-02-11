@@ -279,3 +279,43 @@ def sortcorrelation(expdat,method='all'):
 	newexp.filters.append("correlation sort")
 	hs.addcommand(newexp,"sortcorrelation",params=params,replaceparams={'expdat':expdat})
 	return newexp
+
+
+############
+# add sort by center of mass (for time/1d series)
+###########
+
+
+def sortbycentermass(expdat,field=False,numeric=True,uselog=True):
+	"""
+	sort bacteria in the experiment according to a 1d gradient by calculating the center of mass
+	input:
+	expdat
+	field : string
+		the name of the field to sort by or False to skip sorting
+	numeric : bool
+		True if the sort field is numeric (ignored if no sort field)
+	uselog : bool
+		True to log transform the data before mass center calculation
+	output:
+	newexp - the experiment with sorted bacteria
+	"""
+	params=locals()
+
+	if field:
+		newexp=hs.sortsamples(expdat,field,numeric=numeric)
+	else:
+		newexp=hs.copyexp(expdat)
+	dat=newexp.data
+	if uselog:
+		dat[dat<1]=1
+		dat=np.log2(dat)
+	cm=[]
+	multpos=np.arange(len(newexp.samples))
+	for cseqind in range(len(newexp.seqs)):
+		cm.append(np.dot(dat[cseqind,:],multpos)/np.sum(dat[cseqind,:]))
+	sv,si=hs.isort(cm)
+	newexp=hs.reorderbacteria(expdat,si)
+	newexp.filters.append("sort by center of mass field=%s, uselog=%s" % (field,uselog))
+	hs.addcommand(newexp,"sortbycentermass",params=params,replaceparams={'expdat':expdat})
+	return newexp

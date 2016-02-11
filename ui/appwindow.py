@@ -71,7 +71,7 @@
      <rect>
       <x>30</x>
       <y>60</y>
-      <width>256</width>
+      <width>291</width>
       <height>192</height>
      </rect>
     </property>
@@ -285,9 +285,9 @@
      <widget class="QPushButton" name="bRenormalize">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>190</y>
-        <width>121</width>
+        <x>120</x>
+        <y>40</y>
+        <width>131</width>
         <height>32</height>
        </rect>
       </property>
@@ -306,6 +306,19 @@
       </property>
       <property name="text">
        <string>Sort Abundance</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="bFilterAnnotation">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>121</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Filter Annotation</string>
       </property>
      </widget>
     </widget>

@@ -481,6 +481,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bMainClusterBacteria.clicked.connect(self.clusterbacteria)
 		self.bMainFilterMinReads.clicked.connect(self.filterminreads)
 		self.bMainFilterTaxonomy.clicked.connect(self.filtertaxonomy)
+		self.bFilterAnnotation.clicked.connect(self.filterannotation)
 		self.bFilterPresence.clicked.connect(self.filterpresence)
 		self.bFilterMean.clicked.connect(self.filtermean)
 		self.bSortAbundance.clicked.connect(self.sortabundance)
@@ -1082,6 +1083,22 @@ class AppWindow(QtGui.QMainWindow):
 				newexp=hs.filtertaxonomy(cexp,tax=str(val),exact=False)
 				newexp.studyname=newexp.studyname+'_ftax'
 				self.addexp(newexp)
+
+
+	def filterannotation(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			val,ok=QtGui.QInputDialog.getText(self,'Filter annotation','Annotation to filter')
+			if ok:
+				newexp=hs.filterannotations(cexp,str(val),cdb=self.cooldb)
+				newexp.studyname=newexp.studyname+'_fan'
+				self.addexp(newexp)
+
 
 	def renormalize(self):
 		items=self.bMainList.selectedItems()

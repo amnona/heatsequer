@@ -168,12 +168,7 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 	if plotit:
 		figure()
 		if plottype=='heatmap':
-			iax=imshow(gdist,interpolation='nearest',aspect='auto',vmin=0,vmax=1)
-			ax=iax.get_axes()
-			ax.set_xticks(range(len(uvals)))
-			ax.set_xticklabels(uvals,rotation=90)
-			ax.set_yticks(range(len(uvals)))
-			ax.set_yticklabels(uvals)
+			plotdistheatmap(gdist,uvals)
 			title(expdat.studyname+' '+field)
 		elif plottype=='hist':
 			pl=[]
@@ -190,3 +185,53 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 			legend(names)
 	return gdist,uvals
 
+
+def plotdistheatmap(gdist,uvals,neworder=False):
+	"""
+	plot a distance heat map and add axis labels
+	input:
+	gdist : numpy array of float
+		the distance matrix (from getgroupdist)
+	uvals : list of strings
+		the names of the categories (from getgroupdist)
+	neworder : list of integers of False
+		if not False, the order by which to sort the matrix and labels prior to plotting
+	"""
+	if neworder:
+		gdist=gdist[neworder,:]
+		gdist=gdist[:,neworder]
+		uvals=hs.reorder(uvals,neworder)
+	figure()
+	iax=imshow(gdist,interpolation='nearest',aspect='auto',vmin=0,vmax=1)
+	ax=iax.get_axes()
+	ax.set_xticks(range(len(uvals)))
+	ax.set_xticklabels(uvals,rotation=90)
+	ax.set_yticks(range(len(uvals)))
+	ax.set_yticklabels(uvals)
+	tight_layout()
+	draw()
+
+
+def plotdistbar(gdist,uvals,crow=0,neworder=False):
+	"""
+	plot a distance heat map and add axis labels
+	input:
+	gdist : numpy array of float
+		the distance matrix (from getgroupdist)
+	uvals : list of strings
+		the names of the categories (from getgroupdist)
+	neworder : list of integers of False
+		if not False, the order by which to sort the matrix and labels prior to plotting
+	"""
+	if neworder:
+		gdist=gdist[neworder,:]
+		gdist=gdist[:,neworder]
+		uvals=hs.reorder(uvals,neworder)
+
+	figure()
+	bar(np.arange(len(uvals))-0.5,gdist[crow,:])
+	ax=gca()
+	ax.set_xticks(range(len(uvals)))
+	ax.set_xticklabels(uvals,rotation=90)
+	tight_layout()
+	draw()

@@ -567,7 +567,7 @@ def filtersimilarsamples(expdat,field,method='mean'):
 	return newexp
 
 
-def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,direction='both'):
+def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,step=1,direction='up',posloc='start'):
 	"""
 	filter bacteria, keeping only ones that show a consecutive region of samples with higher/lower mean than other samples
 	Done by scanning all windowlen/startpos options for each bacteria
@@ -579,12 +579,17 @@ def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,direction='bot
 		For the sorting according to field (does not matter if field is False)
 	minfold : float
 		The minimal fold change for the window compared to the rest in order to keep
+	step : int
+		The skip between tested windows (to make it faster use a larger skip)
 	minlen : int
 		The minimal window len for over/under expression testing
 	direction : string
 		'both' - test both over and under expression in the window
 		'up' - only overexpressed
 		'down' - only underexpressed
+	posloc : string
+		The position to measure the beginning ('maxstart') or middle ('maxmid') of maximal wave
+		or 'gstart' to use beginning of first window with >=minfold change
 
 	output:
 	newexp : Experiment
@@ -598,10 +603,73 @@ def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,direction='bot
 	else:
 		newexp=hs.copyexp(expdat)
 
+	dat=newexp.data
+	dat[dat<1]=1
+	dat=np.log2(dat)
 	numsamples=len(newexp.samples)
+	numbact=len(newexp.seqs)
+	maxdiff=np.zeros([numbact])
+	maxpos=np.zeros([numbact])
+	maxlen=np.zeros([numbact])
 	for startpos in range(numsamples-minlen):
-		for cwin in np.range(startpos,numsamples):
-			meanin=np.mean(newexp.data[:,startpos:startpos+cwin])
+		for cwin in np.arange(minlen,numsamples-startpos,step):
+			meanin=np.mean(dat[:,startpos:startpos+cwin],axis=1)
+			nowin=[]
+			if startpos>0:
+				nonwin=np.arange(startpos-1)
+			if startpos<numsamples:
+				nowin=np.hstack([nowin,np.arange(startpos,numsamples-1)])
+			nowin=nowin.astype(int)
+			meanout=np.mean(dat[:,nowin],axis=1)
+			cdiff=meanin-meanout
+			if direction=='both':
+				cdiff=np.abs(cdiff)
+			elif direction=='down':
+				cdiff=-cdiff
+			if posloc=='start':
+				maxpos[cdiff>maxdiff]=startpos
+			elif posloc=='mid':
+				maxpos[cdiff>maxdiff]=startpos+int(cwin/2)
+			else:
+				hs.Debug('posloc nut supported %s' % posloc)
+				return False
+			maxlen[cdiff>maxdiff]=cwin
+			maxdiff=np.maximum(maxdiff,cdiff)
+
+	keep=np.where(maxdiff>=minfold)[0]
+	keeppos=maxpos[keep]
+	si=np.argsort(keeppos)
+	keep=keep[si]
+	for ci in keep:
+		hs.Debug(6,'bacteria %s startpos %d len %d diff %f' % (newexp.tax[ci],maxpos[ci],maxlen[ci],maxdiff[ci]))
+	newexp=hs.reorderbacteria(newexp,keep)
 	newexp.filters.append('Filter wave field=%s minlen=%d' % (field,minlen))
 	hs.addcommand(newexp,"filterwave",params=params,replaceparams={'expdat':expdat})
 	hs.Debug(6,'%d samples before filtering, %d after' % (len(expdat.samples),len(newexp.samples)))
+	return newexp
+
+
+def filtern(expdat):
+	"""
+	delete sequences containing "N" from experiment and renormalize
+	input:
+	expdat : Experiment
+	output:
+	newexp : Experiment
+		experiment without sequences containing "N"
+	"""
+	params=locals()
+
+	keeplist=[]
+	for idx,cseq in enumerate(expdat.seqs):
+		if "N" in cseq:
+			continue
+		if "n" in cseq:
+			continue
+		keeplist.append(idx)
+	newexp=hs.reorderbacteria(expdat,keeplist)
+	newexp=hs.normalizereads(newexp)
+	newexp.filters.append('Filter sequences containing N')
+	hs.addcommand(newexp,"filtern",params=params,replaceparams={'expdat':expdat})
+	hs.Debug(6,'%d sequences before filtering, %d after' % (len(expdat.seqs),len(newexp.seqs)))
+	return newexp
