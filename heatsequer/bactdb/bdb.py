@@ -29,7 +29,8 @@ from pdb import set_trace as XXX
 from scipy import stats
 
 
-def initdb(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
+#def initdb(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
+def initdb(dbname="db/SRBactDB.db"):
 	db=dbstart()
 	db=initontologies(db)
 	return db
@@ -77,7 +78,8 @@ def initontologies(db):
 	return db
 
 
-def dbconnect(db,dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
+#def dbconnect(db,dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
+def dbconnect(db,dbname="db/SRBactDB.db"):
 	"""
 	connect to the database
 	input:
@@ -108,7 +110,9 @@ class dbstruct:
 		self.dbfile=''
 		self.recPrecBalance=10
 
-def dbstart(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
+
+#def dbstart(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
+def dbstart(dbname="db/SRBactDB.db"):
 	'''
 	start the database structure and connect to database
 	input:
