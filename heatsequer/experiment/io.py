@@ -599,7 +599,8 @@ def createbiomtablefromexp(expdat,addtax=True):
 			ctax=str(expdat.tax[idx])
 			if len(ctax)==0:
 				ctax='NA'
-			taxdict[cseq]={'taxonomy': ctax}
+			taxs=ctax.split(';')
+			taxdict[cseq]={'taxonomy': taxs}
 		table.add_metadata(taxdict,axis='observation')
 	return table
 

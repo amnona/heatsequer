@@ -64,7 +64,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		svals=hs.getfieldvals(exp,'#SampleID')
 		newexp=hs.copyexp(exp)
 	hs.Debug(1,"Filtering min reads. original bacteria - %d" % len(newexp.seqs))
-	newexp=hs.filterminreads(newexp,minreads)
+	newexp=hs.filterminreads(newexp,minreads,logit=uselog)
 	hs.Debug(1,"New number of bacteria %d" % len(newexp.seqs))
 	newexp.seqdb=seqdb
 	newexp.cdb=cdb
@@ -72,8 +72,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 #	ldat=ldat[:,sidx]
 	ldat=newexp.data
 	if uselog:
-		hs.Debug(1,"Using log, cutoff at 1")
-		ldat[np.where(ldat<1)]=1
+		hs.Debug(1,"Using log, cutoff at %f" % lowcutoff)
+		ldat[np.where(ldat<lowcutoff)]=lowcutoff
 		ldat=np.log2(ldat)
 	oldparams=plt.rcParams
 	mpl.rc('keymap',back='c, backspace')

@@ -137,7 +137,7 @@ def sortsamples(exp,field,numeric=False,logit=True):
 	return newexp
 
 
-def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale=True):
+def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale=True,useabs=False):
 	"""
 	sort bacteria in experiment according to frequency
 	sorting is performed based on a subset of samples (field/val/exact) and then
@@ -154,6 +154,8 @@ def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale
 		True to sort on all samples except the field/value ones, False to sort only on field/value samples (default=False)
 	logscale : bool
 		True (default) to use log2 transform for frequencies before mean and sorting, False to use original values
+	useabs : bool
+		True to sort by absolute value of freq, False (default) to sort by freq
 
 	output:
 	newexp : Experiment
@@ -168,13 +170,17 @@ def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale
 	if logscale:
 		texp.data[texp.data<2]=2
 		texp.data=np.log2(texp.data)
-	meanvals=np.mean(texp.data,axis=1)
+	if useabs:
+		meanvals=np.mean(np.abs(texp.data),axis=1)
+	else:
+		meanvals=np.mean(texp.data,axis=1)
 	svals,sidx=hs.isort(meanvals)
 
 	newexp=hs.reorderbacteria(expdat,sidx)
 	newexp.filters.append("sort by freq field=%s value=%s" % (field,value))
 	hs.addcommand(newexp,"sortbyfreq",params=params,replaceparams={'expdat':expdat})
 	return newexp
+
 
 def sortbyvariance(expdat,field=False,value=False,exact=False,norm=False):
 	"""
