@@ -94,6 +94,17 @@ def dbconnect(db,dbname="db/SRBactDB.db"):
 	Debug(1,"Connected")
 	# and the cursor
 	db.cur=db.con.cursor()
+	# test if the database file exists:
+	try:
+		db.cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Reads'")
+		istable=db.cur.fetchone()
+		if istable[0]==0:
+			Debug(9,"Can't find Reads table in database file %s" % dbname)
+			db=False
+	except:
+		Debug(9,"Can't test database file %s" % dbname)
+		db=False
+
 	return db
 
 

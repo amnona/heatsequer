@@ -242,3 +242,33 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 	tight_layout()
 	show()
 	return diff,expnames,otus
+
+
+
+def showleakage(expdat,seq,wwpp=['1','2','3','4','5','6','7','8']):
+	figure()
+	newexp=hs.filterseqs(expdat,[seq])
+	for idx,cplate in enumerate(wwpp):
+		print(cplate)
+		cexp=hs.filtersamples(newexp,'primerplate_int',cplate,exact=True)
+		print(len(cexp.samples))
+		subplot(3,3,idx+1)
+		title(cplate)
+		cmat=np.empty([8,12])
+		cmat[:] = np.NAN
+		for idx2,csamp in enumerate(cexp.samples):
+			crow=ord(cexp.smap[csamp]['Row'].lower())-ord('A'.lower())
+			ccol=int(cexp.smap[csamp]['column_int'])-1
+			cval=cexp.data[0,idx2]
+			if cval>0:
+				cval=np.log2(cval)
+			else:
+				cval=-5
+			cmat[crow,ccol]=cval
+		imshow(cmat,interpolation='nearest',aspect='auto',clim=[-5,10],cmap=plt.get_cmap("coolwarm"))
+		for idx2,csamp in enumerate(cexp.samples):
+			crow=ord(cexp.smap[csamp]['Row'].lower())-ord('A'.lower())
+			ccol=int(cexp.smap[csamp]['column_int'])-1
+			isntc=int(cexp.smap[csamp]['NTC_bool'])
+			if isntc:
+				text(ccol,crow,'x')

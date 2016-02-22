@@ -609,7 +609,7 @@ def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,step=1,directi
 	numsamples=len(newexp.samples)
 	numbact=len(newexp.seqs)
 	maxdiff=np.zeros([numbact])
-	maxpos=np.zeros([numbact])
+	maxpos=np.zeros([numbact])-1
 	maxlen=np.zeros([numbact])
 	for startpos in range(numsamples-minlen):
 		for cwin in np.arange(minlen,numsamples-startpos,step):
@@ -626,6 +626,9 @@ def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,step=1,directi
 				cdiff=np.abs(cdiff)
 			elif direction=='down':
 				cdiff=-cdiff
+			if posloc=='gstart':
+				usepos=(cdiff>=minfold) and (maxpos==-1)
+				maxpos[usepos]=startpos
 			if posloc=='start':
 				maxpos[cdiff>maxdiff]=startpos
 			elif posloc=='mid':

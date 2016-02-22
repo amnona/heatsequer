@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False):
 	"""
 	Plot an experiment
 	input:
@@ -39,6 +39,10 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	lowcutoff - minimal value for read (for 0 log transform) - the minimal resolution - could be 10000*2/origreads
 	showxlabel : bool
 		True to show the x label (default), False to hide it
+	colormap : string or False
+		name of colormap or False (default) to use mpl default colormap
+	colorrange : [min,max] or False
+		[min,max] to set the colormap range, False to use data min,max (default) as specified in rangeall
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)
@@ -80,12 +84,19 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	mpl.rc('keymap',forward='v')
 	mpl.rc('keymap',all_axes='A')
 	f=figure()
-	if rangeall:
+	# set the colormap to default if not supplied
+	if not colormap:
+		colormap=plt.rcParams['image.cmap']
+	# plot the image
+	if colorrange:
+		hs.Debug(1,"colormap range is 0,10")
+		iax=imshow(ldat,interpolation='nearest',aspect='auto',clim=colorrange,cmap=plt.get_cmap(colormap))
+	elif rangeall:
 		hs.Debug(1,"colormap range is all")
-		iax=imshow(ldat,interpolation='nearest',aspect='auto')
+		iax=imshow(ldat,interpolation='nearest',aspect='auto',cmap=plt.get_cmap(colormap))
 	else:
 		hs.Debug(1,"colormap range is 0,10")
-		iax=imshow(ldat,interpolation='nearest',aspect='auto',clim=[0,10])
+		iax=imshow(ldat,interpolation='nearest',aspect='auto',clim=[0,10],cmap=plt.get_cmap(colormap))
 
 	if not ptitle:
 		hs.Debug(1,"Showing filters in title")

@@ -387,26 +387,26 @@ def saveexpseqs(expdat,filename):
 	hs.saveseqsfasta(expdat,expdat.seqs,filename)
 
 
-def savebiom(expdat,filename):
-	"""
-	save experiment to text biom table and mapping file
-	DEPRACATED - use savetobiom instead!
-	"""
-	savemap(expdat,filename+'.map.txt')
-	tablefilename=filename+'.table.txt'
-	tf=open(tablefilename,'w')
-	tf.write('# Saved biom table from python analysis\n')
-	tf.write('#OTUID')
-	for csamp in expdat.samples:
-		tf.write('\t%s' % csamp)
-	tf.write('\ttaxonomy\n')
-	for idxseq,cseq in enumerate(expdat.seqs):
-		tf.write('%s' % cseq)
-		for idx,csamp in enumerate(expdat.samples):
-			tf.write('\t%d' % expdat.data[idxseq,idx])
-		tf.write('\t%s\n' % expdat.tax[idxseq])
-	tf.close()
-	hs.Debug(6,'Saved experiment to biom table %s and mapping %s' % (tablefilename,mapfilename))
+# def savebiom(expdat,filename):
+# 	"""
+# 	save experiment to text biom table and mapping file
+# 	DEPRACATED - use savetobiom instead!
+# 	"""
+# 	savemap(expdat,filename+'.map.txt')
+# 	tablefilename=filename+'.table.txt'
+# 	tf=open(tablefilename,'w')
+# 	tf.write('# Saved biom table from python analysis\n')
+# 	tf.write('#OTUID')
+# 	for csamp in expdat.samples:
+# 		tf.write('\t%s' % csamp)
+# 	tf.write('\ttaxonomy\n')
+# 	for idxseq,cseq in enumerate(expdat.seqs):
+# 		tf.write('%s' % cseq)
+# 		for idx,csamp in enumerate(expdat.samples):
+# 			tf.write('\t%d' % expdat.data[idxseq,idx])
+# 		tf.write('\t%s\n' % expdat.tax[idxseq])
+# 	tf.close()
+# 	hs.Debug(6,'Saved experiment to biom table %s and mapping %s' % (tablefilename,mapfilename))
 
 
 def savemap(expdat,filename):
@@ -605,7 +605,7 @@ def createbiomtablefromexp(expdat,addtax=True):
 	return table
 
 
-def savetobiom(expdat,filename,format='hdf5',addtax=True):
+def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True):
 	"""
 	Save an experiment to a biom table
 	input:
@@ -616,10 +616,16 @@ def savetobiom(expdat,filename,format='hdf5',addtax=True):
 		Format of the file ('hdf5','json','txt')
 	addtax : bool
 		True to add taxonomy metadata, False to not add
+	useorigreads : bool
+		True (default) to use original number of reads, False to use normalized (sum=10k)
 	"""
 	savemap(expdat,filename+'.map.txt')
 	hs.Debug(1,'Saving biom table %s' % filename)
-	tab=createbiomtablefromexp(expdat,addtax=addtax)
+	if useorigreads:
+		newexp=hs.toorigreads(expdat)
+	else:
+		newexp=expdat
+	tab=createbiomtablefromexp(newexp,addtax=addtax)
 	if format=='hdf5':
 		with biom.util.biom_open(filename, 'w') as f:
 			tab.to_hdf5(f, "heatsequer")

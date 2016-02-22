@@ -505,11 +505,13 @@ class AppWindow(QtGui.QMainWindow):
 		try:
 			hs.Debug(6,'Connecting to sequence database')
 			self.bactdb=hs.bactdb.dbstart()
+			hs.Debug(6,'Sequence database connected')
 		except:
 			hs.Debug(9,'sequence database file not found')
 		try:
 			hs.Debug(6,'Loading coolseq database')
 			self.cooldb=hs.cooldb.loaddb()
+			hs.Debug(6,'coolseq database loaded')
 		except:
 			hs.Debug(9,'CoolDB file not found')
 

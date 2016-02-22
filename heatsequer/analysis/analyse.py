@@ -243,7 +243,7 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 	return newexp
 
 
-def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore',sampkeep=0.5,bactkeep=0.25,justcount=False,numruns=1):
+def bicluster(expdat,numiter=5,startb=False,starts=False,method='binary',sampkeep=0.5,bactkeep=0.25,justcount=False,numruns=1):
 	"""
 	EXPERIMENTAL
 	cluster bacteria and samples from subgroup
@@ -403,8 +403,8 @@ def bicluster(expdat,numiter=5,startb=False,starts=False,method='zscore',sampkee
 			samples.append(csamp)
 
 		if not justcount:
-			newexp=reordersamples(expdat,sampo)
-			newexp=reorderbacteria(newexp,bacto,inplace=True)
+			newexp=hs.reordersamples(expdat,sampo)
+			newexp=hs.reorderbacteria(newexp,bacto,inplace=True)
 			newexp.filters.append('biclustering')
 		else:
 			newexp=False
@@ -1632,3 +1632,161 @@ def groupfunc(dat,groups):
 	for cgroup in groups:
 		odat += dat[:,cgroup[0]]*dat[:,cgroup[1]]
 	return odat
+
+
+def getsubtaxdict(expdat,separator=';',removemin=2,removemax=250):
+	"""
+	get a dict of all sub taxonomies and sequence positions associated with it
+
+	input:
+	expdat : Experiment
+	separator : string
+		The sperator between different taxonomic levels
+	removemin : int
+		The minimal number of bacteria in a group in order to keep the group (0 to keep all)
+	removemax : int
+		The maximal number of bacteria in a group in order to keep the group (0 to keep all)
+
+
+	output:
+	taxgroups : dictionary of Name (string) ,pos (list of int)
+		The taxonomic groups
+	"""
+	taxgroups={}
+	for idx,ctax in enumerate(expdat.tax):
+		if ctax in taxgroups:
+			taxgroups[ctax].append(idx)
+		else:
+			taxgroups[ctax]=[idx]
+		for cpos,cchar in enumerate(ctax):
+			if cchar==separator:
+				subtax=ctax[:cpos]
+				if subtax in taxgroups:
+					taxgroups[subtax].append(idx)
+				else:
+					taxgroups[subtax]=[idx]
+	# and remove groups with 1 bacteria
+	for k,v in taxgroups.items():
+		taxgroups[k]=np.array(v)
+		if len(v)<removemin:
+			del taxgroups[k]
+		elif removemax>0:
+			if len(v)>removemax:
+				del taxgroups[k]
+	return taxgroups
+
+
+def fastpermuteoverlap(expdat,tfunc,taxgroups={},numperm=[100,1000],maxpval=0.05,mineffect=0.1,method='binary'):
+	"""
+	do a fast iterative permutation test for taxonomic group overlap
+	by skipping the row if it is clearly above the p-value or if the effect size is not big enough
+	input:
+	expdat : Experiment
+	taxgroups : dictionary of Name (string) ,pos (list of int) or empty list
+		The taxonomic groups to test for overlap - name and position in the data matrix. Empty (default) to calculate here
+	tfunc : the test function (takes dat and a list of taxonomic group positions, returns value per group
+	maxpv : float
+		the maximal p-value to test
+	numperm : list of integers
+		number of permutations in each step
+	mineffect - the minimal effect size (abs(group difference)/mean) - keep only bacteria with at least this effect size or 0 to use all
+	output:
+	taxgroups - dict of name,list of positions
+	pvals - np array of floats
+		p-value for each taxonomic group (approximate if high)
+	odif - np array of floats
+		the statistic for the original (non-permuted) groups
+	"""
+
+	dat=expdat.data
+	# if no taxonomic group dict provided, make it ourselves
+	if len(taxgroups)==0:
+		taxgroups=getsubtaxdict(expdat)
+	taxglist=[]
+	taxgnames=[]
+	for k,v in taxgroups.items():
+		taxglist.append(v)
+		taxgnames.append(k)
+
+	odat=copy.copy(expdat.data)
+	if method=='binary':
+		odat=odat>0
+	numgroups=len(taxgroups)
+	numsamps=len(expdat.samples)
+	numseqs=len(expdat.seqs)
+	# calculate the true difference
+	odif=tfunc(odat,taxglist)
+
+	# init for the first permutations
+	pval=np.ones(numgroups)
+#	pval[oeffect>=mineffect]=0
+
+	# go over permutation numbers
+	for cnumperm in numperm:
+		alldif=np.empty([numgroups,cnumperm])
+		alldif[:]=np.nan
+		usegroup=np.where(pval<2*maxpval)[0]
+		notusegroup=np.where(pval>=2*maxpval)[0]
+		print("cnumperm %d, numbact %d, numnotuse %d" % (cnumperm,len(usegroup),len(notusegroup)))
+		dat=odat
+		# do permutations
+		for x in range(cnumperm):
+			for idx in range(numseqs):
+				rp=np.random.permutation(numsamps)
+				dat[idx,:]=dat[idx,rp]
+			diff=tfunc(dat,taxglist)
+			alldif[:,x]=diff
+
+		# calculate the p-values
+		pval=np.ones([numgroups])
+		for crow in range(numgroups):
+			cdat=alldif[crow,:]
+			cdat=cdat[np.logical_not(np.isnan(cdat))]
+			ccnumperm=len(cdat)
+			if ccnumperm==0:
+				pval[crow]=1
+				continue
+			cpval=float(np.sum(cdat>=odif[crow]))/ccnumperm
+			# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
+			cpval=min(cpval+(1.0/ccnumperm),1)
+			pval[crow]=cpval
+	return pval,odif,taxgnames,taxglist
+
+
+def getgroupcover(dat,taxgroups):
+	"""
+	for fastpermuteoverlap. Get the number of samples that have at least 1 bacteria out of the tax group
+	input:
+	dat - the experiment data matrix
+	taxgroups : list of list of int
+		a list of bacteria positions per group
+
+	output:
+	cover : numpy array of floats
+		Number of samples that have coverage for each taxgroup
+	"""
+	cover=np.zeros([len(taxgroups)])
+	for idx,cgroup in enumerate(taxgroups):
+		persamp=np.sum(dat[cgroup,:],axis=0)
+		cover[idx]=np.sum(persamp>0)
+	return cover
+
+
+def getgroupcoverstd(dat,taxgroups):
+	"""
+	for fastpermuteoverlap. Get the std of the sum of all bacteria in the group
+	input:
+	dat - the experiment data matrix
+	taxgroups : list of list of int
+		a list of bacteria positions per group
+
+	output:
+	cover : numpy array of floats
+		1/std of each group
+	"""
+
+	cover=np.zeros([len(taxgroups)])
+	for idx,cgroup in enumerate(taxgroups):
+		persamp=np.sum(dat[cgroup,:],axis=0)
+		cover[idx]=np.std(persamp)
+	return cover
