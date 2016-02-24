@@ -321,6 +321,19 @@
        <string>Filter Annotation</string>
       </property>
      </widget>
+     <widget class="QPushButton" name="bCleanTaxonomy">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>70</y>
+        <width>131</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Clean Taxonomy</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">

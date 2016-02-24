@@ -14,6 +14,7 @@ import heatsequer as hs
 import copy
 import numpy as np
 from pdb import set_trace as XXX
+import time
 
 class Experiment:
 	'''
@@ -536,4 +537,31 @@ def samplemeanpervalue(expdat,field):
 		newexp.data[:,idx]=mv
 	newexp.filters.append('samplemeanpervalue for field %s' % field)
 	hs.addcommand(newexp,"samplemeanpervalue",params=params,replaceparams={'expdat':expdat})
+	return(newexp)
+
+
+def convertdatefield(expdat,field,newfield,timeformat='%m/%d/%y %H:%M'):
+	"""
+	convert a field containing date/time to a numeric (seocds since epoch) field (create a new field for that)
+	input:
+	expdat : Experiment
+		the experiment to add the field to
+	field : string
+		name of the field containing the date/time format
+	newfield : string
+		name of the new field (with seconds since epoch)
+	timeformat : string
+		format of the date/time field (based on time format)
+	output:
+	newexp : Experiment
+		the experiment with the added time since epoch field
+	"""
+	params=locals()
+
+	newexp=hs.copyexp(expdat)
+	newexp.fields.append(newfield)
+	for csamp in newexp.samples:
+		newexp.smap[csamp][newfield]=time.mktime(time.strptime(newexp.smap[csamp][field],timeformat))
+	newexp.filters.append('add time field %s (based on field %s)' % (newfield,field))
+	hs.addcommand(newexp,"convertdatefield",params=params,replaceparams={'expdat':expdat})
 	return(newexp)

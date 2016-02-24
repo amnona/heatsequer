@@ -21,6 +21,15 @@ import os.path
 import numpy as np
 
 
+class CleanTaxonomyWindow(QtGui.QDialog):
+	cexp=[]
+
+	def __init__(self,expdat):
+		super(CleanTaxonomyWindow, self).__init__()
+		uic.loadUi('./ui/cleantaxonomy.py', self)
+		self.cexp=expdat
+
+
 class JoinWindow(QtGui.QDialog):
 	cexp=[]
 
@@ -491,6 +500,7 @@ class AppWindow(QtGui.QMainWindow):
 		self.bEnrichment.clicked.connect(self.enrichment)
 		self.bFilterFasta.clicked.connect(self.filterfasta)
 		self.bRenormalize.clicked.connect(self.renormalize)
+		self.bCleanTaxonomy.clicked.connect(self.cleantaxonomy)
 		self.bSubsample.clicked.connect(self.subsample)
 		self.cDebugMode.stateChanged.connect(self.debugmode)
 
@@ -1113,6 +1123,34 @@ class AppWindow(QtGui.QMainWindow):
 			newexp=hs.normalizereads(cexp)
 			newexp.studyname=newexp.studyname+'_norm'
 			self.addexp(newexp)
+
+
+	def cleantaxonomy(self):
+		items=self.bMainList.selectedItems()
+		if len(items)!=1:
+			print("Need 1 item")
+			return
+		for citem in items:
+			cname=str(citem.text())
+			cexp=self.explist[cname]
+			ctwin = CleanTaxonomyWindow(cexp)
+			res=ctwin.exec_()
+			if res==QtGui.QDialog.Accepted:
+				newname=cname+'.ct'
+				newexp=hs.copyexp(cexp)
+				if ctwin.cMitochondria.checkState():
+					newexp=hs.filtertaxonomy(newexp,'mitochondria',exclude=True)
+				if ctwin.cChloroplast.checkState():
+					newexp=hs.filtertaxonomy(newexp,'Streptophyta',exclude=True)
+					newexp=hs.filtertaxonomy(newexp,'Chloroplast',exclude=True)
+				if ctwin.cUnknown.checkState():
+					newexp=hs.filtertaxonomy(newexp,'nknown',exclude=True)
+				if ctwin.cBacteria.checkState():
+					newexp=hs.filtertaxonomy(newexp,'Bacteria;',exclude=True,exact=True)
+				newexp=hs.normalizereads(newexp)
+				newexp.studyname=newname
+				self.addexp(newexp)
+
 
 	def debugmode(self):
 		# unchecked
