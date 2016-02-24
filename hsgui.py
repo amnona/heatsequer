@@ -1136,7 +1136,6 @@ class AppWindow(QtGui.QMainWindow):
 			ctwin = CleanTaxonomyWindow(cexp)
 			res=ctwin.exec_()
 			if res==QtGui.QDialog.Accepted:
-				newname=cname+'.ct'
 				newexp=hs.copyexp(cexp)
 				if ctwin.cMitochondria.checkState():
 					newexp=hs.filtertaxonomy(newexp,'mitochondria',exclude=True)
@@ -1148,7 +1147,7 @@ class AppWindow(QtGui.QMainWindow):
 				if ctwin.cBacteria.checkState():
 					newexp=hs.filtertaxonomy(newexp,'Bacteria;',exclude=True,exact=True)
 				newexp=hs.normalizereads(newexp)
-				newexp.studyname=newname
+				newexp.studyname=cexp.studyname+'.ct'
 				self.addexp(newexp)
 
 
