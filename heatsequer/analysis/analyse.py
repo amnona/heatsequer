@@ -37,22 +37,27 @@ def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
 	"""
 	params=locals()
 
+	# do the 4 tests
 	methods=['mean','binary','ranksum','freqpres']
 	res=[]
 	for cmethod in methods:
 		res.append(hs.getdiffsig(expdat,field=field,val1=val1,val2=val2,method=cmethod,numperm=numperm,maxfval=maxfval))
 
+	# combine the results from the different tests
 	keep=[]
 	keeporder=[]
 	for cidx,cseq in enumerate(expdat.seqs):
 		pos=[]
+		edir=[]
 		for cres in res:
 			if cseq in cres.seqdict:
 				pos.append(float(cres.seqdict[cseq])/len(cres.seqs))
+				edir.append(np.sign(cres.odif[cres.seqdict[cseq]]))
 		if len(pos)>0:
 			keep.append(cidx)
-			keeporder.append(np.mean(pos))
+			keeporder.append(np.mean(pos)*np.mean(edir))
 	keep=np.array(keep)
+
 	if len(keep)>0:
 		si=np.argsort(keeporder)
 		newexp=hs.reorderbacteria(expdat,keep[si])
@@ -152,6 +157,7 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	odif=odif[keep[0]]
 	sv,si=hs.isort(odif)
 	newexp=hs.reorderbacteria(newexp,si)
+	newexp.odif=sv
 	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
 	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
 	return newexp

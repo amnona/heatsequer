@@ -12,6 +12,7 @@ __version__ = "0.9"
 
 import heatsequer as hs
 
+from scipy import stats
 import numpy as np
 from pdb import set_trace as XXX
 
@@ -675,4 +676,118 @@ def filtern(expdat):
 	newexp.filters.append('Filter sequences containing N')
 	hs.addcommand(newexp,"filtern",params=params,replaceparams={'expdat':expdat})
 	hs.Debug(6,'%d sequences before filtering, %d after' % (len(expdat.seqs),len(newexp.seqs)))
+	return newexp
+
+
+def cleantaxonomy(expdat,mitochondria=True,chloroplast=True,bacteria=True,unknown=True):
+	"""
+	remove common non-16s sequences from the experiment and renormalize
+
+	input:
+	expdat : Experiment
+	mitochondria : bool
+		remove mitochondrial sequences
+	chloroplast : bool
+		remove chloroplast sequences
+	bacteria : bool
+		remove sequences only identified as "Bacteria" (no finer identification)
+	unknown : bool
+		remove unknown sequences
+
+	output:
+	newexp : Experiment
+		the renormalized experiment without these bacteria
+	"""
+	params=locals()
+
+	newexp=hs.copyexp(expdat)
+	if mitochondria:
+		newexp=hs.filtertaxonomy(newexp,'mitochondria',exclude=True)
+	if chloroplast:
+		newexp=hs.filtertaxonomy(newexp,'Streptophyta',exclude=True)
+		newexp=hs.filtertaxonomy(newexp,'Chloroplast',exclude=True)
+	if unknown:
+		newexp=hs.filtertaxonomy(newexp,'nknown',exclude=True)
+	if bacteria:
+		newexp=hs.filtertaxonomy(newexp,'Bacteria;',exclude=True,exact=True)
+	newexp=hs.normalizereads(newexp)
+	newexp.filters.append('Clean Taxonomy (remove mitochondria etc.)')
+	hs.addcommand(newexp,"cleantaxonomy",params=params,replaceparams={'expdat':expdat})
+	hs.Debug(6,'%d sequences before filtering, %d after' % (len(expdat.seqs),len(newexp.seqs)))
+	return newexp
+
+
+
+def filterfieldwave(expdat,field,val1,val2=False,mineffect=1,method='mean',uselog=True):
+	"""
+	find all sequences which show an effect size of at least mineffect between val1 and val2 samples in field
+	no statistical significance testing is performed
+
+	input:
+	expdat : Experiment
+	field : string
+		name of field to use for group separation
+	val1 : string
+		value in field for group1
+	val2 : string
+		value in field for group2 or False for all the other samples except val1
+	mineffect : float
+		min difference between groups per OTU in order to keep
+	method: string
+		'ranksum'
+	uselog : bool
+		True to log transform the data
+
+	output:
+	newexp : Experiment
+		only with sequences showing a mineffect difference
+	"""
+	params=locals()
+
+	numseqs=len(expdat.seqs)
+	numsamples=len(expdat.samples)
+	dat=expdat.data
+	if uselog:
+		dat[dat<1]=1
+		dat=np.log2(dat)
+	if method=='ranksum':
+		for idx in range(numseqs):
+			dat[idx,:]=stats.rankdata(dat[idx,:])
+
+	pos1=hs.findsamples(expdat,field,val1)
+	if val2:
+		pos2=hs.findsamples(expdat,field,val2)
+	else:
+		pos2=np.setdiff1d(np.arange(numsamples),pos1,assume_unique=True)
+
+	outpos=[]
+	odif=[]
+	for idx in range(numseqs):
+		cdif=np.mean(dat[idx,pos1])-np.mean(dat[idx,pos2])
+		if abs(cdif)>=mineffect:
+			outpos.append(idx)
+			odif.append(cdif)
+
+	si=np.argsort(odif)
+	outpos=hs.reorder(outpos,si)
+	newexp=hs.reorderbacteria(expdat,outpos)
+	newexp.filters.append('filterfieldwave field %s val1 %s val2 %s' % (field,val1,val2))
+	hs.addcommand(newexp,"filterfieldwave",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+def filterwinperid(expdat,idfield,field,val1,val2,mineffect=1):
+	"""
+	do filterfieldwave on each individual (based on idfield) and join the resulting bacteria
+	"""
+	params=locals()
+
+	iseqs=[]
+	uids=hs.getfieldvals(expdat,idfield,ounique=True)
+	for cid in uids:
+		cexp=hs.filtersamples(expdat,idfield,cid)
+		texp=hs.filterfieldwave(cexp,field,val1,val2,mineffect=mineffect)
+		iseqs+=texp.seqs
+	iseqs=list(set(iseqs))
+	newexp=hs.filterseqs(expdat,iseqs)
 	return newexp
