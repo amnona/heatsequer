@@ -14,7 +14,7 @@ import heatsequer as hs
 import numpy as np
 import copy
 from sklearn.preprocessing import scale
-from scipy import cluster
+from scipy import cluster,spatial,stats
 from scipy import spatial
 
 
@@ -324,4 +324,51 @@ def sortbycentermass(expdat,field=False,numeric=True,uselog=True):
 	newexp=hs.reorderbacteria(expdat,si)
 	newexp.filters.append("sort by center of mass field=%s, uselog=%s" % (field,uselog))
 	hs.addcommand(newexp,"sortbycentermass",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+
+def sortbysign(expdat,field=False,value='',exclude=False,exact=True,maxfval=0.2):
+	"""
+	sort bacteria in the experiment based on the number of positive/negative samples
+	(ignoring nans)
+	input:
+	expdat : Experiment
+	field,value,exclude,exact : name of field and value of field in order to sort based only on these samples
+		or field=False for all samples (default)
+	maxfval - the maximal f-value
+
+	output:
+	newexp : Experiment
+		sorted by difference between positive/negative
+	"""
+	params=locals()
+
+	if field:
+		texp=hs.filtersamples(expdat,field,value,exact=exact,exclude=exclude)
+	else:
+		texp=hs.copyexp(expdat)
+
+	texp.data=np.sign(texp.data)
+	numpos=np.nansum(texp.data>0,axis=1)
+	numneg=np.nansum(texp.data<0,axis=1)
+	pval=np.ones(len(numpos))
+	for cpos in range(len(pval)):
+		if numpos[cpos]==0 and numneg[cpos]==0:
+			continue
+		pval1=stats.binom.cdf(numpos[cpos],numpos[cpos]+numneg[cpos],0.5)
+		pval2=stats.binom.cdf(numneg[cpos],numpos[cpos]+numneg[cpos],0.5)
+		pval[cpos]=np.min([pval1,pval2])
+
+	signs=np.nanmean(texp.data,axis=1)
+
+	fval=hs.fdr(pval)
+	keep=np.where(np.array(fval)<=maxfval)[0]
+	newexp=hs.reorderbacteria(expdat,keep)
+	signs=signs[keep]
+	si=np.argsort(signs)
+
+	newexp=hs.reorderbacteria(newexp,si)
+	newexp.filters.append("sort by sign field %s max-f-val %f" % (field,maxfval))
+	hs.addcommand(newexp,"sortbysign",params=params,replaceparams={'expdat':expdat})
 	return newexp

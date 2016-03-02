@@ -791,3 +791,24 @@ def filterwinperid(expdat,idfield,field,val1,val2,mineffect=1):
 	iseqs=list(set(iseqs))
 	newexp=hs.filterseqs(expdat,iseqs)
 	return newexp
+
+
+def filternans(expdat,minpresence):
+	"""
+	filter an experiment containing nans in the table, keeping only bacteria with at least minpresence non-nan values
+	input:
+	expdat : Experiment
+	minpresence: int
+		minimal number of non-nan samples (keep only if >=)
+	output:
+	newexp : Experiment
+	"""
+	params=locals()
+
+	numok=np.sum(np.isfinite(expdat.data),axis=1)
+	keep=np.where(numok>=minpresence)[0]
+	print(len(keep))
+	newexp=hs.reorderbacteria(expdat,keep)
+	newexp.filters.append('filternans keep only with >=%d non nan reads' % minpresence)
+	hs.addcommand(newexp,"filternans",params=params,replaceparams={'expdat':expdat})
+	return newexp

@@ -26,7 +26,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	exp - from load()
 	sortby - name of mapping file field to sort by or Flase to not sort
 	numeric - True if the field is numeric
-	minreads - minimum number of reads per bacteria in order to show it
+	minreads - minimum number of reads per bacteria in order to show it or 0 to show all
 	rangeall - True to show all frequencies in image scale, false to saturate at 10%
 	seqdb - the SRBactDB database (from bactdb.load)
 	cdb - the cool sequences database (from cooldb.load)
@@ -68,7 +68,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		svals=hs.getfieldvals(exp,'#SampleID')
 		newexp=hs.copyexp(exp)
 	hs.Debug(1,"Filtering min reads. original bacteria - %d" % len(newexp.seqs))
-	newexp=hs.filterminreads(newexp,minreads,logit=uselog)
+	if minreads>0:
+		newexp=hs.filterminreads(newexp,minreads,logit=uselog)
 	hs.Debug(1,"New number of bacteria %d" % len(newexp.seqs))
 	newexp.seqdb=seqdb
 	newexp.cdb=cdb
