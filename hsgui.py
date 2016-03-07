@@ -26,7 +26,7 @@ class CleanTaxonomyWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(CleanTaxonomyWindow, self).__init__()
-		uic.loadUi('./ui/cleantaxonomy.py', self)
+		uic.loadUi(hs.get_data_path('cleantaxonomy.py','ui'), self)
 		self.cexp=expdat
 
 
@@ -35,7 +35,7 @@ class JoinWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(JoinWindow, self).__init__()
-		uic.loadUi('./ui/joinfields.py', self)
+		uic.loadUi(hs.get_data_path('joinfields.py','ui'), self)
 		self.cexp=expdat
 		self.cField1.addItems(expdat.fields)
 		self.cField2.addItems(expdat.fields)
@@ -47,7 +47,7 @@ class MetaDataDetailsWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(MetaDataDetailsWindow, self).__init__()
-		uic.loadUi('./ui/metadatadetails.py', self)
+		uic.loadUi(hs.get_data_path('metadatadetails.py','ui'), self)
 		self.cexp=expdat
 		self.bFieldValues.clicked.connect(self.values)
 		self.cField.addItems(expdat.fields)
@@ -65,7 +65,7 @@ class MetaDataWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(MetaDataWindow, self).__init__()
-		uic.loadUi('./ui/plotmetadata.py', self)
+		uic.loadUi(hs.get_data_path('plotmetadata.py','ui'), self)
 		self.cexp=expdat
 		self.mddict={}
 		for cmeta in expdat.plotmetadata:
@@ -120,7 +120,7 @@ class BiClusterWindow(QtGui.QDialog):
 
 	def __init__(self,expdat,cdb=False,bdb=False):
 		super(BiClusterWindow, self).__init__()
-		uic.loadUi('./ui/bicluster.py', self)
+		uic.loadUi(hs.get_data_path('bicluster.py','ui'), self)
 		self.cexp=expdat
 		self.cooldb=cdb
 		self.bactdb=bdb
@@ -199,7 +199,7 @@ class AdvPlotWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(AdvPlotWindow, self).__init__()
-		uic.loadUi('./ui/advplot.py', self)
+		uic.loadUi(hs.get_data_path('advplot.py','ui'), self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -238,7 +238,7 @@ class SortSamplesWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(SortSamplesWindow, self).__init__()
-		uic.loadUi('./ui/sortsamples.py', self)
+		uic.loadUi(hs.get_data_path('sortsamples.py','ui'), self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -272,7 +272,7 @@ class DiffExpWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(DiffExpWindow, self).__init__()
-		uic.loadUi('./ui/diffexp.py', self)
+		uic.loadUi(hs.get_data_path('diffexp.py','ui'), self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bFieldValues1.clicked.connect(self.fieldvalues1)
@@ -309,7 +309,7 @@ class FilterSimilarSamplesWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(FilterSimilarSamplesWindow, self).__init__()
-		uic.loadUi('./ui/filtersimilarsamples.py', self)
+		uic.loadUi(hs.get_data_path('filtersimilarsamples.py','ui'), self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bFieldValues1.clicked.connect(self.fieldvalues1)
@@ -326,7 +326,7 @@ class CorrelationWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(CorrelationWindow, self).__init__()
-		uic.loadUi('./ui/correlation.py', self)
+		uic.loadUi(hs.get_data_path('correlation.py','ui'), self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bFieldValues1.clicked.connect(self.fieldvalues1)
@@ -343,7 +343,7 @@ class ClassifyWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(ClassifyWindow, self).__init__()
-		uic.loadUi('./ui/classifier.py', self)
+		uic.loadUi(hs.get_data_path('classifier.py','ui'), self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bFieldValues1.clicked.connect(self.fieldvalues1)
@@ -380,7 +380,7 @@ class FilterSamplesWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(FilterSamplesWindow, self).__init__()
-		uic.loadUi('./ui/filtersamples.py', self)
+		uic.loadUi(hs.get_data_path('filtersamples.py','ui'), self)
 		self.cexp=expdat
 		self.cField.addItems(expdat.fields)
 		self.bOK.clicked.connect(self.OK)
@@ -415,7 +415,7 @@ class FilterSamplesWindow(QtGui.QDialog):
 class FilterFastaWindow(QtGui.QDialog):
 	def __init__(self):
 		super(FilterFastaWindow, self).__init__()
-		uic.loadUi('./ui/filterfasta.py', self)
+		uic.loadUi(hs.get_data_path('filterfasta.py','ui'), self)
 		self.bBrowse.clicked.connect(self.browse)
 
 	def browse(self):
@@ -426,7 +426,7 @@ class FilterFastaWindow(QtGui.QDialog):
 class LoadWindow(QtGui.QDialog):
 	def __init__(self):
 		super(LoadWindow, self).__init__()
-		uic.loadUi('./ui/load.py', self)
+		uic.loadUi(hs.get_data_path('load.py','ui'), self)
 		self.bLoadBrowseTable.clicked.connect(self.browsetable)
 		self.bLoadBrowseMap.clicked.connect(self.browsemap)
 		self.bLoadLoad.clicked.connect(self.load)
@@ -461,7 +461,7 @@ class ListWindow(QtGui.QDialog):
 		listname - name to display above the list
 		"""
 		super(ListWindow, self).__init__()
-		uic.loadUi('./ui/listwindow.py', self)
+		uic.loadUi(hs.get_data_path('listwindow.py','ui'), self)
 		for citem in listdata:
 			self.lList.addItem(citem)
 		if listname:
@@ -475,7 +475,7 @@ class AppWindow(QtGui.QMainWindow):
 
 	def __init__(self):
 		super(AppWindow, self).__init__()
-		uic.loadUi('./ui/appwindow.py', self)
+		uic.loadUi(hs.get_data_path('appwindow.py','ui'), self)
 		self.bMainLoadNew.clicked.connect(self.load)
 		self.bPickleLoad.clicked.connect(self.pickleload)
 		self.bMainPlot.clicked.connect(self.plot)
@@ -514,13 +514,17 @@ class AppWindow(QtGui.QMainWindow):
 		self.cooldb=False
 		try:
 			hs.Debug(6,'Connecting to sequence database')
-			self.bactdb=hs.bactdb.dbstart()
+			bdbpath=hs.get_data_path('SRBactDB.db','db')
+			hs.Debug(6,'From %s' % bdbpath)
+			self.bactdb=hs.bactdb.dbstart(bdbpath)
 			hs.Debug(6,'Sequence database connected')
 		except:
 			hs.Debug(9,'sequence database file not found')
 		try:
 			hs.Debug(6,'Loading coolseq database')
-			self.cooldb=hs.cooldb.loaddb()
+			cdbpath=hs.get_data_path('coolseqs.txt','db')
+			hs.Debug(6,'From %s' % cdbpath)
+			self.cooldb=hs.cooldb.loaddb(cdbpath)
 			hs.Debug(6,'coolseq database loaded')
 		except:
 			hs.Debug(9,'CoolDB file not found')

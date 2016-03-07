@@ -12,6 +12,8 @@ import sys
 import numpy as np
 
 from sys import getsizeof, stderr
+import inspect
+import os
 from itertools import chain
 from collections import deque
 try:
@@ -20,6 +22,7 @@ except ImportError:
 	pass
 
 __version__ = "0.2"
+
 
 def Debug(dlevel,*args):
 	if dlevel>=DebugLevel:
@@ -32,6 +35,7 @@ def reverse(seq):
 	for a in seq:
 		oseq=a+oseq
 	return oseq
+
 
 def complement(seq):
 	seq=seq.upper()
@@ -49,8 +53,10 @@ def complement(seq):
 			oseq+='N'
 	return oseq
 
+
 def revcomp(seq):
 	return reverse(complement(seq))
+
 
 def iterfastaseqs(filename):
 	"""
@@ -125,6 +131,7 @@ def isort(clist,reverse=False):
 
 	return svals,sidx
 
+
 def tofloat(clist):
 	"""
 	convert a list of strings to a list of floats
@@ -141,11 +148,13 @@ def tofloat(clist):
 			res.append(0)
 	return res
 
+
 def reorder(clist,idx):
 	""""
 	reorder a list according to idx
 	"""
 	return [clist[i] for i in idx]
+
 
 def delete(clist,idx):
 	"""
@@ -154,6 +163,7 @@ def delete(clist,idx):
 	for i in sorted(idx, reverse=True):
 		del clist[i]
 	return clist
+
 
 def clipstrings(clist,maxlen,reverse=False):
 	"""
@@ -171,6 +181,7 @@ def clipstrings(clist,maxlen,reverse=False):
 		else:
 			retlist.append(cstr[0:clen])
 	return retlist
+
 
 def mlhash(cstr,emod=0):
 	"""
@@ -372,6 +383,7 @@ def dictupper(dat):
 	newdat = {k.upper(): v for k,v in dat.iteritems()}
 	return newdat
 
+
 def listupper(dat):
 	"""
 	turn a list of strings to upper case
@@ -384,3 +396,35 @@ def listupper(dat):
 
 	newdat = [cstr.upper() for cstr in dat]
 	return newdat
+
+
+def get_data_path(fn, subfolder='data'):
+	"""Return path to filename ``fn`` in the data folder.
+	During testing it is often necessary to load data files. This
+	function returns the full path to files in the ``data`` subfolder
+	by default.
+	Parameters
+	----------
+	fn : str
+		File name.
+	subfolder : str, defaults to ``data``
+		Name of the subfolder that contains the data.
+	Returns
+	-------
+	str
+		Inferred absolute path to the test data for the module where
+		``get_data_path(fn)`` is called.
+	Notes
+	-----
+	The requested path may not point to an existing file, as its
+	existence is not checked.
+
+	Taken from scikit-bio (Thanks!)
+	"""
+	# getouterframes returns a list of tuples: the second tuple
+	# contains info about the caller, and the second element is its
+	# filename
+	callers_filename = inspect.getouterframes(inspect.currentframe())[1][1]
+	path = os.path.dirname(os.path.abspath(callers_filename))
+	data_path = os.path.join(path, subfolder, fn)
+	return data_path

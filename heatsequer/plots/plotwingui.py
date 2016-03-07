@@ -63,7 +63,8 @@ class PlotGUIWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(PlotGUIWindow, self).__init__()
-		uic.loadUi('ui/plotguiwindow.py', self)
+		uic.loadUi(hs.get_data_path('plotguiwindow.py','ui'), self)
+#		uic.loadUi('ui/plotguiwindow.py', self)
 		self.bGetSequence.clicked.connect(self.getsequence)
 		self.bExport.clicked.connect(self.export)
 		self.bView.clicked.connect(self.view)
