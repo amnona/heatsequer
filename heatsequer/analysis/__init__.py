@@ -1,3 +1,3 @@
-from metrics import *
-from mislabels import *
-from analyse import *
+from heatsequer.analysis.metrics import *
+from heatsequer.analysis.mislabels import *
+from heatsequer.analysis.analyse import *

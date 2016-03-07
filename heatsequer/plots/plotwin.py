@@ -7,6 +7,8 @@ heatsequer heatmap plot module
 
 # amnonscript
 
+from __future__ import absolute_import
+
 __version__ = "0.9"
 
 
@@ -167,8 +169,10 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	# if we want gui, open it
 	if usegui:
 		hs.Debug(1,"Using the GUI window")
-		import plotwingui
-		guiwin = plotwingui.PlotGUIWindow(newexp)
+		import heatsequer.plots.plotwingui
+		guiwin = heatsequer.plots.plotwingui.PlotGUIWindow(newexp)
+#		from heatsequer.plots import plotwingui
+#		guiwin = plotwingui.PlotGUIWindow(newexp)
 		ax.guiwin=guiwin
 		guiwin.plotfig=f
 		guiwin.plotax=ax
@@ -187,11 +191,11 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 
 def onplotkeyclick(event):
 	if not hasattr(event,'inaxes'):
-		print "boogs"
+		print("boogs")
 		return
 	cax=event.inaxes
 	if cax is None:
-		print "basdoogs"
+		print("basdoogs")
 		return
 	cylim=cax.get_ylim()
 	cxlim=cax.get_xlim()

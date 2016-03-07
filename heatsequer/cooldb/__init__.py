@@ -1,1 +1,1 @@
-from cdb import *
+from heatsequer.cooldb.cdb import *

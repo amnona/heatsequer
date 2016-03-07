@@ -173,7 +173,7 @@ def addcommand(expdat,command,params={},replaceparams={}):
 		key is parameter, value is experiment, from where the experimentid will be taken
 	'''
 	newcommand='exp%d=hs.%s' % (expdat.uniqueid,command)
-	if params>0:
+	if len(params)>0:
 #		if replaceparams:
 #			for rk,rv in replaceparams.items():
 #				if rk not in params:
@@ -564,4 +564,40 @@ def convertdatefield(expdat,field,newfield,timeformat='%m/%d/%y %H:%M'):
 		newexp.smap[csamp][newfield]=time.mktime(time.strptime(newexp.smap[csamp][field],timeformat))
 	newexp.filters.append('add time field %s (based on field %s)' % (newfield,field))
 	hs.addcommand(newexp,"convertdatefield",params=params,replaceparams={'expdat':expdat})
+	return(newexp)
+
+
+def fieldtobact(expdat,field,bactname='',meanreads=1000,cutoff=0):
+	"""
+	convert values in a map file field to a new bacteria (to facilitate numeric analysis)
+	input:
+	expdat : Experiment
+	field : string
+		name of the field to convert
+	bactname : string
+		name of the new bacteria (empty to have similar to field name)
+	meanreads : int
+		the mean number of reads for the new field bacteria
+	cutoff : int
+		the minimal value of the field per sample (otherwise replace with meanreads)
+
+	output:
+	newexp : Experiment
+		with added bacteria with the field vals as reads
+	"""
+	params=locals()
+
+	if len(bactname)==0:
+		bactname=field
+	fv=hs.getfieldvals(expdat,field)
+	vals=np.array(hs.tofloat(fv))
+	okpos=np.where(vals>=cutoff)[0]
+	badpos=np.where(vals<cutoff)[0]
+	scalefactor=np.mean(vals[okpos])
+	vals[okpos]=(vals[okpos]/scalefactor)*meanreads
+	vals[badpos]=meanreads
+	newexp=hs.copyexp(expdat)
+	hs.insertbacteria(newexp,vals,bactname,bactname,logit=False)
+	newexp.filters.append('add bacteria from map field %s' % field)
+	hs.addcommand(newexp,"fieldtobact",params=params,replaceparams={'expdat':expdat})
 	return(newexp)

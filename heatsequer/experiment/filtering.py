@@ -707,7 +707,8 @@ def cleantaxonomy(expdat,mitochondria=True,chloroplast=True,bacteria=True,unknow
 		newexp=hs.filtertaxonomy(newexp,'Streptophyta',exclude=True)
 		newexp=hs.filtertaxonomy(newexp,'Chloroplast',exclude=True)
 	if unknown:
-		newexp=hs.filtertaxonomy(newexp,'nknown',exclude=True)
+		newexp=hs.filtertaxonomy(newexp,'Unknown',exclude=True)
+		newexp=hs.filtertaxonomy(newexp,'Unclassified;',exclude=True,exact=True)
 	if bacteria:
 		newexp=hs.filtertaxonomy(newexp,'Bacteria;',exclude=True,exact=True)
 	newexp=hs.normalizereads(newexp)

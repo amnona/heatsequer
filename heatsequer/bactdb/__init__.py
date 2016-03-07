@@ -1,1 +1,1 @@
-from bdb import *
+from heatsequer.bactdb.bdb import *

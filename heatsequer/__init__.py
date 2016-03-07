@@ -1,9 +1,11 @@
-from experiment import *
-from plots import *
-from utils import *
-from reloadme import *
-from analysis import *
-import cooldb
-import bactdb
+from __future__ import absolute_import
+
+from heatsequer.experiment import *
+from heatsequer.plots import *
+from heatsequer.utils import *
+from heatsequer.reloadme import *
+from heatsequer.analysis import *
+import heatsequer.cooldb
+import heatsequer.bactdb
 
 #__all__ = ['experiment','heatmap','utils']

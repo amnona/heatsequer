@@ -17,6 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import biom
 from matplotlib.pyplot import *
+from networkx.drawing.nx_agraph import graphviz_layout
 import csv
 #from scipy import cluster
 #from scipy import spatial
@@ -31,7 +32,7 @@ from scipy import stats
 
 #def initdb(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
 def initdb(dbname="db/SRBactDB.db"):
-	db=dbstart()
+	db=dbstart(dbname)
 	db=initontologies(db)
 	return db
 
@@ -425,7 +426,8 @@ def InitOntologyGraph(db,pv,field,ontohashname):
 	db.OntoGraph[field]['nodes']=nodes
 	db.OntoGraph[field]['sizes']=sizes
 	db.OntoGraph[field]['ndict']=ndict
-	db.OntoGraph[field]['nodepositions']=nx.graphviz_layout(G)
+#	db.OntoGraph[field]['nodepositions']=nx.graphviz_layout(G)
+	db.OntoGraph[field]['nodepositions']=graphviz_layout(G)
 	return db
 
 
