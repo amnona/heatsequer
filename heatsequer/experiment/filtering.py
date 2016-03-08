@@ -109,7 +109,7 @@ def filterorigreads(expdat,minreads,inplace=False):
 	return newexp
 
 
-def filtersamples(expdat,field,filtval,exact=True,exclude=False,numexpression=False):
+def filtersamples(expdat,field,filtval,exact=True,exclude=False,numexpression=False,shownumoutput=True):
 	"""
 	filter samples in experiment according to value in field
 	input:
@@ -124,6 +124,8 @@ def filtersamples(expdat,field,filtval,exact=True,exclude=False,numexpression=Fa
 		False to keep only matching samples, True to exclude matching samples
 	numexpression : bool
 		True if val is a python expression, False if just a value. For an expression assume value is the beggining of the line (i.e. '<=5')
+	shownumoutput : bool
+		True (default) to show number of samples remaining, False to not show
 	"""
 	params=locals()
 	if not isinstance(filtval,list):
@@ -158,7 +160,10 @@ def filtersamples(expdat,field,filtval,exact=True,exclude=False,numexpression=Fa
 		fstr+=" (exclude)"
 	newexp.filters.append(fstr)
 	hs.addcommand(newexp,"filtersamples",params=params,replaceparams={'expdat':expdat})
-	hs.Debug(6,'%d Samples left' % len(newexp.samples))
+	if shownumoutput:
+		hs.Debug(6,'%d Samples left' % len(newexp.samples))
+	else:
+		hs.Debug(1,'%d Samples left' % len(newexp.samples))
 	return newexp
 
 
