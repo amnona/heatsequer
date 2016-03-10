@@ -334,7 +334,7 @@ def filterseqsfromexp(expdat,filtexp,exclude=False,subseq=False,logit=True):
 	return newexp
 
 
-def filterknownbact(expdat,cdb,exclude=False):
+def filterknownbact(expdat,cdb=None,exclude=False):
 	"""
 	filter keeping only bacteria which we know about in cooldb
 	input:
@@ -349,6 +349,8 @@ def filterknownbact(expdat,cdb,exclude=False):
 	"""
 	params=locals()
 
+	if cdb is None:
+		cdb=hs.cdb
 	known=[]
 	for idx,cseq in enumerate(expdat.seqs):
 		if len(hs.cooldb.getseqinfo(cdb,cseq))>0:
@@ -487,13 +489,13 @@ def filterandnormalize(expdat,seqs,exclude=False,subseq=False,numreads=10000):
 	return newexp
 
 
-def filterannotations(expdat,annotation,cdb,exclude=False):
+def filterannotations(expdat,annotation,cdb=None,exclude=False):
 	"""
 	filter keeping only samples which have annotation in their cooldb description
 	input:
 	expdat
 	annotation - substring of the annotation (case insensitive)
-	cdb - the database of cool sequences (from cooldb.load())
+	cdb - the database of cool sequences (from cooldb.load()) or None (default) to use the heatsequer loaded cdb
 	exclude - False to keep matching bacteria, True to remove matching bacteria
 
 	output:
@@ -501,6 +503,8 @@ def filterannotations(expdat,annotation,cdb,exclude=False):
 	"""
 	params=locals()
 
+	if cdb is None:
+		cdb=hs.cdb
 	keeplist=[]
 	for idx,cseq in enumerate(expdat.seqs):
 		keep=False

@@ -31,7 +31,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	minreads - minimum number of reads per bacteria in order to show it or 0 to show all
 	rangeall - True to show all frequencies in image scale, false to saturate at 10%
 	seqdb - the SRBactDB database (from bactdb.load)
-	cdb - the cool sequences database (from cooldb.load)
+	cdb - the cool sequences database (from cooldb.load), or None (default) to use the heatsequer loaded cdb
 	showline - if True plot lines between category values
 	ontofig - name of ontology to plot for bactdb or false to no plot
 	usegui - True use a gui for otu summary, False just print
@@ -56,6 +56,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	for ccommand in exp.commands:
 		hs.Debug(1,"%s" % ccommand)
 	vals=[]
+	if cdb is None:
+		cdb=hs.cdb
 	if sortby:
 		hs.Debug(1,"Sorting by field %s" % sortby)
 		for csamp in exp.samples:
@@ -345,10 +347,10 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 				info=hs.cooldb.getseqinfo(cexp.cdb,cseq)
 				if len(info)>0:
 					for cinfo in info:
-						if "ontamination" in cinfo:
-							contamlist.append(idx)
 						if "patric" in cinfo:
 							pathogenlist.append(idx)
+						if "ontamination" in cinfo:
+							contamlist.append(idx)
 					if showdb:
 						labs[idx]+='*'
 	cax.set_yticks(np.array(range(len(cexp.seqs))))
