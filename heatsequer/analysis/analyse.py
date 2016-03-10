@@ -61,6 +61,7 @@ def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
 	if len(keep)>0:
 		si=np.argsort(keeporder)
 		newexp=hs.reorderbacteria(expdat,keep[si])
+		newexp.diffdir=hs.reorder(np.sign(keeporder),si)
 		newexp.filters.append('differential expression (all) in %s between %s and %s' % (field,val1,val2))
 		hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
 		return newexp

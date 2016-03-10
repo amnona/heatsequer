@@ -208,22 +208,34 @@ def onplotkeyclick(event):
 		cax.set_ylim(cylim[0], cylim[0]+(cylim[1]-cylim[0])*2)
 		tight_layout()
 		cax.ofig.canvas.draw()
+	if event.key=='Q':
+		cax.set_xlim(cxlim[0], cxlim[0]+(cxlim[1]-cxlim[0])/2)
+		tight_layout()
+		cax.ofig.canvas.draw()
+	if event.key=='A':
+		cax.set_xlim(cxlim[0], cxlim[0]+(cxlim[1]-cxlim[0])*2)
+		tight_layout()
+		cax.ofig.canvas.draw()
 	if event.key=='down':
-		cax.set_ylim(cylim[0]-(cylim[1]-cylim[0]), cylim[0])
-		tight_layout()
-		cax.ofig.canvas.draw()
+		if cylim[0]>0:
+			cax.set_ylim(cylim[0]-(cylim[1]-cylim[0]), cylim[0])
+			tight_layout()
+			cax.ofig.canvas.draw()
 	if event.key=='up':
-		cax.set_ylim(cylim[1],cylim[1]+(cylim[1]-cylim[0]))
-		tight_layout()
-		cax.ofig.canvas.draw()
+		if cylim[1]<len(cexp.seqs):
+			cax.set_ylim(cylim[1],cylim[1]+(cylim[1]-cylim[0]))
+			tight_layout()
+			cax.ofig.canvas.draw()
 	if event.key=='left':
-		cax.set_xlim(cxlim[0]-(cxlim[1]-cxlim[0]), cxlim[0])
-		tight_layout()
-		cax.ofig.canvas.draw()
+		if cxlim[0]>0:
+			cax.set_xlim(cxlim[0]-(cxlim[1]-cxlim[0]), cxlim[0])
+			tight_layout()
+			cax.ofig.canvas.draw()
 	if event.key=='right':
-		cax.set_xlim(cxlim[1],cxlim[1]+(cxlim[1]-cxlim[0]))
-		tight_layout()
-		cax.ofig.canvas.draw()
+		if cxlim[1]<len(cexp.samples)-1:
+			cax.set_xlim(cxlim[1],cxlim[1]+(cxlim[1]-cxlim[0]))
+			tight_layout()
+			cax.ofig.canvas.draw()
 	if event.key==',':
 		# select next bacteria
 		cax.guiwin.clearselection()

@@ -388,7 +388,7 @@ def findsamples(expdat,field,value,exclude=False):
 	input:
 	expdat
 	field - name of the field to test
-	value - the value to look for
+	value - the value to look for (or a list of values)
 	exclude - True to get positions without that value, False to get positions of the value
 
 	output:
@@ -396,8 +396,11 @@ def findsamples(expdat,field,value,exclude=False):
 	"""
 
 	pos=[]
+	if not isinstance(value,list):
+		value=[value]
+
 	for cidx,csamp in enumerate(expdat.samples):
-		if expdat.smap[csamp][field]==value:
+		if expdat.smap[csamp][field] in value:
 			if not exclude:
 				pos.append(cidx)
 		else:
@@ -510,6 +513,7 @@ def findseqsinexp(expdat,seqs):
 
 def samplemeanpervalue(expdat,field):
 	"""
+	BETTER TO USE filtersimilarsamples!!!!
 	create a new experiment, with 1 sample per value in field, containing the mean of all samples with that value
 
 	input:

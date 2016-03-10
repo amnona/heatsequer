@@ -38,7 +38,8 @@ class SListWindow(QtGui.QDialog):
 		listname - name to display above the list
 		"""
 		super(SListWindow, self).__init__()
-		uic.loadUi('./ui/listwindow.py', self)
+#		uic.loadUi('./ui/listwindow.py', self)
+		uic.loadUi(hs.get_data_path('listwindow.py','ui'), self)
 		for citem in listdata:
 			self.lList.addItem(citem)
 		if listname:
@@ -63,6 +64,7 @@ class PlotGUIWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(PlotGUIWindow, self).__init__()
+		print(hs.get_data_path('plotguiwindow.py','ui'))
 		uic.loadUi(hs.get_data_path('plotguiwindow.py','ui'), self)
 #		uic.loadUi('ui/plotguiwindow.py', self)
 		self.bGetSequence.clicked.connect(self.getsequence)
