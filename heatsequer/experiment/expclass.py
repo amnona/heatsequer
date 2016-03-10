@@ -11,6 +11,7 @@ __version__ = "0.9"
 
 import heatsequer as hs
 
+import os
 import copy
 import numpy as np
 from pdb import set_trace as XXX
@@ -605,3 +606,13 @@ def fieldtobact(expdat,field,bactname='',meanreads=1000,cutoff=0):
 	newexp.filters.append('add bacteria from map field %s' % field)
 	hs.addcommand(newexp,"fieldtobact",params=params,replaceparams={'expdat':expdat})
 	return(newexp)
+
+
+def get_data_path(fn, subfolder='data'):
+	"""
+	Return path to filename ``fn`` in the data folder.
+	returns the joining of the heatsequerdir variable (set in __init__) and the subfolder and fn
+	"""
+
+	return os.path.join(hs.heatsequerdir,subfolder,fn)
+

@@ -398,7 +398,7 @@ def listupper(dat):
 	return newdat
 
 
-def get_data_path(fn, subfolder='data'):
+def get_current_data_path(fn, subfolder='data'):
 	"""Return path to filename ``fn`` in the data folder.
 	During testing it is often necessary to load data files. This
 	function returns the full path to files in the ``data`` subfolder

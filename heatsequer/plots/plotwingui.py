@@ -13,6 +13,7 @@ __version__ = "0.91"
 
 import heatsequer as hs
 
+import os
 import numpy as np
 import matplotlib as mpl
 mpl.use('Qt4Agg')
@@ -39,7 +40,8 @@ class SListWindow(QtGui.QDialog):
 		"""
 		super(SListWindow, self).__init__()
 #		uic.loadUi('./ui/listwindow.py', self)
-		uic.loadUi(hs.get_data_path('listwindow.py','ui'), self)
+		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/listwindow.py'), self)
+#		uic.loadUi(hs.get_data_path('listwindow.py','ui'), self)
 		for citem in listdata:
 			self.lList.addItem(citem)
 		if listname:
@@ -65,7 +67,8 @@ class PlotGUIWindow(QtGui.QDialog):
 	def __init__(self,expdat):
 		super(PlotGUIWindow, self).__init__()
 		print(hs.get_data_path('plotguiwindow.py','ui'))
-		uic.loadUi(hs.get_data_path('plotguiwindow.py','ui'), self)
+#		uic.loadUi(hs.get_data_path('plotguiwindow.py','ui'), self)
+		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/plotguiwindow.py'), self)
 #		uic.loadUi('ui/plotguiwindow.py', self)
 		self.bGetSequence.clicked.connect(self.getsequence)
 		self.bExport.clicked.connect(self.export)
