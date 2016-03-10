@@ -58,6 +58,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	vals=[]
 	if cdb is None:
 		cdb=hs.cdb
+	if seqdb is None:
+		seqdb=hs.bdb
 	if sortby:
 		hs.Debug(1,"Sorting by field %s" % sortby)
 		for csamp in exp.samples:

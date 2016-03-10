@@ -11,13 +11,23 @@ import heatsequer.cooldb
 import heatsequer.bactdb
 
 heatsequerdir=os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+
+# load the cooldb
 cdb=False
 try:
 	Debug(6,'loading cooldb')
-	cdb=cooldb.loaddb(os.path.join(heatsequerdir,'db/coolseqs.txt'))
+	cdb=cooldb.loaddb(get_data_path('coolseqs.txt','db'))
 	Debug(6,'cooldb loaded')
 except:
 	Debug(9,'cooldb not found')
 
+# load the automatic bactdb
+bdb=False
+try:
+	Debug(6,'loading bactdb')
+	bdb=bactdb.dbstart(get_data_path('SRBactDB.db','db'))
+	Debug(6,'bactdb loaded')
+except:
+	Debug(9,'bactdb not found')
 
 #__all__ = ['experiment','heatmap','utils']
