@@ -603,7 +603,7 @@ class AppWindow(QtGui.QMainWindow):
 	def menuExport(self):
 		cname=str(self.bMainList.currentItem().text())
 		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as biom',''))
-		hs.savebiom(self.explist[cname],fname)
+		hs.savetobiom(self.explist[cname],fname,'hdf5')
 		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as biom table and mapping file' % cname)
 #		cname=str(self.bMainList.currentItem().text())
 #		cm='global %s;%s=self.explist[cname]' % (cname,cname)
@@ -701,7 +701,7 @@ class AppWindow(QtGui.QMainWindow):
 		if fname:
 			fl=open(fname,'r')
 			expdat=pickle.load(fl)
-			if isinstance(expdat,hs.experiment):
+			if isinstance(expdat,hs.Experiment):
 				self.addexp(expdat)
 			else:
 				hs.Debug(9,'Not an experiment pickle!')
