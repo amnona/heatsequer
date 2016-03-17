@@ -13,9 +13,9 @@ import heatsequer as hs
 
 import numpy as np
 import matplotlib as mpl
-mpl.use('Qt4Agg')
+#mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
 import copy
 
 from pdb import set_trace as XXX
@@ -38,12 +38,12 @@ def plotseqfreq(expdat,seqs,toaxis=False,xfield=False,normalizey=False):
 
 
 	if xfield:
-		xdat=hs.tofloat(getfieldvals(expdat,xfield))
+		xdat=hs.tofloat(hs.getfieldvals(expdat,xfield))
 	else:
 		xdat=range(len(expdat.samples))
 	sv,si=hs.isort(xdat)
 	if not toaxis:
-		figure()
+		plt.figure()
 		toaxis=plt.gca()
 	labels=[]
 	for cseq in seqs:
@@ -99,15 +99,15 @@ def analyzenumreads(expdat,blanks=['blank','empty']):
 		yb.append(float(sum(nreadsb>=cx))/tsampsb)
 		ynb.append(float(sum(nreadsnb>=cx))/tsampsnb)
 		x.append(cx)
-	figure()
-	plot(x,y)
-	plot(x,yb)
-	plot(x,ynb)
-	title(expdat.studyname+' (%d samples)' % len(expdat.samples))
-	xlabel('number of reads')
-	ylabel('fraction of samples with >= reads')
-	legend(['all','blanks','non blanks'])
-	show()
+	plt.figure()
+	plt.plot(x,y)
+	plt.plot(x,yb)
+	plt.plot(x,ynb)
+	plt.title(expdat.studyname+' (%d samples)' % len(expdat.samples))
+	plt.xlabel('number of reads')
+	plt.ylabel('fraction of samples with >= reads')
+	plt.legend(['all','blanks','non blanks'])
+	plt.show()
 
 
 def plotnucdistribution(expdat,position):
@@ -128,10 +128,10 @@ def plotnucdistribution(expdat,position):
 		cseqn=hs.SeqToArray(cseq)
 		for idx,cpos in enumerate(position):
 			retv[idx,cseqn[cpos]]+=1
-	figure()
+	plt.figure()
 	for cnuc in range(np.size(retv,axis=1)):
 		for crow in range(np.size(retv,axis=0)-1):
-			bar(np.arange(np.size(retv,axis=0)),retv[crow+1,:],bottom=retv[crow,:])
+			plt.bar(np.arange(np.size(retv,axis=0)),retv[crow+1,:],bottom=retv[crow,:])
 	return (retv)
 
 
@@ -155,13 +155,13 @@ def plotdiffsummary2(expdatlist1,expdatlist2,seqs1,seqs2,field,val1,val2=False,m
 	print(np.shape(diff2))
 	diff=np.vstack([diff1,diff2])
 	maxdiff=np.nanmax(np.abs(diff))
-	figure()
-	imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
-	colorbar()
-	title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
-	plot([-0.5,len(expdatlist1)-0.5],[np.shape(diff1)[0]-0.5,np.shape(diff1)[0]-0.5],'k')
-	xticks(np.arange(len(names1)),names1,rotation=90)
-	autoscale(tight=True)
+	plt.figure()
+	plt.imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
+	plt.colorbar()
+	plt.title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
+	plt.plot([-0.5,len(expdatlist1)-0.5],[np.shape(diff1)[0]-0.5,np.shape(diff1)[0]-0.5],'k')
+	plt.xticks(np.arange(len(names1)),names1,rotation=90)
+	plt.autoscale(tight=True)
 
 
 def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=True,threshold=0.1,ptitle=False,showallfirstexp=True):
@@ -226,34 +226,34 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 		si=np.argsort(diff[0,:])
 		diff=diff[:,si]
 		otus=hs.reorder(otus,si)
-	figure()
+	plt.figure()
 	maxdiff=np.nanmax(np.abs(diff))
 	diff=np.transpose(diff)
-	imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
-	colorbar()
+	plt.imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
+	plt.colorbar()
 	if ptitle:
-		title(ptitle)
+		plt.title(ptitle)
 	else:
-		title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
+		plt.title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
 	expnames=[]
 	for cexp in expdatlist:
 		expnames.append(cexp.studyname)
-	xticks(np.arange(len(expnames)),expnames,rotation=45)
-	tight_layout()
-	show()
+	plt.xticks(np.arange(len(expnames)),expnames,rotation=45)
+	plt.tight_layout()
+	plt.show()
 	return diff,expnames,otus
 
 
 
 def showleakage(expdat,seq,wwpp=['1','2','3','4','5','6','7','8']):
-	figure()
+	plt.figure()
 	newexp=hs.filterseqs(expdat,[seq])
 	for idx,cplate in enumerate(wwpp):
 		print(cplate)
 		cexp=hs.filtersamples(newexp,'primerplate_int',cplate,exact=True)
 		print(len(cexp.samples))
-		subplot(3,3,idx+1)
-		title(cplate)
+		plt.subplot(3,3,idx+1)
+		plt.title(cplate)
 		cmat=np.empty([8,12])
 		cmat[:] = np.NAN
 		for idx2,csamp in enumerate(cexp.samples):
@@ -265,10 +265,10 @@ def showleakage(expdat,seq,wwpp=['1','2','3','4','5','6','7','8']):
 			else:
 				cval=-5
 			cmat[crow,ccol]=cval
-		imshow(cmat,interpolation='nearest',aspect='auto',clim=[-5,10],cmap=plt.get_cmap("coolwarm"))
+		plt.imshow(cmat,interpolation='nearest',aspect='auto',clim=[-5,10],cmap=plt.get_cmap("coolwarm"))
 		for idx2,csamp in enumerate(cexp.samples):
 			crow=ord(cexp.smap[csamp]['Row'].lower())-ord('A'.lower())
 			ccol=int(cexp.smap[csamp]['column_int'])-1
 			isntc=int(cexp.smap[csamp]['NTC_bool'])
 			if isntc:
-				text(ccol,crow,'x')
+				plt.text(ccol,crow,'x')

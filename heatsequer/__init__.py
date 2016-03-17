@@ -2,6 +2,11 @@ from __future__ import absolute_import
 
 import os
 
+# we need the QT backend
+import matplotlib as mpl
+mpl.use('Qt4Agg')
+
+
 from heatsequer.experiment import *
 from heatsequer.plots import *
 from heatsequer.utils import *

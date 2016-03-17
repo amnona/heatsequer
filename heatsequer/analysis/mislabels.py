@@ -13,9 +13,9 @@ import heatsequer as hs
 
 import numpy as np
 import matplotlib as mpl
-mpl.use('Qt4Agg')
+#mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import *
+
 
 def findmislabels(expdat,field,distmetric='bc'):
 	""""
@@ -45,8 +45,8 @@ def findmislabels(expdat,field,distmetric='bc'):
 					continue
 				cdist.append(hs.calcdist(cexp.data[:,gidx],expdat.data[:,aidx],distmetric=distmetric))
 			omat[aidx,groupidx]=np.mean(cdist)
-	figure()
-	iax=imshow(omat,interpolation='nearest',aspect='auto')
+	plt.figure()
+	iax=plt.imshow(omat,interpolation='nearest',aspect='auto')
 	ax=iax.get_axes()
 	ax.set_xticks(range(len(ufvals)))
 	ax.set_xticklabels(ufvals,rotation=90)
@@ -70,6 +70,6 @@ def plotnumotushist(expdat,newfig=True,threshold=0.001):
 		cnotus=np.sum(expdat.data[:,idx]>=threshold)
 		notus.append(cnotus)
 	if newfig:
-		figure()
-	hist(notus,bins=20,range=[0,200],normed=True)
-	title('num OTUs for %s' % expdat.tablefilename)
+		plt.figure()
+	plt.hist(notus,bins=20,range=[0,200],normed=True)
+	plt.title('num OTUs for %s' % expdat.tablefilename)

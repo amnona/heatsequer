@@ -605,7 +605,7 @@ def createbiomtablefromexp(expdat,addtax=True):
 	return table
 
 
-def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True):
+def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True,exporthistory=True):
 	"""
 	Save an experiment to a biom table
 	input:
@@ -618,8 +618,12 @@ def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True):
 		True to add taxonomy metadata, False to not add
 	useorigreads : bool
 		True (default) to use original number of reads, False to use normalized (sum=10k)
+	exporthistory : bool
+		True (default) to save also the history (to filename.commands.txt)
 	"""
 	savemap(expdat,filename+'.map.txt')
+	if exporthistory:
+		savecommands(expdat,filename+'.commands.txt')
 	hs.Debug(1,'Saving biom table %s' % filename)
 	if useorigreads:
 		newexp=hs.toorigreads(expdat)

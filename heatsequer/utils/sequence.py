@@ -14,6 +14,8 @@ import heatsequer as hs
 
 import numpy as np
 from pdb import set_trace as XXX
+from skbio.alignment import global_pairwise_align_nucleotide
+from skbio import DNA
 
 
 def SeqToArray(seq):
@@ -109,3 +111,16 @@ def seqdist(seq1,seq2,trim=True):
 	if not trim:
 		dist+=max(len(seq1),len(seq2))-mlen
 	return dist
+
+
+def mutiplesequencealign(seqs):
+	"""
+	align sequences to each other
+
+	input:
+	seqs : list of sequences (ACGT string)
+
+	"""
+	for target_sequence in seqs[1:]:
+		tt=global_pairwise_align_nucleotide(DNA(seqs[0],lowercase=True),DNA(target_sequence,lowercase=True))
+		print(tt)

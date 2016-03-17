@@ -14,11 +14,12 @@ __version__ = "0.9"
 
 import heatsequer as hs
 
+import sys
 import numpy as np
 import matplotlib as mpl
-mpl.use('Qt4Agg')
+#mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
 
 
 def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False):
@@ -80,6 +81,14 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	newexp.seqdb=seqdb
 	newexp.cdb=cdb
 
+	# if usegui:
+	# 	hs.Debug(1,"Using the GUI window")
+	# 	import heatsequer.plots.plotwingui
+	# 	from PyQt4 import QtGui
+
+	# 	app = QtGui.QApplication(sys.argv)
+	# 	guiwin = heatsequer.plots.plotwingui.PlotGUIWindow(newexp)
+
 #	ldat=ldat[:,sidx]
 	ldat=newexp.data
 	if uselog:
@@ -90,20 +99,20 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	mpl.rc('keymap',back='c, backspace')
 	mpl.rc('keymap',forward='v')
 	mpl.rc('keymap',all_axes='A')
-	f=figure()
+	f=plt.figure()
 	# set the colormap to default if not supplied
 	if not colormap:
 		colormap=plt.rcParams['image.cmap']
 	# plot the image
 	if colorrange:
 		hs.Debug(1,"colormap range is 0,10")
-		iax=imshow(ldat,interpolation='nearest',aspect='auto',clim=colorrange,cmap=plt.get_cmap(colormap))
+		iax=plt.imshow(ldat,interpolation='nearest',aspect='auto',clim=colorrange,cmap=plt.get_cmap(colormap))
 	elif rangeall:
 		hs.Debug(1,"colormap range is all")
-		iax=imshow(ldat,interpolation='nearest',aspect='auto',cmap=plt.get_cmap(colormap))
+		iax=plt.imshow(ldat,interpolation='nearest',aspect='auto',cmap=plt.get_cmap(colormap))
 	else:
 		hs.Debug(1,"colormap range is 0,10")
-		iax=imshow(ldat,interpolation='nearest',aspect='auto',clim=[0,10],cmap=plt.get_cmap(colormap))
+		iax=plt.imshow(ldat,interpolation='nearest',aspect='auto',clim=[0,10],cmap=plt.get_cmap(colormap))
 
 	if not ptitle:
 		hs.Debug(1,"Showing filters in title")
@@ -113,7 +122,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			cfilters=newexp.filters
 		cfilters=hs.clipstrings(cfilters,30)
 		ptitle='\n'.join(cfilters)
-	title(ptitle,fontsize=10)
+	plt.title(ptitle,fontsize=10)
 
 	ax=iax.get_axes()
 	ax.autoscale(False)
@@ -136,19 +145,19 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			ax.set_xticks(labpos)
 			ax.set_xticklabels(labs,rotation=45,ha='right')
 		for cx in linepos:
-			plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'k',linewidth=2)
+			plt.plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'k',linewidth=2)
 	else:
 		hs.Debug(1,"Not showing lines")
 		if showxall or len(newexp.samples)<=10:
 			hs.Debug(1,"less than 10 samples, showing all sample names")
 			ax.set_xticklabels(svals,rotation=90)
 			ax.set_xticks(range(len(newexp.samples)))
-	tight_layout()
+	plt.tight_layout()
 	ax.set_ylim(-0.5,np.size(ldat,0)+0.5)
 
 	if showcolorbar:
 		hs.Debug(1,"Showing colorbar")
-		cb=colorbar(ticks=list(np.log2([2,10,100,500,1000])))
+		cb=plt.colorbar(ticks=list(np.log2([2,10,100,500,1000])))
 		cb.ax.set_yticklabels(['<0.02%','0.1%','1%','5%','>10%'])
 
 	# create the plot
@@ -174,9 +183,12 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	if usegui:
 		hs.Debug(1,"Using the GUI window")
 		import heatsequer.plots.plotwingui
+#		from PyQt4 import QtGui
+
+#		app = QtGui.QApplication(sys.argv)
 		guiwin = heatsequer.plots.plotwingui.PlotGUIWindow(newexp)
-#		from heatsequer.plots import plotwingui
-#		guiwin = plotwingui.PlotGUIWindow(newexp)
+		from heatsequer.plots import plotwingui
+		guiwin = plotwingui.PlotGUIWindow(newexp)
 		ax.guiwin=guiwin
 		guiwin.plotfig=f
 		guiwin.plotax=ax
@@ -189,7 +201,11 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		hs.Debug(1,"Experiment has metadata attached for plotting (%d points)" % len(newexp.plotmetadata))
 		for cmet in newexp.plotmetadata:
 			addplotmetadata(newexp,field=cmet[0],value=cmet[1],color=cmet[2],inverse=cmet[3],beforesample=cmet[4])
-	show()
+	plt.show()
+
+#	if usegui:
+#		app.exec_()
+
 	return newexp,ax
 
 
@@ -206,39 +222,39 @@ def onplotkeyclick(event):
 	cexp=cax.expdat
 	if event.key=='q':
 		cax.set_ylim(cylim[0], cylim[0]+(cylim[1]-cylim[0])/2)
-		tight_layout()
+		plt.tight_layout()
 		cax.ofig.canvas.draw()
 	if event.key=='a':
 		cax.set_ylim(cylim[0], cylim[0]+(cylim[1]-cylim[0])*2)
-		tight_layout()
+		plt.tight_layout()
 		cax.ofig.canvas.draw()
 	if event.key=='Q':
 		cax.set_xlim(cxlim[0], cxlim[0]+(cxlim[1]-cxlim[0])/2)
-		tight_layout()
+		plt.tight_layout()
 		cax.ofig.canvas.draw()
 	if event.key=='A':
 		cax.set_xlim(cxlim[0], cxlim[0]+(cxlim[1]-cxlim[0])*2)
-		tight_layout()
+		plt.tight_layout()
 		cax.ofig.canvas.draw()
 	if event.key=='down':
 		if cylim[0]>0:
 			cax.set_ylim(cylim[0]-(cylim[1]-cylim[0]), cylim[0])
-			tight_layout()
+			plt.tight_layout()
 			cax.ofig.canvas.draw()
 	if event.key=='up':
 		if cylim[1]<len(cexp.seqs):
 			cax.set_ylim(cylim[1],cylim[1]+(cylim[1]-cylim[0]))
-			tight_layout()
+			plt.tight_layout()
 			cax.ofig.canvas.draw()
 	if event.key=='left':
 		if cxlim[0]>0:
 			cax.set_xlim(cxlim[0]-(cxlim[1]-cxlim[0]), cxlim[0])
-			tight_layout()
+			plt.tight_layout()
 			cax.ofig.canvas.draw()
 	if event.key=='right':
 		if cxlim[1]<len(cexp.samples)-1:
 			cax.set_xlim(cxlim[1],cxlim[1]+(cxlim[1]-cxlim[0]))
-			tight_layout()
+			plt.tight_layout()
 			cax.ofig.canvas.draw()
 	if event.key==',':
 		# select next bacteria
@@ -299,7 +315,7 @@ def onplotkeyclick(event):
 		cax.set_yticks(np.array(range(len(cexp.seqs))))
 		cax.set_yticklabels(labs)
 		cax.set_ylim(cylim[0], cylim[1])
-		tight_layout()
+		plt.tight_layout()
 		cax.ofig.canvas.draw()
 
 
@@ -343,7 +359,7 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 	contamlist=[]
 	pathogenlist=[]
 	labs=hs.clipstrings(cexp.tax,25,reverse=True)
-	if showdb or contam:
+	if showdb or showcontam:
 		if cexp.cdb:
 			for idx,cseq in enumerate(cexp.seqs):
 				info=hs.cooldb.getseqinfo(cexp.cdb,cseq)
@@ -366,7 +382,7 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 				clab.set_color("blue")
 	cax.set_ylim(cylim[0], cylim[1])
 	cax.set_xlim(cxlim[0], cxlim[1])
-	tight_layout()
+	plt.tight_layout()
 	cax.ofig.canvas.draw()
 
 

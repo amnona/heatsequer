@@ -137,6 +137,8 @@ def filtersamples(expdat,field,filtval,exact=True,exclude=False,numexpression=Fa
 		for filt in filtval:
 			if numexpression:
 				cval=expdat.smap[csamp][field]
+				if len(cval)==0:
+					continue
 				if eval(cval+filt):
 					keepit=True
 			elif exact:

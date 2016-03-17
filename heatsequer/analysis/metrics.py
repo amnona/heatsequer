@@ -14,9 +14,9 @@ import heatsequer as hs
 import numpy as np
 from collections import defaultdict
 import matplotlib as mpl
-mpl.use('Qt4Agg')
+#mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import *
+
 
 def calcdist(sample1,sample2,distmetric='bc'):
 	"""
@@ -166,10 +166,10 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 			distdict[(cg1,cg2)]=adist
 			gdist[idx1,idx2]=np.mean(adist)
 	if plotit:
-		figure()
+		plt.figure()
 		if plottype=='heatmap':
 			plotdistheatmap(gdist,uvals)
-			title(expdat.studyname+' '+field)
+			plt.title(expdat.studyname+' '+field)
 		elif plottype=='hist':
 			pl=[]
 			pairs=[]
@@ -181,8 +181,8 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 				pl.append(v)
 				pairs.append(ks)
 				names.append(k)
-			hist(pl,alpha=0.5,normed=True,bins=50,range=[0,1])
-			legend(names)
+			plt.hist(pl,alpha=0.5,normed=True,bins=50,range=[0,1])
+			plt.legend(names)
 	return gdist,uvals
 
 
@@ -201,15 +201,15 @@ def plotdistheatmap(gdist,uvals,neworder=False):
 		gdist=gdist[neworder,:]
 		gdist=gdist[:,neworder]
 		uvals=hs.reorder(uvals,neworder)
-	figure()
-	iax=imshow(gdist,interpolation='nearest',aspect='auto',vmin=0,vmax=1)
+	plt.figure()
+	iax=plt.imshow(gdist,interpolation='nearest',aspect='auto',vmin=0,vmax=1)
 	ax=iax.get_axes()
 	ax.set_xticks(range(len(uvals)))
 	ax.set_xticklabels(uvals,rotation=90)
 	ax.set_yticks(range(len(uvals)))
 	ax.set_yticklabels(uvals)
-	tight_layout()
-	draw()
+	plt.tight_layout()
+	plt.draw()
 
 
 def plotdistbar(gdist,uvals,crow=0,neworder=False):
@@ -228,10 +228,10 @@ def plotdistbar(gdist,uvals,crow=0,neworder=False):
 		gdist=gdist[:,neworder]
 		uvals=hs.reorder(uvals,neworder)
 
-	figure()
-	bar(np.arange(len(uvals))-0.5,gdist[crow,:])
-	ax=gca()
+	plt.figure()
+	plt.bar(np.arange(len(uvals))-0.5,gdist[crow,:])
+	ax=plt.gca()
 	ax.set_xticks(range(len(uvals)))
 	ax.set_xticklabels(uvals,rotation=90)
-	tight_layout()
-	draw()
+	plt.tight_layout()
+	plt.draw()

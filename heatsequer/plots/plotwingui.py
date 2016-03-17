@@ -30,6 +30,7 @@ from pdb import set_trace as XXX
 for the GUI
 """
 
+
 class SListWindow(QtGui.QDialog):
 	def __init__(self,listdata=[],listname=''):
 		"""
@@ -95,22 +96,38 @@ class PlotGUIWindow(QtGui.QDialog):
 			for conto in ontofields:
 #			for conto in self.cexp.seqdb.OntoGraph.keys():
 				self.cOntology.addItem(conto)
+		self.dc=None
+		self.createaddplot(useqt=True)
 
-
-		# add the matplotlib figure
-		self.frame = QtGui.QWidget(self)
-		self.dc = MyMplCanvas(self.frame, width=5, height=4, dpi=100)
-		# add it to an hboxlayout to make it resize with window
-		layout = QtGui.QHBoxLayout(self)
-		layout.insertSpacing(0,250)
-#		layout.addWidget(self.dc)
-#		self.setLayout(layout)
-		layout2 = QtGui.QVBoxLayout()
-		layout.addLayout(layout2)
-		layout2.addWidget(self.dc)
-		self.mpl_toolbar = NavigationToolbar(self.dc, self)
-		layout2.addWidget(self.mpl_toolbar)
-		self.setLayout(layout)
+	def createaddplot(self,useqt=True):
+		"""
+		create the additional figure for the ontology/line plots
+		input:
+		useqt : boolean
+			True to embed the plot in the qtgui window, false to open a new figure window (so don't need the qtagg)
+		"""
+		print("hola")
+		if useqt:
+			print("oh no!!!")
+			# add the matplotlib figure
+			self.frame = QtGui.QWidget(self)
+			self.dc = MyMplCanvas(self.frame, width=5, height=4, dpi=100)
+			# add it to an hboxlayout to make it resize with window
+			layout = QtGui.QHBoxLayout(self)
+			layout.insertSpacing(0,250)
+	#		layout.addWidget(self.dc)
+	#		self.setLayout(layout)
+			layout2 = QtGui.QVBoxLayout()
+			layout.addLayout(layout2)
+			layout2.addWidget(self.dc)
+			self.mpl_toolbar = NavigationToolbar(self.dc, self)
+			layout2.addWidget(self.mpl_toolbar)
+			self.setLayout(layout)
+		else:
+			addfig=plt.figure()
+			addax=addfig.add_subplot(1,1,1)
+	#		addax.hold(False)
+			self.dc=addax
 
 	def sampleinfo(self):
 		if not self.csamp:
@@ -140,6 +157,8 @@ class PlotGUIWindow(QtGui.QDialog):
 
 
 	def plotxgraph(self):
+		if self.dc is None:
+			self.createaddplot()
 		self.dc.axes.clear()
 		seqs=self.getselectedseqs()
 		if self.cPlotNormalizeY.checkState()==0:
@@ -151,7 +170,10 @@ class PlotGUIWindow(QtGui.QDialog):
 		else:
 			xfield=str(self.cPlotXField.currentText())
 		hs.plotseqfreq(self.cexp,seqs=seqs,toaxis=self.dc.axes,normalizey=normalizey,xfield=xfield)
-		self.dc.draw()
+		# is this needed?
+#		self.dc.draw()
+		self.dc.figure.canvas.draw_idle()
+
 
 	def samplefield(self,qstr):
 		cfield=str(qstr)
@@ -191,7 +213,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		"""
 		if not self.cexp.cdb:
 			hs.Debug(8,'No cooldb loaded')
-			return		
+			return
 		selseqs=[]
 		for cid in self.selection:
 			selseqs.append(self.cexp.seqs[cid])

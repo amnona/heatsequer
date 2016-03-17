@@ -11,6 +11,7 @@ __version__ = "0.4"
 
 import networkx
 
+
 def simplifygraph(g):
 	"""
 	remove all intermediate nodes in a graph (i.e. 1 in and 1 out)

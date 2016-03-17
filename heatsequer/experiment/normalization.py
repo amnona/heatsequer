@@ -14,6 +14,7 @@ import heatsequer as hs
 
 import numpy as np
 
+
 def normalizeprctile(expdat,percent=80):
 	"""
 	normalize reads per experiment so percentile (rather than mean) will be normalized

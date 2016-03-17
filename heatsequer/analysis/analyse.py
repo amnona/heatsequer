@@ -16,9 +16,9 @@ from scipy import stats
 from scipy import spatial
 from collections import defaultdict
 import matplotlib as mpl
-mpl.use('Qt4Agg')
+#mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
 import sklearn.metrics
 import sklearn.cross_validation
 import copy
@@ -425,20 +425,20 @@ def testbicluster(expdat,numiter=5,numruns=100):
 	"""
 	show the sizes of clusters in data, random and random normalized
 	"""
-	figure()
+	plt.figure()
 	cc,seqs,samps=bicluster(expdat,method='binary',justcount=True,numruns=numruns,numiter=numiter)
 	for idx,cseqs in enumerate(seqs):
-		plot(len(samps[idx]),len(cseqs),'xr')
+		plt.plot(len(samps[idx]),len(cseqs),'xr')
 	rp=randomizeexp(expdat,normalize=False)
 	cc,seqs,samps=bicluster(rp,method='binary',justcount=True,numruns=numruns,numiter=numiter)
 	for idx,cseqs in enumerate(seqs):
-		plot(len(samps[idx]),len(cseqs),'xk')
+		plt.plot(len(samps[idx]),len(cseqs),'xk')
 	rp=randomizeexp(expdat,normalize=True)
 	cc,seqs,samps=bicluster(rp,method='binary',justcount=True,numruns=numruns,numiter=numiter)
 	for idx,cseqs in enumerate(seqs):
-		plot(len(samps[idx]),len(cseqs),'xk')
-	xlabel('# Samples in cluster')
-	ylabel('# Bacteria in cluster')
+		plt.plot(len(samps[idx]),len(cseqs),'xk')
+	plt.xlabel('# Samples in cluster')
+	plt.ylabel('# Bacteria in cluster')
 
 
 def getbigfreqsource(expdat,seqdb):
@@ -482,6 +482,7 @@ def getbigfreqsource(expdat,seqdb):
 		newexp.tax[idx]=mcat
 
 	return newexp
+
 
 def getexpdbsources(expdat,seqdb=False):
 	'''
@@ -607,7 +608,8 @@ def BaysZeroClassifyTest(oexpdat,field,val1,val2=False,n_folds=10,istreeexpand=F
 					else:
 						vtype=2
 					groundtruthlist.append(vtype==1)
-				predlist.append(lscores[0])
+#				predlist.append(lscores[0])
+				predlist.append(lrscores[0])
 			cauc=sklearn.metrics.roc_auc_score(typeis1, lrscores, average='macro', sample_weight=None)
 			hs.Debug(4,"auc=%f" % cauc)
 			aucres.append(cauc)
@@ -734,11 +736,11 @@ def keeptreebest(expdat,field,val1,val2,method="meandif"):
 	"""
 	params=locals()
 
-	pos1=findsamples(expdat,field,val1)
+	pos1=hs.findsamples(expdat,field,val1)
 	if val2:
-		pos2=findsamples(expdat,field,val2)
+		pos2=hs.findsamples(expdat,field,val2)
 	else:
-		pos2=findsamples(expdat,field,val1,exclude=True)
+		pos2=hs.findsamples(expdat,field,val1,exclude=True)
 	allpos=list(set(pos1+pos2))
 
 	mean1=np.mean(expdat.data[:,pos1],axis=1)
@@ -772,7 +774,7 @@ def keeptreebest(expdat,field,val1,val2,method="meandif"):
 			keep.append(cidx)
 			for cpos in poss:
 				dontuse[cpos]=True
-	newexp=reorderbacteria(expdat,keep)
+	newexp=hs.reorderbacteria(expdat,keep)
 	newexp.filters.append("keeptreebest field %s val1 %s val2 %s" % (field,val1,str(val2)))
 	hs.addcommand(newexp,"keeptreebest",params=params,replaceparams={'expdat':expdat})
 	return newexp
@@ -1014,16 +1016,16 @@ def testbactenrichment(expdat,seqs,cdb=False,bdb=False,dbexpres=False,translates
 
 	# maybe need to keep similar freq bacteria?
 	if cdb:
-		cooldb.testenrichment(cdb,expdat.seqs,seqs)
+		hs.cooldb.testenrichment(cdb,expdat.seqs,seqs)
 	if bdb:
 		if not dbexpres:
-			dbexpres=bactdb.GetSeqListInfo(bdb,expdat.seqs,info='studies')
-		seqpos=findseqsinexp(expdat,seqs)
+			dbexpres=hs.bactdb.GetSeqListInfo(bdb,expdat.seqs,info='studies')
+		seqpos=hs.findseqsinexp(expdat,seqs)
 		plist=testenrichment(dbexpres,seqpos,printit=False)
 		for cpv in plist:
 			cname=cpv['name']
 			if translatestudy:
-				studyname=bactdb.StudyNameFromID(bdb,cname)
+				studyname=hs.bactdb.StudyNameFromID(bdb,cname)
 			else:
 				studyname=cname
 			print("%s - observed %f, expected %f, pval %f" % (studyname,cpv['observed'],cpv['expected'],cpv['pval']))
@@ -1385,7 +1387,7 @@ def getsimilarfreqseqs(expdat,seqs):
 		cseqpos=expdat.seqdict[cseq]
 		ofreqs[idx]=np.mean(expdat.data[cseqpos,:])
 	ffrac,edges=np.histogram(ofreqs,normed=False)
-	hist(ofreqs,normed=False)
+	plt.hist(ofreqs,normed=False)
 
 	allfreqs=np.mean(expdat.data,axis=1)
 	cpos=[]
