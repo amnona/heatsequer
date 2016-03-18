@@ -14,7 +14,7 @@ import heatsequer as hs
 import sys
 from PyQt4 import QtGui, uic, QtCore
 # import cPickle as pickle
-import cPickle as pickle
+import Pickle as pickle
 import matplotlib
 matplotlib.use('Qt4Agg')
 import os.path

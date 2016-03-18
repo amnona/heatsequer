@@ -18,7 +18,7 @@ import os
 from pdb import set_trace as XXX
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -61,7 +61,13 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		ids=table.ids(axis='sample')
 		for cid in ids:
 			if removefrom in cid:
-				tid=cid[:cid.find(removefrom)]
+#				tid=cid[:cid.find(removefrom)]
+				fpos=hs.findn(cid,removefrom,removenum)
+				if fpos==-1:
+					hs.Debug(6,'Did not find enough %s in %s' % (removefrom,cid))
+					tid=cid
+				else:
+					tid=cid[:fpos]
 			else:
 				hs.Debug(6,'%s not found in sample name %s (removefrom)' % (removefrom,cid))
 				tid=cid

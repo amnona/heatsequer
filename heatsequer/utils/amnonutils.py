@@ -428,3 +428,16 @@ def get_current_data_path(fn, subfolder='data'):
 	path = os.path.dirname(os.path.abspath(callers_filename))
 	data_path = os.path.join(path, subfolder, fn)
 	return data_path
+
+
+def findn(text,substr,num):
+	index=0
+	while index < len(text):
+		index = text.find(substr, index)
+		if index == -1:
+			break
+		num-=1
+		if num==0:
+			return index
+		index+=len(substr)
+	return -1
