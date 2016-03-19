@@ -3,14 +3,14 @@ HeatSequer
 look at the secret life of bacteria
 
 HeatSequer is a program for visualization (using heatmaps) and analysis of 16S amplicon data. It is intended for large studies (100s of samples, 1000s of OTUs). While being adapted mostly for deblurred 16S sequences, it can work with closed/open reference OTUs and metabolomics data.
-HeatSequer can be used as an interactive program or as a set of interactive python commands.
+HeatSequer can be used as an interactive program or as a set of interactive python commands for data exploration (also in Jupyter notebook).
 
 
 Installation
 ------------
 The easiest way to install is:
 
-1. Install miniconda (http://conda.pydata.org/miniconda.html) or anaconda ( https://www.continuum.io/downloads ). HeatSequer is tested to work with Python 2.7
+1. Install miniconda (http://conda.pydata.org/miniconda.html) or anaconda ( https://www.continuum.io/downloads ). HeatSequer is tested to work with Python 2 and Python 3
 
 2. Create a virtual environment for heatsequer:
 
