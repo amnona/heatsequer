@@ -10,9 +10,9 @@ Installation
 ------------
 The easiest way to install is:
 
-1. Install miniconda (http://conda.pydata.org/miniconda.html) or anaconda ( https://www.continuum.io/downloads ). HeatSequer is tested to work with Python 2 and Python 3
+Install miniconda (http://conda.pydata.org/miniconda.html) or anaconda ( https://www.continuum.io/downloads ). HeatSequer is tested to work with Python 2 and Python 3
 
-2. Create a virtual environment for heatsequer:
+Create a virtual environment for heatsequer:
 
 in the command prompt, run:
 
@@ -20,7 +20,7 @@ in the command prompt, run:
 conda create --name heatsequer scipy numpy networkx pyqt qt scikit-learn matplotlib hdf5 h5py
 ```
 
-3. Activate the environment:
+Activate the environment:
 
 on mac/unix:
 
@@ -34,7 +34,7 @@ on windows:
 activate heatsequer
 ```
 
-4. install additional required packages:
+Install additional required packages:
 
 ```
 pip install biom-format
@@ -44,7 +44,7 @@ pip install h5py
 pip install scikit-bio
 ```
 
-5. download the heatsequer files from github (https://github.com/amnona/heatsequer):
+Download the heatsequer files from github (https://github.com/amnona/heatsequer):
 
 cd to where you want the new heatsequer directory to be created
 
