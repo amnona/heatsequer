@@ -16,41 +16,41 @@ The easiest way to install is:
 
 in the command prompt, run:
 
-'''
+```
 conda create --name heatsequer scipy numpy networkx pyqt qt scikit-learn matplotlib hdf5 h5py
-'''
+```
 
 3. Activate the environment:
 
 on mac/unix:
 
-'''
+```
 source activate heatsequer
-'''
+```
 
 on windows:
 
-'''
+```
 activate heatsequer
-'''
+```
 
 4. install additional required packages:
 
-'''
+```
 pip install biom-format
 
 pip install h5py
 
 pip install scikit-bio
-'''
+```
 
 5. download the heatsequer files from github (https://github.com/amnona/heatsequer):
 
 cd to where you want the new heatsequer directory to be created
 
-'''
+```
 git clone git@github.com:amnona/heatsequer.git
-'''
+```
 
 To run the program:
 -------------------
@@ -58,21 +58,21 @@ from the direcroty where heatsequer is downloaded to type:
 
 on windows:
 
-'''
+```
 activate heatsequer
-'''
+```
 
 on mac/unix:
 
-'''
+```
 source activate heatsequer
-'''
+```
 
 and then (on win/mac/unix):
 
-'''
+```
 python hsgui.py
-'''
+```
 
 
 Basic Usage:
