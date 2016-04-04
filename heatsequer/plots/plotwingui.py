@@ -106,9 +106,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		useqt : boolean
 			True to embed the plot in the qtgui window, false to open a new figure window (so don't need the qtagg)
 		"""
-		print("hola")
 		if useqt:
-			print("oh no!!!")
 			# add the matplotlib figure
 			self.frame = QtGui.QWidget(self)
 			self.dc = MyMplCanvas(self.frame, width=5, height=4, dpi=100)

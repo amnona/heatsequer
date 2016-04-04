@@ -325,7 +325,7 @@ def loadrdptax(expdat,rdpfilename,fastaname=False,threshold=60):
 				cseq=hdict[cseq]
 			else:
 				hs.Debug(6,'sequence %s not found in fasta file' % cseq)
-		if not cseq in expdat.seqdict:
+		if cseq not in expdat.seqdict:
 			hs.Debug(6,'sequence %s not found in experiment' % cseq)
 			continue
 		cpos=expdat.seqdict[cseq]
@@ -651,3 +651,48 @@ def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True,expor
 		return
 	hs.Debug(6,'table saved to file %s' % filename)
 	return
+
+
+def reloadmap(expdat,mapfilename):
+	"""
+	reload the mapping file for a loaded experiment
+
+	input:
+	expdat : Experiment
+	mapfilename : string
+		Name of the mapping file to reload
+
+	output:
+	newexp : Experiment
+		like expdat but with fields from new map file
+	"""
+	params=locals()
+
+	newexp=hs.copyexp(expdat)
+	mapsamples,smap,fields=loadmap(mapfilename)
+	newexp.smap=smap
+	newexp.fields=fields
+	for csamp in newexp.samples:
+		if csamp not in mapsamples:
+			hs.Debug(7,'Sample %s not in new map!' % csamp)
+	newexp.filters.append('reload map %s' % mapfilename)
+	hs.addcommand(newexp,"reloadmapfile",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+
+def writetaxseq(expdat,filename):
+	"""
+	write a tab delimited table of taxonomy and sequence
+	used for rapid response summary
+
+	input:
+	expdat : Experiment
+	filename : name of the tsv output file
+	"""
+
+	fl=open(filename,'w')
+	fl.write('Taxonomy\tSequence\n')
+	for idx in np.arange(len(expdat.seqs),0,-1):
+		fl.write('%s\t%s\n' % (expdat.tax[idx-1],expdat.seqs[idx-1]))
+	fl.close()

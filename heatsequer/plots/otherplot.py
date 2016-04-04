@@ -272,3 +272,46 @@ def showleakage(expdat,seq,wwpp=['1','2','3','4','5','6','7','8']):
 			isntc=int(cexp.smap[csamp]['NTC_bool'])
 			if isntc:
 				plt.text(ccol,crow,'x')
+
+
+def plottimeseries(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
+	"""
+	plot a line plot for a timeseries with a different line for each individual
+	input:
+	expdat : Experiment
+	idfield : string
+		name of the per individual id field
+	timefield : string
+		name of the timepoint field
+	seq : string (ACGT)
+		the sequence to plot
+	toaxis : axis
+		False (default) to draw in a new figure
+	numeric : bool
+		True (default) if timefield is numeric
+	"""
+
+	if not toaxis:
+		plt.figure()
+		toaxis=plt.gca()
+
+	newexp=hs.sortsamples(expdat,timefield,numeric=numeric)
+	times=hs.getfieldvals(expdat,timefield)
+	utimes=list(set(times))
+	if numeric:
+		utimes=hs.tofloat(utimes)
+	utimes=np.sort(utimes)
+	timesd=hs.listtodict(times)
+	ids=hs.getfieldvals(newexp,idfield)
+	for cid in list(set(ids)):
+		x=[]
+		y=[]
+		for ct in hs.findsamples(newexp,idfield,cid):
+			y.append(newexp.data[newexp.seqdict[seq],ct])
+			if numeric:
+				x.append(float(times[ct]))
+			else:
+				x.append(timesd[times[ct]])
+		toaxis.plot(x,y)
+	toaxis.legend(list(set(ids)))
+	toaxis.title('lala')

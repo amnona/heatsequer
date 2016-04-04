@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2):
 	"""
 	Plot an experiment
 	input:
@@ -145,7 +145,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			ax.set_xticks(labpos)
 			ax.set_xticklabels(labs,rotation=45,ha='right')
 		for cx in linepos:
-			plt.plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'k',linewidth=2)
+			plt.plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'k',linewidth=linewidth)
+			plt.plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'w:',linewidth=linewidth)
 	else:
 		hs.Debug(1,"Not showing lines")
 		if showxall or len(newexp.samples)<=10:
@@ -316,6 +317,11 @@ def onplotkeyclick(event):
 		cax.set_yticklabels(labs)
 		cax.set_ylim(cylim[0], cylim[1])
 		plt.tight_layout()
+		cax.ofig.canvas.draw()
+	# hide the cursor
+	if event.key=='!':
+		cax.guiwin.clearselection()
+		cax.lines.remove(cax.sampline)
 		cax.ofig.canvas.draw()
 
 

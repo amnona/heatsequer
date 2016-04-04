@@ -639,9 +639,9 @@ def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,step=1,directi
 			elif direction=='down':
 				cdiff=-cdiff
 			if posloc=='gstart':
-				usepos=(cdiff>=minfold) and (maxpos==-1)
+				usepos=np.logical_and(cdiff>=minfold,maxpos==-1)
 				maxpos[usepos]=startpos
-			if posloc=='start':
+			elif posloc=='start':
 				maxpos[cdiff>maxdiff]=startpos
 			elif posloc=='mid':
 				maxpos[cdiff>maxdiff]=startpos+int(cwin/2)
@@ -690,7 +690,7 @@ def filtern(expdat):
 	return newexp
 
 
-def cleantaxonomy(expdat,mitochondria=True,chloroplast=True,bacteria=True,unknown=True):
+def cleantaxonomy(expdat,mitochondria=True,chloroplast=True,bacteria=True,unknown=True,exclude=True):
 	"""
 	remove common non-16s sequences from the experiment and renormalize
 
@@ -704,6 +704,8 @@ def cleantaxonomy(expdat,mitochondria=True,chloroplast=True,bacteria=True,unknow
 		remove sequences only identified as "Bacteria" (no finer identification)
 	unknown : bool
 		remove unknown sequences
+	exclude : bool
+		True (default) to remove these sequecnes, False to keep them and throw other
 
 	output:
 	newexp : Experiment
@@ -713,16 +715,41 @@ def cleantaxonomy(expdat,mitochondria=True,chloroplast=True,bacteria=True,unknow
 
 	newexp=hs.copyexp(expdat)
 	if mitochondria:
-		newexp=hs.filtertaxonomy(newexp,'mitochondria',exclude=True)
+		if exclude:
+			newexp=hs.filtertaxonomy(newexp,'mitochondria',exclude=True)
+		else:
+			ne1=hs.filtertaxonomy(newexp,'mitochondria',exclude=False)
 	if chloroplast:
-		newexp=hs.filtertaxonomy(newexp,'Streptophyta',exclude=True)
-		newexp=hs.filtertaxonomy(newexp,'Chloroplast',exclude=True)
+		if exclude:
+			newexp=hs.filtertaxonomy(newexp,'Streptophyta',exclude=True)
+			newexp=hs.filtertaxonomy(newexp,'Chloroplast',exclude=True)
+		else:
+			ne2=hs.filtertaxonomy(newexp,'Streptophyta',exclude=False)
+			ne3=hs.filtertaxonomy(newexp,'Chloroplast',exclude=False)
 	if unknown:
-		newexp=hs.filtertaxonomy(newexp,'Unknown',exclude=True)
-		newexp=hs.filtertaxonomy(newexp,'Unclassified;',exclude=True,exact=True)
+		if exclude:
+			newexp=hs.filtertaxonomy(newexp,'Unknown',exclude=True)
+			newexp=hs.filtertaxonomy(newexp,'Unclassified;',exclude=True,exact=True)
+		else:
+			ne4=hs.filtertaxonomy(newexp,'Unknown',exclude=False)
+			ne5=hs.filtertaxonomy(newexp,'Unclassified;',exclude=False,exact=True)
 	if bacteria:
-		newexp=hs.filtertaxonomy(newexp,'Bacteria;',exclude=True,exact=True)
-	newexp=hs.normalizereads(newexp)
+		if exclude:
+			newexp=hs.filtertaxonomy(newexp,'Bacteria;',exclude=True,exact=True)
+		else:
+			ne6=hs.filtertaxonomy(newexp,'Bacteria;',exclude=False,exact=True)
+	if exclude:
+		newexp=hs.normalizereads(newexp)
+	else:
+		allseqs=[]
+		allseqs+=(ne1.seqs)
+		allseqs+=(ne2.seqs)
+		allseqs+=(ne3.seqs)
+		allseqs+=(ne4.seqs)
+		allseqs+=(ne5.seqs)
+		allseqs+=(ne6.seqs)
+		allseqs=list(set(allseqs))
+		newexp=hs.filterseqs(newexp,allseqs)
 	newexp.filters.append('Clean Taxonomy (remove mitochondria etc.)')
 	hs.addcommand(newexp,"cleantaxonomy",params=params,replaceparams={'expdat':expdat})
 	hs.Debug(6,'%d sequences before filtering, %d after' % (len(expdat.seqs),len(newexp.seqs)))

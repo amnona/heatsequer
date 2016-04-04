@@ -1087,7 +1087,7 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean',threshold=0.1
 
 
 
-def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1000],maxfval=0.1,mineffect=0.1):
+def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1000],maxfval=0.1,mineffect=0.1,permutefield=False):
 	"""
 	test the differential expression between 2 groups (val1 and val2 in field field)
 	for bacteria that have a high difference.
@@ -1106,6 +1106,8 @@ def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1
 	maxfval - the maximal f-value (FDR) for a bacteria to keep
 	mineffect : float
 		the minimal effect size to keep (abs(diff)/mean)
+	permutefield : string or False
+		if False (default) permute all samples, otherwise permute separately on samples with same value on field permutefield
 
 	output:
 	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
@@ -1146,7 +1148,17 @@ def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1
 		hs.Debug(9,"Method not supported!",method)
 		return
 
-	pval,odif=fastpermutepv(dat,meanfunc,pos1,pos2,numperm=numperm,maxpval=maxfval,mineffect=mineffect)
+	if permutefield:
+		gvals=hs.getfieldvals(cexp,permutefield)
+		ugvals=list(set(gvals))
+		permutegroups=[]
+		for cgval in ugvals:
+			permutegroups.append(np.array(hs.findsamples(cexp,permutefield,cgval)))
+		print(permutegroups)
+	else:
+		permutegroups=False
+
+	pval,odif=fastpermutepv(dat,meanfunc,pos1,pos2,numperm=numperm,maxpval=maxfval,mineffect=mineffect,permutegroups=permutegroups)
 
 	# do fdr
 	fval=hs.fdr(pval)
@@ -1165,7 +1177,7 @@ def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1
 	return newexp
 
 
-def fastpermutepv(dat,tfunc,group1,group2,numperm=[100,1000],maxpval=0.05,mineffect=0.1):
+def fastpermutepv(dat,tfunc,group1,group2,numperm=[100,1000],maxpval=0.05,mineffect=0.1,permutegroups=False):
 	"""
 	do a fast iterative permutation test for differential expression dat (each row is tested independently)
 	by skipping the row if it is clearly above the p-value or if the effect size is not big enough
@@ -1185,6 +1197,8 @@ def fastpermutepv(dat,tfunc,group1,group2,numperm=[100,1000],maxpval=0.05,mineff
 		p-value for each row (approximate if high)
 	odif - np array of floats
 		the statistic for the original (non-permuted) groups
+	permutegroups : list of lists
+		if False (default) permute all samples, otherwise permute separately on samples within each group
 	"""
 
 	numbact=np.shape(dat)[0]
@@ -1212,7 +1226,14 @@ def fastpermutepv(dat,tfunc,group1,group2,numperm=[100,1000],maxpval=0.05,mineff
 		dat=odat[usebact,:]
 		# do permutations
 		for x in range(cnumperm):
-			rp=np.random.permutation(numg1+numg2)
+			if permutegroups:
+				rp=np.arange(numg1+numg2)
+				for cgroup in permutegroups:
+					crp=np.random.permutation(len(cgroup))
+					rp[cgroup]=rp[cgroup[crp]]
+				pass
+			else:
+				rp=np.random.permutation(numg1+numg2)
 			val1=tfunc(dat[:,rp[0:numg1]])
 			val2=tfunc(dat[:,rp[numg1:]])
 			diff=val1-val2

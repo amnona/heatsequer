@@ -439,7 +439,7 @@ def insertbacteria(expdat,freqs=[],seq="unknown",tax="unknown",logit=True):
 		cid=0
 		while seq+str(cid) in expdat.seqdict:
 			cid+=1
-		expdat.seqs.append()
+#		expdat.seqs.append()
 		seq=seq+str(cid)
 
 	expdat.seqs.append(seq)
@@ -463,24 +463,26 @@ def addsubtrees(expdat,tree,inplace=False):
 	newexp - the new experiment with twice-1 number of otus
 	"""
 	params=locals()
-	if not expdat.tree:
-		hs.Debug(8,"No tree loaded for experiment")
-		return False
+#	if not expdat.tree:
+#		hs.Debug(8,"No tree loaded for experiment")
+#		return False
 
 	if inplace:
 		newexp=expdat
 	else:
-		newexp=copy.deepcopy(expdat)
+		newexp=hs.copyexp(expdat)
 
 	subtrees=tree.subsets()
 	for csubtree in subtrees:
 		newname=""
 		newtax=""
+		numuse=0
 		newfreq=np.zeros([1,len(newexp.samples)])
 		for cbact in csubtree:
-			if not cbact in newexp.seqdict:
-				hs.Debug(6,'sequence not in seqdict',cbact)
+			if cbact not in newexp.seqdict:
+				hs.Debug(4,'sequence not in seqdict',cbact)
 				continue
+			numuse+=1
 			cpos=newexp.seqdict[cbact]
 			newfreq+=newexp.data[cpos,:]
 			newname+='%d,' % cpos
@@ -488,7 +490,10 @@ def addsubtrees(expdat,tree,inplace=False):
 				newtax=newexp.tax[cpos]
 			else:
 				newtax=hs.common_start(newtax,newexp.tax[cpos])
-		newexp,newpos=insertbacteria(newexp,freqs=newfreq,seq=newname,tax=newtax,logit=False)
+		# add only if we have 2 bacteria or more
+		if numuse>1:
+			if newname not in newexp.seqdict:
+				newexp,newpos=insertbacteria(newexp,freqs=newfreq,seq=newname,tax=newtax,logit=False)
 
 	newexp.filters.append("Add subtrees")
 	hs.addcommand(newexp,"addsubtrees",params=params,replaceparams={'expdat':expdat})

@@ -270,6 +270,18 @@ def ArrayToSeq(seqa):
 	return(seq)
 
 
+
+def fdr2(p):
+	"""Benjamini-Hochberg p-value correction for multiple hypothesis testing."""
+	p = np.asfarray(p)
+	by_descend = p.argsort()[::-1]
+	by_orig = by_descend.argsort()
+	steps = float(len(p)) / np.arange(len(p), 0, -1)
+	q = np.minimum(1, np.minimum.accumulate(steps * p[by_descend]))
+	return q[by_orig]
+
+
+
 def fdr(pvalues, correction_type = "Benjamini-Hochberg"):
 	"""
 	consistent with R - print correct_pvalues_for_multiple_testing([0.0, 0.01, 0.029, 0.03, 0.031, 0.05, 0.069, 0.07, 0.071, 0.09, 0.1])
@@ -431,6 +443,20 @@ def get_current_data_path(fn, subfolder='data'):
 
 
 def findn(text,substr,num):
+	"""
+	find num-th occurance of substr in text
+	input:
+	text : string
+		the string to search in
+	substr : string
+		the substring to search for in text
+	num : int
+		the occurance number (1 is the first occurance, etc)
+
+	output:
+	index : int
+		the position of the start of the num-th substring in text, or -1 if not present
+	"""
 	index=0
 	while index < len(text):
 		index = text.find(substr, index)
