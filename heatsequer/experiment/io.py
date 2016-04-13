@@ -16,9 +16,10 @@ import csv
 import biom
 import os
 from pdb import set_trace as XXX
+import hashlib
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -27,7 +28,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	taxfile - empty ('') to load taxonomy from biom table, non-empty to load
 	from rdp output file (web)
 	nameisseq - False to keep otu name as sid without hashing it, True to treat otuid as sequence
-	addsname - a string to add to each sample name (or empty to not add)
+	addsname - a string to add to each table sample name (or empty to not add)
 	studyname - Flase to assign from table file name, otherwise string to store as study name
 	tabletype:
 		'biom' - a biom table
@@ -37,6 +38,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		True (default) to keep samples with 0 reads, False to throw away
 	removefrom : string
 		if non empty - cut table sample name after (and including) the first occurance of removefrom
+	mapsampletolowercase : bool
+		True to convert the mapping file sample id to lower case (for EMP data). default=False
+	sortit : bool
+		True (default) to sort sequences by taxonomy, False to not sort
 	output:
 	an experiment class for the current experiment
 	"""
@@ -54,6 +59,9 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		hs.Debug(9,'Table type %s not supported' % tabletype)
 		return False
 
+	datamd5=hashlib.md5()
+	datamd5.update(str(table.matrix_data.todense().A).encode('utf=8'))
+	datamd5=datamd5.hexdigest()
 	# if need to cut table sample names
 	if removefrom:
 		idtable={}
@@ -93,7 +101,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	mapsamples = []
 	if mapname:
 		# if mapping file supplied, load it
-		mapsamples,smap,fields=loadmap(mapname)
+		mapsamples,smap,fields,mapmd5=loadmap(mapname,mapsampletolowercase=mapsampletolowercase)
 	else:
 		# no mapping file, so just create the #SampleID field
 		hs.Debug(6,'No mapping file supplied - using just sample names')
@@ -178,6 +186,8 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	exp.mapfilename=tablename
 	exp.filters = [tablename]
 	exp.fields = fields
+	exp.datamd5 = datamd5
+	exp.mapmd5 = mapmd5
 	colsum=np.sum(exp.data,axis=0,keepdims=False)
 	exp.origreads=list(colsum)
 	# add the original number of reads as a field to the experiment
@@ -202,7 +212,8 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		exp.data=10000*exp.data/np.mean(colsum)
 
 	exp.uniqueid=exp.getexperimentid()
-	exp=hs.sortbacteria(exp,logit=False)
+	if sortit:
+		exp=hs.sortbacteria(exp,logit=False)
 	hs.addcommand(exp,"load",params=params)
 	exp.filters.append('loaded table=%s, map=%s' % (tablename,mapname))
 	return(exp)
@@ -550,7 +561,7 @@ def saveseqstolinefile(seqs,filename):
 	fl.close()
 
 
-def loadmap(mapfilename,sampidfield='#SampleID'):
+def loadmap(mapfilename,sampidfield='#SampleID',mapsampletolowercase=False):
 	"""
 	load a tab separated mapping file and store the values and samples (from #SampleID field)
 	input:
@@ -566,21 +577,27 @@ def loadmap(mapfilename,sampidfield='#SampleID'):
 		indexed by sampleid, then by field name (i.e. 'ENV_MATTER' etc.), values are the actual value of the field for the sample
 	fields : list of strings
 		names of the mapping file fields (i.e 'ENV_MATTER' etc)
+	mapmd5 : string
+		the md5 of the map file
 	"""
 
 	smap = {}
 	mapsamples = []
+
 	hs.Debug(6,'Loading mapping file %s' % mapfilename)
 	mapf = open(mapfilename, 'rU')
 	reader = csv.DictReader(mapf, delimiter='\t')
 	fields = reader.fieldnames
 	for cline in reader:
 		cid = cline[sampidfield]
+		if mapsampletolowercase:
+			cid=cid.lower()
 		smap[cid] = cline
 		mapsamples.append(cid)
 	mapf.close()
 	hs.Debug(6,'number of samples in map is %d' % len(mapsamples))
-	return mapsamples,smap,fields
+	mapmd5=getfilemd5(mapfilename)
+	return mapsamples,smap,fields,mapmd5
 
 
 
@@ -669,9 +686,10 @@ def reloadmap(expdat,mapfilename):
 	params=locals()
 
 	newexp=hs.copyexp(expdat)
-	mapsamples,smap,fields=loadmap(mapfilename)
+	mapsamples,smap,fields,mapmd5=loadmap(mapfilename)
 	newexp.smap=smap
 	newexp.fields=fields
+	newexp.mapmd5=mapmd5
 	for csamp in newexp.samples:
 		if csamp not in mapsamples:
 			hs.Debug(7,'Sample %s not in new map!' % csamp)
@@ -696,3 +714,22 @@ def writetaxseq(expdat,filename):
 	for idx in np.arange(len(expdat.seqs),0,-1):
 		fl.write('%s\t%s\n' % (expdat.tax[idx-1],expdat.seqs[idx-1]))
 	fl.close()
+
+
+def getfilemd5(filename):
+	"""
+	get the md5 of the text file filename
+	input:
+	filename : str
+		name of the file to calculate md5 on
+
+	output:
+	flmd5: str
+		the md5 of the file filename
+	"""
+	fl=open(filename,'rU')
+	flmd5=hashlib.md5()
+	for cline in fl:
+		flmd5.update(cline.encode('utf-8'))
+	flmd5=flmd5.hexdigest()
+	return flmd5
