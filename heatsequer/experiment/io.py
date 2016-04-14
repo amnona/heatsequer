@@ -110,6 +110,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 			smap[cid]={'#SampleID':cid}
 			mapsamples.append(cid)
 		fields=['#SampleID']
+		mapmd5=''
 
 	# remove table samples not in mapping file
 	tablesamples = table.ids(axis='sample')
@@ -402,28 +403,6 @@ def saveexpseqs(expdat,filename):
 	filename - the name of the output fasta file
 	"""
 	hs.saveseqsfasta(expdat,expdat.seqs,filename)
-
-
-# def savebiom(expdat,filename):
-# 	"""
-# 	save experiment to text biom table and mapping file
-# 	DEPRACATED - use savetobiom instead!
-# 	"""
-# 	savemap(expdat,filename+'.map.txt')
-# 	tablefilename=filename+'.table.txt'
-# 	tf=open(tablefilename,'w')
-# 	tf.write('# Saved biom table from python analysis\n')
-# 	tf.write('#OTUID')
-# 	for csamp in expdat.samples:
-# 		tf.write('\t%s' % csamp)
-# 	tf.write('\ttaxonomy\n')
-# 	for idxseq,cseq in enumerate(expdat.seqs):
-# 		tf.write('%s' % cseq)
-# 		for idx,csamp in enumerate(expdat.samples):
-# 			tf.write('\t%d' % expdat.data[idxseq,idx])
-# 		tf.write('\t%s\n' % expdat.tax[idxseq])
-# 	tf.close()
-# 	hs.Debug(6,'Saved experiment to biom table %s and mapping %s' % (tablefilename,mapfilename))
 
 
 def savemap(expdat,filename):
