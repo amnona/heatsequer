@@ -25,7 +25,7 @@ import copy
 from pdb import set_trace as XXX
 
 
-def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
+def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1,nofreqpres=False):
 	"""
 	Get the differentially abundant bacteria (using getdiffsig) using all methods possible.
 	Sort results according to combined effect order
@@ -38,7 +38,10 @@ def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1):
 	params=locals()
 
 	# do the 4 tests
-	methods=['mean','binary','ranksum','freqpres']
+	if nofreqpres:
+		methods=['mean','binary','ranksum']
+	else:
+		methods=['mean','binary','ranksum','freqpres']
 	res=[]
 	for cmethod in methods:
 		res.append(hs.getdiffsig(expdat,field=field,val1=val1,val2=val2,method=cmethod,numperm=numperm,maxfval=maxfval))
@@ -1820,3 +1823,110 @@ def getgroupcoverstd(dat,taxgroups):
 		persamp=np.sum(dat[cgroup,:],axis=0)
 		cover[idx]=np.std(persamp)
 	return cover
+
+
+
+
+def get2expcorr(exp1,exp2,field,method='spearman',maxfval=0.1):
+	"""
+	test the correlation between the same bacteria in 2 experiments
+	input:
+	exp1,exp2 : Experiment
+		the experiments containing the same bacteria
+	field - the field containing the same unique value for both experiments (i.e. subject_id etc.)
+	method - the test to compare the 2 groups:
+		'spearman' - nonparametric correlation
+		'binary' - spearman correlation of presence/absence
+	maxfval - the maximal f-value (FDR) for a bacteria to keep
+
+	output:
+	newexp : Experiment
+		the experiment with 2 lines per bacteria - from exp1 and exp2.
+		with only significant (FDR<=maxfval) difference, sorted according to difference
+	"""
+	params=locals()
+
+	# make sure 1 sample per value - otherwise join
+	exp1=hs.filtersimilarsamples(exp1,field,method='mean')
+	exp2=hs.filtersimilarsamples(exp2,field,method='mean')
+
+	# reorder both experiments the same
+	e2vals=hs.getfieldvals(exp2,field)
+	exp1=hs.filtersamples(exp1,field,e2vals,exact=True)
+	e1vals=hs.getfieldvals(exp1,field)
+	neworder=[]
+	for idx,cval in enumerate(e1vals):
+		neworder.append(e2vals.index(cval))
+	exp2=hs.reordersamples(exp2,neworder)
+
+	minthresh=2
+	len1=len(exp1.samples)
+	len2=len(exp2.samples)
+	dat1=copy.copy(exp1.data)
+	dat2=copy.copy(exp2.data)
+	dat1[dat1<minthresh]=minthresh
+	dat2[dat2<minthresh]=minthresh
+	dat1=np.log2(dat1)
+	dat1=np.log2(dat1)
+	numseqs=len(exp1.seqs)
+
+	eps=0.000001
+
+	if method=='binary':
+		dat1=(dat1>np.log2(minthresh))
+		dat2=(dat2>np.log2(minthresh))
+	elif method=='spearman':
+		pass
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+
+	pval=np.ones([numseqs])
+	odif=np.zeros([numseqs])
+	for pos1,cseq in enumerate(exp1.seqs):
+		if cseq in exp2.seqdict:
+			odif[pos1],pval[pos1]=stats.spearmanr(dat1[pos1,:],dat2[exp2.seqdict[cseq],:])
+
+	# NOTE: maybe use better fdr (this one not tested...)
+	fval=hs.fdr(pval)
+	keep=np.where(np.array(fval)<=maxfval)
+	seqlist=[]
+	for cidx in keep[0]:
+		seqlist.append(exp1.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp1=hs.filterseqs(exp1,seqlist,logit=False)
+	newexp2=hs.filterseqs(exp2,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(odif)
+	newexp1=hs.reorderbacteria(newexp1,si)
+	newexp2=hs.reorderbacteria(newexp2,si)
+	newexp1.odif=sv
+	newexp2.odif=sv
+	newexp=hs.copyexp(newexp1)
+	newseqs=[]
+	newtax=[]
+	newsids=[]
+	newodif=[]
+	newexp.data=np.vstack([newexp.data,newexp.data])
+	for idx,cseq in enumerate(newexp1.seqs):
+		newodif.append(newexp1.odif[idx])
+		newodif.append(newexp1.odif[idx])
+		newsids.append(newexp1.sids[idx])
+		newsids.append(newexp1.sids[idx])
+		newseqs.append(newexp1.seqs[idx])
+		cseq2=newexp1.seqs[idx]+'2'
+		newseqs.append(cseq2)
+		newexp.seqdict[newexp1.seqs[idx]]=idx*2
+		newexp.seqdict[cseq2]=idx*2+1
+		newtax.append(newexp1.tax[idx]+'1')
+		newtax.append(newexp1.tax[idx]+'2')
+		newexp.data[idx*2,:]=newexp1.data[idx,:]
+		newexp.data[idx*2+1,:]=newexp2.data[idx,:]
+	newexp.seqs=newseqs
+	newexp.tax=newtax
+	newexp.sids=newsids
+	newexp.odif=newodif
+	hs.addcommand(newexp,"get2expcorr",params=params,replaceparams={'exp1':exp1,'exp2':exp2})
+	newexp.filters.append('two experiment correlation (%s) in %s' % (method,field))
+	return newexp
