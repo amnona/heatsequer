@@ -99,6 +99,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 
 	smap = {}
 	mapsamples = []
+	mapmd5=''
 	if mapname:
 		# if mapping file supplied, load it
 		mapsamples,smap,fields,mapmd5=loadmap(mapname,mapsampletolowercase=mapsampletolowercase)
