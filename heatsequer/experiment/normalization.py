@@ -192,3 +192,28 @@ def updateorigreads(expdat,logit=True):
 		expdat.filters.append("Update orig reads")
 		hs.addcommand(expdat,"updateorigreads",params=params,replaceparams={})
 	return expdat
+
+
+
+def findcandidatecompositional(expdat,fracappear=0.1,minlevel=3000):
+	"""
+	find the sequences that may affect compositional data
+	for georg nose analysis
+	input:
+	expdat : Experiment
+	fracappear : float
+		fraction of samples where the otu is above the minlevel
+	minlevel : float
+		the minimal number of reads in a sample to count it
+
+	output:
+	oseqs : list of sequences
+		a list of candidate sequences
+	"""
+
+	dat=np.sum(expdat.data>=minlevel,1)
+	iseqs=np.where(dat>=fracappear*len(expdat.samples))[0]
+	oseqs=[]
+	for cseq in iseqs:
+		oseqs.append(expdat.seqs[cseq])
+	return oseqs
