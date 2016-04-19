@@ -27,4 +27,6 @@ def reloadme():
 	imp.reload(hs.bactdb)
 	imp.reload(hs.cooldb.cdb)
 	imp.reload(hs.cooldb)
+	imp.reload(hs.supercooldb.scdb)
+	imp.reload(hs.supercooldb)
 	imp.reload(hs)

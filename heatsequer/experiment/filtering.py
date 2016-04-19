@@ -40,6 +40,7 @@ def filterminreads(exp,minreads,logit=True):
 	hs.Debug(6,'%d Bacteria left' % len(newexp.sids))
 	return newexp
 
+
 def filterpresence(expdat,frac):
 	"""
 	filter away bacteria present in less than frac of the samples
@@ -70,7 +71,7 @@ def filtermean(expdat,meanval):
 	expdat : Experiment
 		the experiment
 	meanval : float
-		the minimum mean reads of per sample (and out of 10k/sample) for a bacteria to be kept
+		the minimum mean fraction of reads of per sample (NOT out of 10k/sample) for a bacteria to be kept
 	output:
 	newexp : Experiment
 		the filtered experiment
@@ -78,7 +79,8 @@ def filtermean(expdat,meanval):
 	params=locals()
 
 	meanreads=np.mean(expdat.data,axis=1)
-	keep=np.where(meanreads>=meanval)
+	meantotreads=np.mean(np.sum(expdat.data,0))
+	keep=np.where(meanreads>=meanval*meantotreads)
 	newexp=hs.reorderbacteria(expdat,keep[0])
 	newexp.filters.append('filter mean reads %f' % meanval)
 	hs.addcommand(newexp,"filtermean",params=params,replaceparams={'expdat':expdat})
@@ -536,14 +538,18 @@ def filtersimilarsamples(expdat,field,method='mean'):
 		What to do with samples with similar value. options:
 		'mean' - replace with a sample containing the mean of the samples
 		'median'- replace with a sample containing the median of the samples
-		'random' - replace with a sinlge random sample out of these samples
+		'random' - replace with a single random sample out of these samples
+		'sum' - replace with sum of original reads in all samples, renormalized after to 10k and orignumreads updated
 	output:
 	newexp : Experiment
 		like the input experiment but only one sample per unique value in field
 	"""
 	params=locals()
 
-	newexp=hs.copyexp(expdat)
+	if method=='sum':
+		newexp=hs.toorigreads(expdat)
+	else:
+		newexp=hs.copyexp(expdat)
 	uvals=hs.getfieldvals(expdat,field,ounique=True)
 	keep=[]
 	for cval in uvals:
@@ -568,11 +574,18 @@ def filtersimilarsamples(expdat,field,method='mean'):
 			cval=np.median(expdat.data[:,cpos],axis=1)
 			newexp.data[:,cpos[0]]=cval
 			keep.append(cpos[0])
+		elif method=='sum':
+			cval=np.sum(newexp.data[:,cpos],axis=1)
+			newexp.data[:,cpos[0]]=cval
+			newexp.origreads[cpos[0]]=np.sum(hs.reorder(expdat.origreads,cpos))
+			keep.append(cpos[0])
 		else:
 			hs.Debug(9,'method %s not supported' % method)
 			return False
 		newexp.smap[expdat.samples[cpos[0]]]=cmap
 	newexp=hs.reordersamples(newexp,keep)
+	if method=='sum':
+		newexp=hs.normalizereads(newexp)
 	newexp.filters.append('Filter similar samples field %s method %s' % (field,method))
 	hs.addcommand(newexp,"filtersimilarsamples",params=params,replaceparams={'expdat':expdat})
 	hs.Debug(6,'%d samples before filtering, %d after' % (len(expdat.samples),len(newexp.samples)))
@@ -851,3 +864,4 @@ def filternans(expdat,minpresence):
 	newexp.filters.append('filternans keep only with >=%d non nan reads' % minpresence)
 	hs.addcommand(newexp,"filternans",params=params,replaceparams={'expdat':expdat})
 	return newexp
+

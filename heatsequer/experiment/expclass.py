@@ -17,6 +17,7 @@ import numpy as np
 from pdb import set_trace as XXX
 import time
 
+
 class Experiment:
 	'''
 	experiment class holds the read data and metadata about the experiment, as well
@@ -89,6 +90,11 @@ class Experiment:
 
 		# the unqiue experiment id
 		self.uniqueid=0
+
+		# the md5 of the original data and mapping files loaded
+		# used for a unique id for the data in the manual curation database
+		self.datamd5=''
+		self.mapmd5=''
 
 		hs.Debug(0,'New experiment initialized')
 

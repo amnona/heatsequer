@@ -60,7 +60,6 @@ def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1,nofreqpr
 			keep.append(cidx)
 			keeporder.append(np.mean(pos)*np.mean(edir))
 	keep=np.array(keep)
-
 	if len(keep)>0:
 		si=np.argsort(keeporder)
 		newexp=hs.reorderbacteria(expdat,keep[si])
@@ -160,6 +159,7 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	newexp=hs.filterseqs(expdat,seqlist,logit=False)
 	odif=odif[keep[0]]
 	sv,si=hs.isort(odif)
+	hs.Debug(6,'method %s. number of higher in %s : %d. number of higher in %s : %d. total %d' % (method,val1,np.sum(odif>0),val2,np.sum(odif<0),len(odif)))
 	newexp=hs.reorderbacteria(newexp,si)
 	newexp.odif=sv
 	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})

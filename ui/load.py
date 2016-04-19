@@ -196,7 +196,7 @@
   <widget class="QCheckBox" name="cMetabolite">
    <property name="geometry">
     <rect>
-     <x>210</x>
+     <x>170</x>
      <y>110</y>
      <width>89</width>
      <height>20</height>
@@ -204,6 +204,31 @@
    </property>
    <property name="text">
     <string>Metabolite</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>20</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="cEMP">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>110</y>
+     <width>89</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>change map sampleid to lowercase</string>
+   </property>
+   <property name="text">
+    <string>EMP</string>
    </property>
    <property name="iconSize">
     <size>

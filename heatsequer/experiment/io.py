@@ -59,9 +59,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		hs.Debug(9,'Table type %s not supported' % tabletype)
 		return False
 
-	datamd5=hashlib.md5()
-	datamd5.update(str(table.matrix_data.todense().A).encode('utf=8'))
-	datamd5=datamd5.hexdigest()
+	datamd5g=hashlib.md5()
+	datamd5g.update(table.matrix_data.todense().A.view(np.uint8))
+	datamd5=datamd5g.hexdigest()
+	print(datamd5)
 	# if need to cut table sample names
 	if removefrom:
 		idtable={}

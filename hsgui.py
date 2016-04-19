@@ -685,11 +685,12 @@ class AppWindow(QtGui.QMainWindow):
 			mapfname=str(loadwin.tLoadMap.text())
 			expname=str(loadwin.tLoadName.text())
 			metabolite=loadwin.cMetabolite.checkState()
+			emp=loadwin.cEMP.checkState()
 			if metabolite:
 				tabletype='meta'
 			else:
 				tabletype='biom'
-			expdat=hs.load(tablefname,mapfname,tabletype=tabletype)
+			expdat=hs.load(tablefname,mapfname,tabletype=tabletype,mapsampletolowercase=emp)
 			expdat.studyname=expname
 			self.addexp(expdat)
 			# for biom table show the number of reads`

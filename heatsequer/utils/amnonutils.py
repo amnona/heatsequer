@@ -467,3 +467,27 @@ def findn(text,substr,num):
 			return index
 		index+=len(substr)
 	return -1
+
+
+
+def getnicetax(name,separator=';'):
+	"""
+	get the last non empty string (separated by separator)
+	used to get a nice taxonomy name from a taxonomy string
+
+	input:
+	name : str
+		the taxonomy string
+	separator: str
+		the separator between taxonomic levels (i.e. ';')
+
+	output:
+	nicename : str
+		only the last non empty part of name
+	"""
+	nicename='unknown'
+	s=name.split(separator)
+	for cstr in s:
+		if len(cstr)>0:
+			nicename=cstr
+	return nicename

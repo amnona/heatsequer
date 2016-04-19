@@ -14,6 +14,8 @@ from heatsequer.reloadme import *
 from heatsequer.analysis import *
 import heatsequer.cooldb
 import heatsequer.bactdb
+import heatsequer.supercooldb
+
 
 heatsequerdir=os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 
@@ -34,5 +36,13 @@ try:
 	Debug(6,'bactdb loaded')
 except:
 	Debug(9,'bactdb not found')
+
+scdb=False
+try:
+	Debug(6,'loading supercooldb')
+	scdb=supercooldb.dbstart(get_data_path('supercooldb.db','db'))
+	Debug(6,'supercooldb loaded')
+except:
+	Debug(9,'supercool not found')
 
 #__all__ = ['experiment','heatmap','utils']

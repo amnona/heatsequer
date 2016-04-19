@@ -315,3 +315,63 @@ def plottimeseries(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 		toaxis.plot(x,y)
 	toaxis.legend(list(set(ids)))
 	toaxis.title('lala')
+
+
+
+def plotgroupbar(expdat,field,seqs=[],type='meanse',uvals=[]):
+	"""
+	plot a bar graph of the mean frequency of each sequence in seqs as a function of field.
+	for skin-gallo analysis
+
+	input:
+	expdat : Experiment
+	field : str
+		name of the field to group by
+	seqs : list of str (ACGT)
+		list of sequences to plot or [] for all sequences in expdat (default)
+	type : str
+		'meanstd' (default) - plot mean + standard error per group
+	uvals : list of str
+		the order of the unique field values to use, or [] for all (default)
+	"""
+	colors=['b','r','k','g','m','c','y']
+	if len(uvals)==0:
+		vals=hs.getfieldvals(expdat,field)
+		uvals=list(set(vals))
+	if len(seqs)==0:
+		seqs=expdat.seqs
+	else:
+		expdat=hs.filterseqs(expdat,seqs)
+
+	numseqs=len(seqs)
+	numgroups=len(uvals)
+	gmeans=np.zeros([numseqs,numgroups])
+	gstd=np.zeros([numseqs,numgroups])
+	ldat=[]
+
+	width = 0.7/numgroups
+	fig, ax = plt.subplots()
+	for idx,cval in enumerate(uvals):
+		cpos=hs.findsamples(expdat,field,cval)
+		numnotnan=len(cpos)-np.sum(np.isnan(expdat.data[:,cpos]),1)
+		gmeans[:,idx]=np.nanmean(expdat.data[:,cpos],axis=1)
+		gstd[:,idx]=np.nanstd(expdat.data[:,cpos],axis=1)/np.sqrt(numnotnan)
+		ind = np.arange(numseqs)+0.7-idx*width
+#		rects = ax.bar(ind, gmeans[:,idx]/100, width, yerr=gstd[:,idx]/100,color=colors[np.mod(idx,len(colors))])
+		rects = ax.barh(ind, gmeans[:,idx], width, xerr=gstd[:,idx],color=colors[np.mod(idx,len(colors))])
+		ldat.append(rects[0])
+
+	# # add some text for labels, title and axes ticks
+	ax.set_xlabel('number of reads')
+	# ax.set_title('Scores by group and gender')
+	ax.set_yticks(np.arange(numseqs)+0.45)
+	ylabs=[]
+	for cseq in seqs:
+		clab=hs.getnicetax(expdat.tax[expdat.seqdict[cseq]])
+		ylabs.append(clab)
+	ax.set_yticklabels(ylabs)
+	ax.legend(ldat, uvals,loc='best')
+	plt.tight_layout()
+#	cx.ofig.canvas.draw()
+
+#	ax.set_xscale('log')

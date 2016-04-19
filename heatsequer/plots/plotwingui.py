@@ -14,6 +14,7 @@ __version__ = "0.91"
 import heatsequer as hs
 
 import os
+import sys
 import numpy as np
 import matplotlib as mpl
 mpl.use('Qt4Agg')
@@ -22,6 +23,10 @@ from matplotlib.pyplot import *
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt4 import QtGui, QtCore, uic
+from PyQt4.QtCore import Qt
+#from PyQt4 import QtGui
+from PyQt4.QtGui import QCompleter,QStringListModel,QMessageBox
+import pickle
 # for debugging - use XXX()
 from pdb import set_trace as XXX
 
@@ -29,6 +34,7 @@ from pdb import set_trace as XXX
 """"
 for the GUI
 """
+
 
 
 class SListWindow(QtGui.QDialog):
@@ -49,6 +55,7 @@ class SListWindow(QtGui.QDialog):
 			self.lLabel.setText(listname)
 
 
+
 class MyMplCanvas(FigureCanvas):
 	"""Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 	def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -67,16 +74,15 @@ class PlotGUIWindow(QtGui.QDialog):
 
 	def __init__(self,expdat):
 		super(PlotGUIWindow, self).__init__()
-		print(hs.get_data_path('plotguiwindow.py','ui'))
-#		uic.loadUi(hs.get_data_path('plotguiwindow.py','ui'), self)
+		hs.Debug(1,hs.get_data_path('plotguiwindow.py','ui'))
 		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/plotguiwindow.py'), self)
-#		uic.loadUi('ui/plotguiwindow.py', self)
 		self.bGetSequence.clicked.connect(self.getsequence)
 		self.bExport.clicked.connect(self.export)
 		self.bView.clicked.connect(self.view)
 		self.bSave.clicked.connect(self.save)
 		self.bDBSave.clicked.connect(self.dbsave)
 		self.bEnrich.clicked.connect(self.enrich)
+		self.bExpInfo.clicked.connect(self.expinfo)
 		self.bSampleInfo.clicked.connect(self.sampleinfo)
 		self.connect(self.cSampleField, QtCore.SIGNAL('activated(QString)'), self.samplefield)
 		self.FigureTab.connect(self.FigureTab, QtCore.SIGNAL("currentChanged(int)"),self.tabchange)
@@ -198,7 +204,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		save the selected list to the coolseq database
 		"""
 		val,ok=QtGui.QInputDialog.getText(self,'Save %d bacteria to coolseqDB' % len(self.selection),'Enter description')
-		print(ok)
+		hs.Debug(1,ok)
 		if ok:
 			seqs=[]
 			for cid in self.selection:
@@ -329,3 +335,427 @@ class PlotGUIWindow(QtGui.QDialog):
 			self.selection.remove(cseq)
 		self.plotfig.canvas.draw()
 		self.lSelection.setText('%d bacteria' % len(self.selection))
+
+	def expinfo(self):
+		# get the selected sequences
+		sequences=[]
+		for cid in self.selection:
+			sequences.append(self.cexp.seqs[cid])
+
+		dbs = DBAnnotateSave(self.cexp)
+		res=dbs.exec_()
+		if res==QtGui.QDialog.Accepted:
+			fl=open('/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle','rb')
+			ontologyfromid=pickle.load(fl)
+			fl.close()
+			description=str(dbs.bdescription.text())
+			# TODO: need to get primer region!!!!
+			primerid=1
+			method=str(dbs.bmethod.text())
+			submittername='Amnon Amir'
+			curations=[]
+			# if it is differential abundance
+			for citem in qtlistiteritems(dbs.blistall):
+				cdat=qtlistgetdata(citem)
+				cval=cdat['value']
+				ctype=cdat['type']
+				if cval in ontologyfromid:
+					cval=ontologyfromid[cval]
+				else:
+					hs.Debug(1,"item %s not found in ontologyfromid" % cval)
+				curations.append((ctype,cval))
+			if dbs.bdiffpres.isChecked():
+				curtype='DIFFEXP'
+			elif dbs.bisa.isChecked():
+				curtypeval=dbs.bisatype.currentText()
+				if 'Common' in curtypeval:
+					curtype='COMMON'
+				elif 'Contam' in curtypeval:
+					curtype='CONTAMINATION'
+				elif 'High' in curtypeval:
+					curtype='HIGHFREQ'
+				else:
+					curtype='OTHER'
+			else:
+				hs.Debug(9,"No annotation type selected")
+				return
+			scdb=hs.scdb
+			cdata=hs.supercooldb.finddataid(scdb,datamd5=self.cexp.datamd5,mapmd5=self.cexp.mapmd5)
+			# if study not in database, ask to add some metadata for it
+			if len(cdata)==0:
+				okcontinue=False
+				while not okcontinue:
+					hs.Debug(6,'data not found based on datamd5, mapmd5. need to add one!!!')
+					qres=QtGui.QMessageBox.warning(self,"No study data","No information added about study. Add info?",QtGui.QMessageBox.Yes, QtGui.QMessageBox.No,QMessageBox.Cancel)
+					if qres==QtGui.QMessageBox.Cancel:
+						return
+					if qres==QtGui.QMessageBox.No:
+						cdata=[ hs.supercooldb.adddata(scdb,( ('DataMD5',self.cexp.datamd5), ('MapMD5',self.cexp.mapmd5) ) ) ]
+						okcontinue=True
+					if qres==QtGui.QMessageBox.Yes:
+						okcontinue=getstudydata(self.cexp)
+						cdata=hs.supercooldb.finddataid(scdb,datamd5=self.cexp.datamd5,mapmd5=self.cexp.mapmd5)
+						hs.Debug(1,'new cdata is %s' % cdata)
+			if len(cdata)>1:
+				hs.Debug(6,'more than 1 data entry based on datamd5, mapmd5. need to choose one!!!')
+				cdata=cdata[0]
+			else:
+				hs.Debug(6,'Data found. id is %s' % cdata[0])
+				cdata=cdata[0]
+			hs.supercooldb.addcuration(scdb,data=cdata,sequences=sequences,curtype=curtype,curations=curations,submittername=submittername,description=description,method=method,primerid=primerid)
+			hs.lastcurations=curations
+			hs.lastdatamd5=self.cexp.datamd5
+
+
+class DBStudyAnnotations(QtGui.QDialog):
+	def __init__(self,studyid):
+		super(DBStudyAnnotations, self).__init__()
+		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/annotationlist.py'), self)
+		scdb=hs.scdb
+		self.scdb=scdb
+		self.studyid=studyid
+		info=hs.supercooldb.getstudyannotations(scdb,studyid)
+		for cinfo in info:
+			self.blist.addItem(cinfo)
+		self.bdetails.clicked.connect(self.details)
+
+	def details(self):
+		items=self.blist.selectedItems()
+		if len(items)==0:
+			return
+		print(str(items[0].text()))
+
+
+class DBStudyInfo(QtGui.QDialog):
+	def __init__(self,expdat):
+		super(DBStudyInfo, self).__init__()
+		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/studyinfo.py'), self)
+		scdb=hs.scdb
+		self.scdb=scdb
+		self.dataid=0
+		dataid=hs.supercooldb.finddataid(scdb,datamd5=expdat.datamd5,mapmd5=expdat.mapmd5)
+		if len(dataid)>0:
+			info=hs.supercooldb.getdatainfo(scdb,dataid[0])
+			for cinfo in info:
+				qtlistadd(self.blist,cinfo[2],{'fromdb':True,'type':cinfo[0],'value':cinfo[1]},color='grey')
+			self.dataid=dataid[0]
+		else:
+			qtlistadd(self.blist,"DataMD5:%s" % expdat.datamd5,{'fromdb':False,'type':"DataMD5",'value':expdat.datamd5},color='black')
+			qtlistadd(self.blist,"MapMD5:%s" % expdat.mapmd5,{'fromdb':False,'type':"MapMD5",'value':expdat.mapmd5},color='black')
+		self.bplus.clicked.connect(self.plus)
+		self.bvalue.returnPressed.connect(self.plus)
+		self.bminus.clicked.connect(self.minus)
+		self.bannotations.clicked.connect(self.annotations)
+		self.cexp=expdat
+		self.setWindowTitle(self.cexp.studyname)
+		self.bvalue.setFocus()
+
+
+	def keyPressEvent(self, e):
+		"""
+		override the enter event so will not close dialog
+		"""
+		e.ignore()
+
+	def plus(self):
+		ctype=str(self.btype.currentText())
+		cval=str(self.bvalue.text())
+		if len(ctype)>0 and len(cval)>0:
+			newentry='%s:%s' % (ctype,cval)
+#			self.blist.addItem(newentry)
+			qtlistadd(self.blist,newentry,{'fromdb':False,'type':ctype,'value':cval},color="black")
+			self.bvalue.setText('')
+
+	def minus(self):
+		items=self.blist.selectedItems()
+		for citem in items:
+			cdata=qtlistgetdata(citem)
+			if cdata['fromdb']:
+				print('delete from db')
+			self.blist.takeItem(self.blist.row(citem))
+
+	def annotations(self):
+		dbsa = DBStudyAnnotations(self.dataid)
+		dbsa.exec_()
+
+
+
+class DBAnnotateSave(QtGui.QDialog):
+	def __init__(self,expdat):
+		super(DBAnnotateSave, self).__init__()
+		print("DBAnnotateSave")
+		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/manualdata.py'), self)
+		self.bplus.clicked.connect(self.plus)
+		self.bminus.clicked.connect(self.minus)
+		self.bontoinput.returnPressed.connect(self.plus)
+		self.bstudyinfo.clicked.connect(self.studyinfo)
+		self.bisa.toggled.connect(self.radiotoggle)
+		self.bdiffpres.toggled.connect(self.radiotoggle)
+		self.cexp=expdat
+		completer = QCompleter()
+		self.bontoinput.setCompleter(completer)
+		scdb=hs.scdb
+		self.scdb=scdb
+		self.dataid=hs.supercooldb.finddataid(scdb,datamd5=self.cexp.datamd5,mapmd5=self.cexp.mapmd5)
+
+		model = QStringListModel()
+		completer.setModel(model)
+#		completer.setCompletionMode(QCompleter.InlineCompletion)
+		completer.maxVisibleItems=10
+		completer.setCaseSensitivity(Qt.CaseInsensitive)
+
+		# make the completer selection also erase the text edit
+		completer.activated.connect(self.cleartext,type=Qt.QueuedConnection)
+
+		# in qt5 should work with middle complete as well...
+#		completer.setFilterMode(Qt.MatchContains)
+		print("loading ontology")
+		fl=open('/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle','rb')
+		self.ontologyfromid=pickle.load(fl)
+		fl.close()
+
+		fl=open('/Users/amnon/Python/git/heatsequer/db/ontology.pickle','rb')
+		self.ontology=pickle.load(fl)
+		nlist=list(self.ontology.keys())
+#		nlist=sorted(nlist)
+		nlist=sorted(nlist, key=lambda s: s.lower())
+		print("sorted ontology")
+
+		model.setStringList(nlist)
+		self.setWindowTitle(self.cexp.studyname)
+		if self.cexp.datamd5==hs.lastdatamd5:
+			for cdat in hs.lastcurations:
+				if cdat[0]=='ALL':
+					self.addtolist(cdat[0],cdat[1])
+
+		self.prefillinfo()
+		self.bontoinput.setFocus()
+
+	def radiotoggle(self):
+		if self.bisa.isChecked():
+			self.blow.setDisabled(True)
+			self.bhigh.setDisabled(True)
+		if self.bdiffpres.isChecked():
+			self.blow.setEnabled(True)
+			self.bhigh.setEnabled(True)
+
+	def studyinfo(self):
+		getstudydata(self.cexp)
+
+	def keyPressEvent(self, e):
+		"""
+		override the enter event so will not close dialog
+		"""
+#		print(e.key())
+		e.ignore()
+
+	def minus(self):
+		"""
+		delete selected item from current list
+		"""
+		items=self.blistall.selectedItems()
+		for citem in items:
+			self.blistall.takeItem(self.blistall.row(citem))
+
+	def cleartext(self):
+		self.bontoinput.setText('')
+
+	def plus(self):
+		conto=str(self.bontoinput.text())
+		cgroup=self.getontogroup()
+		self.addtolist(cgroup,conto)
+		self.cleartext()
+
+	def addtolist(self,cgroup,conto):
+		"""
+		add an ontology term to the list
+
+		input:
+		cgroup : str
+			the group (i.e. 'low/high/all')
+		conto : str
+			the ontology term to add
+		"""
+		if conto=='':
+			hs.Debug(2,'no string to add to list')
+			return
+		print('addtolist %s %s' % (cgroup,conto))
+		if conto in self.ontology:
+			conto=self.ontologyfromid[self.ontology[conto]]
+		else:
+			hs.Debug(1,'Not in ontology!!!')
+			# TODO: add are you sure... not in ontology list....
+
+		# if item already in list, don't do anything
+		for citem in qtlistiteritems(self.blistall):
+			cdata=qtlistgetdata(citem)
+			if cdata['value']==conto:
+				hs.Debug(2,'item already in list')
+				return
+
+		if cgroup=='LOW':
+			ctext="LOW:%s" % conto
+			qtlistadd(self.blistall,ctext, {'type':'LOW','value':conto},color='red')
+		if cgroup=='HIGH':
+			ctext="HIGH:%s" % conto
+			qtlistadd(self.blistall,ctext, {'type':'HIGH','value':conto},color='blue')
+		if cgroup=='ALL':
+			ctext="ALL:%s" % conto
+			qtlistadd(self.blistall,ctext, {'type':'ALL','value':conto},color='black')
+
+	def getontogroup(self):
+		if self.ball.isChecked():
+			return('ALL')
+		if self.blow.isChecked():
+			return('LOW')
+		if self.bhigh.isChecked():
+			return('HIGH')
+
+	def prefillinfo(self):
+		"""
+		prefill "ALL" data fields based on mapping file
+		if all samples have same info
+		"""
+		hs.Debug(1,'prefill info')
+		ontologyfromid=self.ontologyfromid
+		fl=open('/Users/amnon/Python/git/heatsequer/db/ncbitaxontofromid.pickle','rb')
+		ncbitax=pickle.load(fl)
+		fl.close()
+
+		cexp=self.cexp
+		for cfield in cexp.fields:
+			uvals=[]
+			if cfield in cexp.fields:
+				uvals=hs.getfieldvals(cexp,cfield,ounique=True)
+			# if we have 1 value
+			if len(uvals)==1:
+				cval=uvals[0]
+				hs.Debug(1,'found 1 value %s' % cval)
+				if cfield=='HOST_TAXID' or cfield=='host_taxid':
+					hs.Debug(2,'%s field has 1 value %s' % (cfield,cval))
+					# if ncbi taxonomy (field used differently)
+					cval='NCBITaxon:'+cval
+					if cval in ncbitax:
+						hs.Debug(2,'found in ncbitax %s' % cval)
+						cval=ncbitax[cval]
+				else:
+					# get the XXX from ENVO:XXX value
+					uvalspl=cval.split(':',1)
+					if len(uvalspl)>1:
+						cval=uvalspl[1]
+						cval=uvalspl[1]+' :'+uvalspl[0]
+				if cval in self.ontology:
+					cval=ontologyfromid[self.ontology[cval]]
+					hs.Debug(2,'term %s found in ontologyfromid' % cval)
+					conto=cval
+					hs.Debug(1,'add prefill %s' % conto)
+					self.addtolist('ALL',conto)
+				else:
+					hs.Debug(3,'term %s NOT found in ontologyfromid' % uvals[0])
+
+			else:
+				hs.Debug(1,'found %d values' % len(uvals))
+
+
+def getqtlistitems(qtlist):
+	"""
+	get a list of strings of the qtlist
+	input:
+	qtlist : QTListWidget
+
+	output:
+	item : list of str
+	"""
+	items = []
+	for index in range(qtlist.count()):
+		items.append(str(qtlist.item(index).text()))
+	return items
+
+
+
+def qtlistadd(qtlist,text,data,color="black"):
+	"""
+	Add an entry (text) to qtlist and associaxte metadata data
+	input:
+	qtlist : QTListWidget
+	text : str
+		string to add to list
+	data : arbitrary python var
+		the data to associate with the item (get it by qtlistgetdata)
+	color : (R,G,B)
+		the color of the text in the list
+	"""
+	item = QtGui.QListWidgetItem()
+	item.setText(text)
+	ccol=QtGui.QColor()
+	ccol.setNamedColor(color)
+	item.setTextColor(ccol)
+	item.setData(Qt.UserRole,data)
+	qtlist.addItem(item)
+
+
+def qtlistgetdata(item):
+	"""
+	Get the metadata associated with item as position pos
+	input:
+	qtlist : QtListWidget
+	index : QtListWidgetItem
+		the item to get the info about
+
+	output:
+	data : arbitrary
+		the data associated with the item (using qtlistadd)
+	"""
+#	item=qtlist.item(index)
+	if sys.version_info[0] < 3:
+		# QVariant version 1 API (python2 default)
+		data=item.data(Qt.UserRole).toPyObject()
+	else:
+		# QVariant version 2 API (python3 default)
+		data=item.data(Qt.UserRole)
+	return data
+
+
+def qtlistiteritems(qtlist):
+	"""
+	iterate all items in a list
+	input:
+	qtlist : QtListWidget
+	"""
+	for i in range(qtlist.count()):
+		yield qtlist.item(i)
+
+
+def getstudydata(cexp):
+	"""
+	open the study info window and show/get new references for the study data
+
+	input:
+	cexp : Experiment
+		the experiment for which to show the data (uses the datamd5 and mapmd5)
+
+	output:
+	hasdata : Bool
+		True if the study has data, False if not
+	"""
+	dbsi = DBStudyInfo(cexp)
+	res=dbsi.exec_()
+	if res==QtGui.QDialog.Accepted:
+		newstudydata=[]
+		allstudydata=[]
+		for citem in qtlistiteritems(dbsi.blist):
+			cdata=qtlistgetdata(citem)
+			allstudydata.append( (cdata['type'],cdata['value']) )
+			if cdata['fromdb']==False:
+				newstudydata.append( (cdata['type'],cdata['value']) )
+
+		if len(newstudydata)==0:
+			hs.Debug(6,'No new items. not saving anything')
+			return True
+		# look if study already in table
+		cid=hs.supercooldb.finddataid(dbsi.scdb,datamd5=cexp.datamd5,mapmd5=cexp.mapmd5)
+		dataid=hs.supercooldb.adddata(dbsi.scdb,newstudydata,studyid=cid)
+		hs.Debug(6,'Study data saved to id %d' % dataid)
+		if len(allstudydata)>2:
+			return True
+	return False
