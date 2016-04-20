@@ -21,6 +21,9 @@ import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 import sklearn.metrics
 import sklearn.cross_validation
+from sklearn.cluster import AffinityPropagation
+from sklearn.preprocessing import scale
+from sklearn import metrics
 import copy
 from pdb import set_trace as XXX
 
@@ -1543,7 +1546,7 @@ def fastpermutegroupsim(expdat,field,method='binary',numperm=[100,1000],maxfval=
 	return newexp
 
 
-def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method='binary',numperm=[100,1000],maxfval=0.05,mineffect=2):
+def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method='binary',numperm=[100,1000],maxfval=0.05,mineffect=2,twoway=True):
 	"""
 	do a fast iterative permutation test for group similarity (like twins)
 	by skipping the row if it is clearly above the p-value or if the effect size is not big enough
@@ -1555,6 +1558,8 @@ def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method
 		Name of the field containing the per-group identifier
 	numperm : list of integers
 		number of permutations in each step
+	twoway : bool
+		True (default) to test significant differences in both directions, False to only test group1>group2
 	output:
 	newexp : Experiment
 	"""
@@ -1586,7 +1591,7 @@ def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method
 		if len(cpos)>2:
 			cpos=cpos[:2]
 		groups1.append(cpos)
-	hs.Debug(6,'Found %d group pairs' % len(groups1))
+	hs.Debug(6,'Found %d group pairs for %s' % (len(groups1),twoval1))
 
 	uvals2=hs.getfieldvals(expdat2,field,ounique=True)
 	groups2=[]
@@ -1597,7 +1602,7 @@ def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method
 		if len(cpos)>2:
 			cpos=cpos[:2]
 		groups2.append(cpos)
-	hs.Debug(6,'Found %d group pairs' % len(groups1))
+	hs.Debug(6,'Found %d group pairs for %s' % (len(groups2),twoval2))
 
 	odif1=(groupfunc(dat1,groups1)+0.0)/len(groups1)
 	odif2=(groupfunc(dat2,groups2)+0.0)/len(groups2)
@@ -1638,7 +1643,10 @@ def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method
 			if ccnumperm==0:
 				pval[crow]=1
 				continue
-			cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/ccnumperm
+			if twoway:
+				cpval=float(np.sum(np.abs(cdat)>=np.abs(odif[crow])))/ccnumperm
+			else:
+				cpval=float(np.sum(cdat>=odif[crow]))/ccnumperm
 			# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
 			cpval=min(cpval+(1.0/ccnumperm),1)
 			pval[crow]=cpval
@@ -1655,12 +1663,16 @@ def fastpermutetwogroupsim(expdat,twofield,twoval1,twoval2=False,field='',method
 	odif=odif[keep[0]]
 	sv,si=hs.isort(pval[keep[0]])
 	newexp=hs.reorderbacteria(newexp,si)
-	hs.addcommand(newexp,"fastpermutecorr",params=params,replaceparams={'expdat':expdat})
-	newexp.filters.append('fast significant correlation %s for field %s' % (method,field))
+	hs.addcommand(newexp,"fastpermutetwogroupsim",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('fast permutation for 2 groups similarity %s for field %s' % (method,field))
 	return newexp
 
 
 def groupfunc(dat,groups):
+	"""
+	for group similarity
+	count the number of 1s the appear in the 2 samples of the same group
+	"""
 	odat=np.zeros([np.shape(dat)[0]])
 	for cgroup in groups:
 		odat += dat[:,cgroup[0]]*dat[:,cgroup[1]]
@@ -1930,3 +1942,67 @@ def get2expcorr(exp1,exp2,field,method='spearman',maxfval=0.1):
 	hs.addcommand(newexp,"get2expcorr",params=params,replaceparams={'exp1':exp1,'exp2':exp2})
 	newexp.filters.append('two experiment correlation (%s) in %s' % (method,field))
 	return newexp
+
+
+def groupbacteria(expdat,minreads=0,uselog=True):
+	"""
+	group the bacteria into distinct clusters
+
+	input:
+	expdat : Experiment
+	minreads : int
+		minimal reads for a bacteria to keep.
+	uselog : bool
+		True to log scale the data, False to not
+
+	output:
+	outexp : experiment
+		with the sum of all bacteria in each group
+	seqpergroup : list of list of seqs (ACGT)
+		the sequences in each group
+	taxpergroup : list of list of str
+		the taxonomies in each group
+	"""
+	newexp=hs.filterminreads(expdat,minreads,logit=False)
+	# normalize each row (bacteria) to sum 1
+	dat=copy.copy(newexp.data)
+	if uselog:
+		dat[dat<=2]=2
+		dat=np.log2(dat)
+	dat=scale(dat,axis=1,copy=False)
+	# cluster
+	dm=spatial.distance.pdist(dat,metric='euclidean')
+	dm=spatial.distance.squareform(dm)
+	af = AffinityPropagation().fit(dm)
+	cluster_centers_indices = af.cluster_centers_indices_
+	labels = af.labels_
+
+	n_clusters_ = len(cluster_centers_indices)
+
+	hs.Debug(6,"number of clusters - %d" % n_clusters_)
+	hs.Debug(1,labels)
+
+	seqpergroup=[]
+	taxpergroup=[]
+	outexp=hs.zerobacteria(newexp)
+	uids=list(set(labels))
+	for cid in uids:
+		cpos=np.where(labels==cid)[0]
+		cseqs=[]
+		ctax=[]
+		for ccpos in cpos:
+			cseqs.append(newexp.seqs[ccpos])
+			ctax.append(newexp.tax[ccpos])
+		seqpergroup.append(cseqs)
+		taxpergroup.append(ctax)
+		if len(cpos)>1:
+			newfreq=np.sum(newexp.data[cpos,:],axis=0)
+		else:
+			newfreq=newexp.data[cpos,:]
+		hs.insertbacteria(outexp,freqs=newfreq,seq=str(cid),tax=str(cid),logit=False)
+
+	for cidx,cnum in enumerate(labels):
+		newexp.tax[cidx]=str(cnum)
+	newexp=hs.sortbacteria(newexp)
+
+	return outexp,seqpergroup,taxpergroup

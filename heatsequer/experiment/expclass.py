@@ -416,6 +416,30 @@ def findsamples(expdat,field,value,exclude=False):
 	return pos
 
 
+def zerobacteria(expdat,inplace=False):
+	"""
+	zero all the bacteria in an experiment (can then add insertbacteria)
+	input:
+	expdat : Experiment
+	inplace : bool
+		True to do inplace, False to make new copy
+
+	output:
+	newexp : Experiment
+		all bacteria have been removed
+	"""
+	if inplace:
+		newexp=expdat
+	else:
+		newexp=hs.copyexp(expdat)
+
+	newexp.data=np.zeros([0,len(newexp.samples)])
+	newexp.seqs=[]
+	newexp.tax=[]
+	newexp.seqdict={}
+	newexp.sids=[]
+	return newexp
+
 
 def insertbacteria(expdat,freqs=[],seq="unknown",tax="unknown",logit=True):
 	"""
