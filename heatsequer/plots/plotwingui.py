@@ -448,6 +448,7 @@ class DBStudyInfo(QtGui.QDialog):
 		self.bannotations.clicked.connect(self.annotations)
 		self.cexp=expdat
 		self.setWindowTitle(self.cexp.studyname)
+		self.prepstudyinfo()
 		self.bvalue.setFocus()
 
 
@@ -457,14 +458,21 @@ class DBStudyInfo(QtGui.QDialog):
 		"""
 		e.ignore()
 
+	def addentry(self,fromdb,ctype,value,color='black'):
+		if len(ctype)>0 and len(value)>0:
+			newentry='%s:%s' % (ctype,value)
+			for citem in getqtlistitems(self.blist):
+				if citem==newentry:
+					hs.Debug(2,'item already in list %s' % newentry)
+					return
+			qtlistadd(self.blist,newentry,{'fromdb':False,'type':ctype,'value':value},color="black")
+
+
 	def plus(self):
 		ctype=str(self.btype.currentText())
 		cval=str(self.bvalue.text())
-		if len(ctype)>0 and len(cval)>0:
-			newentry='%s:%s' % (ctype,cval)
-#			self.blist.addItem(newentry)
-			qtlistadd(self.blist,newentry,{'fromdb':False,'type':ctype,'value':cval},color="black")
-			self.bvalue.setText('')
+		self.addentry(fromdb=False,ctype=ctype,value=cval,color='black')
+		self.bvalue.setText('')
 
 	def minus(self):
 		items=self.blist.selectedItems()
@@ -478,6 +486,17 @@ class DBStudyInfo(QtGui.QDialog):
 		dbsa = DBStudyAnnotations(self.dataid)
 		dbsa.exec_()
 
+	def prepstudyinfo(self):
+		"""
+		add the study info from the mapping file if available
+		"""
+		fieldlist=[('SRA_Study_s','SRA'),('project_name_s','Name'),('experiment_title','Name'),('experiment_design_description','Name')]
+		cexp=self.cexp
+		for (cfield,infofield) in fieldlist:
+			if cfield in cexp.fields:
+				uvals=hs.getfieldvals(cexp,cfield,ounique=True)
+				if len(uvals)==1:
+					self.addentry(fromdb=False,ctype=infofield,value=uvals[0],color='black')
 
 
 class DBAnnotateSave(QtGui.QDialog):

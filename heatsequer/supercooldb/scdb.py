@@ -446,3 +446,65 @@ def getstudyannotations(db,studyid):
 	for cres in allvals:
 		info.append('%s:%s:%s' % (cres[0],cres[1],cres[2]))
 	return info
+
+
+def getseqcurationids(db,seqid):
+	"""
+	get the curation ids for the sequence with the id seqid
+
+	input:
+	db : from sbdtart()
+	seqid : int
+		the sequence identifier (from getseq)
+
+	output:
+	curids : list of int
+		ids of all the curations for this sequence
+	"""
+	ids=[]
+	db.cur.execute("SELECT CurationID FROM SeqCurations WHERE SeqID = ?",[seqid])
+	allvals=db.cur.fetchall()
+	for cres in allvals:
+		ids.append(cres[0])
+	Debug(2,'found %d curations' % len(ids))
+	return ids
+
+
+def getseqcurations(db,sequence):
+	"""
+	Get the manual curations for a sequence
+
+	input:
+	db : from sbdtart()
+	sequence : str (ACGT)
+
+	output:
+
+	"""
+	seqid=getseq(db,sequence,insert=False)
+	if seqid==0:
+		Debug(2,'Sequence not found')
+		return
+	curids=getseqcurationids(db,seqid)
+	for cid in curids:
+		cdat=select_column_and_value(db.cur,"SELECT * FROM Curations WHERE CurationID = ?",[cid])
+		if cdat=={}:
+			Debug(8,'no curation found for curationid %d' % cid)
+			continue
+		print(cdat)
+		curation=db.cur.execute('SELECT * from CurationList WHERE CurationID = ?',[cid])
+		for ccuration in curation.fetchall():
+			print(ccuration)
+
+
+def select_column_and_value(cur, sql, parameters=()):
+	"""
+	get a dict with field as key, value as values for an sql query
+	"""
+	execute = cur.execute(sql, parameters)
+	fetch = execute.fetchone()
+
+	if fetch is None:
+		return {}
+
+	return {k[0]: v for k, v in list(zip(execute.description, fetch))}
