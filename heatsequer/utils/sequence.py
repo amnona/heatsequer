@@ -17,30 +17,30 @@ from pdb import set_trace as XXX
 
 
 def SeqToArray(seq):
-    """ convert a string sequence to a numpy array"""
-    seqa=np.zeros(len(seq),dtype=np.int8)
-    for ind,base in enumerate(seq):
-        if base=='A':
-            seqa[ind]=0
-        elif base=='a':
-            seqa[ind]=0
-        elif base=='C':
-            seqa[ind]=1
-        elif base=='c':
-            seqa[ind]=1
-        elif base=='G':
-            seqa[ind]=2
-        elif base=='g':
-            seqa[ind]=2
-        elif base=='T':
-            seqa[ind]=3
-        elif base=='t':
-            seqa[ind]=3
-        elif base=='-':
-            seqa[ind]=4
-        else:
-            seqa[ind]=5
-    return(seqa)
+	""" convert a string sequence to a numpy array"""
+	seqa=np.zeros(len(seq),dtype=np.int8)
+	for ind,base in enumerate(seq):
+		if base=='A':
+			seqa[ind]=0
+		elif base=='a':
+			seqa[ind]=0
+		elif base=='C':
+			seqa[ind]=1
+		elif base=='c':
+			seqa[ind]=1
+		elif base=='G':
+			seqa[ind]=2
+		elif base=='g':
+			seqa[ind]=2
+		elif base=='T':
+			seqa[ind]=3
+		elif base=='t':
+			seqa[ind]=3
+		elif base=='-':
+			seqa[ind]=4
+		else:
+			seqa[ind]=5
+	return(seqa)
 
 
 def findsimseqs(expdat,oseqs,maxmm=3):

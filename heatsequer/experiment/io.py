@@ -19,7 +19,7 @@ from pdb import set_trace as XXX
 import hashlib
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True,useseqnamefortax=True):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -42,6 +42,9 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		True to convert the mapping file sample id to lower case (for EMP data). default=False
 	sortit : bool
 		True (default) to sort sequences by taxonomy, False to not sort
+	useseqnamefortax : bool
+		True (default) to use the sequence as taxonomy if no taxonomy supplied, False to use 'unknown'
+
 	output:
 	an experiment class for the current experiment
 	"""
@@ -165,7 +168,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		else:
 			sids.append(cid)
 		# get the taxonomy string
-		ctax=gettaxfromtable(table,cid)
+		ctax=gettaxfromtable(table,cid,useseqname=useseqnamefortax)
 		tax.append(ctax)
 
 	if not studyname:
@@ -272,7 +275,7 @@ def loadmetabuckettable(filename):
 	return table
 
 
-def gettaxfromtable(table,seq):
+def gettaxfromtable(table,seq,useseqname=False):
 	"""
 	get the taxonomy for a given sequence in the biom table
 	and convert it to a nicer string
@@ -283,13 +286,17 @@ def gettaxfromtable(table,seq):
 		the biom table containing the sequence and (possibly) the taxonomy
 	seq : str
 		the sequence to get taxonomy for
+	useseqname : bool
+		False (default) to use 'unknwon' for sequences without taxonomy, True to use sequence as taxonomy for them
 
 	output:
 	tax : str
 		the nice taxonomy string
 	"""
-
-	tax='unknown'
+	if useseqname:
+		tax=seq
+	else:
+		tax='unknown'
 	md=table.metadata(seq,axis='observation')
 	if md:
 		if 'taxonomy' in md:
