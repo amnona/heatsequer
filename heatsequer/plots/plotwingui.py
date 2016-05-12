@@ -302,6 +302,13 @@ class PlotGUIWindow(QtGui.QDialog):
 		by adding all lines in list to the listbox
 		"""
 		self.lCoolDB.clear()
+		self.addtocdblist(info)
+
+	def addtocdblist(self,info):
+		"""
+		add to cdb list without clearing
+		"""
+
 		for cinfo in info:
 			self.lCoolDB.addItem(cinfo)
 
@@ -345,9 +352,10 @@ class PlotGUIWindow(QtGui.QDialog):
 		dbs = DBAnnotateSave(self.cexp)
 		res=dbs.exec_()
 		if res==QtGui.QDialog.Accepted:
-			fl=open('/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle','rb')
-			ontologyfromid=pickle.load(fl)
-			fl.close()
+			# fl=open('/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle','rb')
+			# ontologyfromid=pickle.load(fl)
+			# fl.close()
+			ontologyfromid=hs.scdb.ontologyfromid
 			description=str(dbs.bdescription.text())
 			# TODO: need to get primer region!!!!
 			primerid=1
@@ -385,8 +393,8 @@ class PlotGUIWindow(QtGui.QDialog):
 			if len(cdata)==0:
 				okcontinue=False
 				while not okcontinue:
-					hs.Debug(6,'data not found based on datamd5, mapmd5. need to add one!!!')
-					qres=QtGui.QMessageBox.warning(self,"No study data","No information added about study. Add info?",QtGui.QMessageBox.Yes, QtGui.QMessageBox.No,QMessageBox.Cancel)
+					hs.Debug(6,'study data info not found based on datamd5, mapmd5. need to add one!!!')
+					qres=QtGui.QMessageBox.warning(self,"No study data","No information added about study data. Add info?",QtGui.QMessageBox.Yes, QtGui.QMessageBox.No,QMessageBox.Cancel)
 					if qres==QtGui.QMessageBox.Cancel:
 						return
 					if qres==QtGui.QMessageBox.No:
@@ -490,7 +498,7 @@ class DBStudyInfo(QtGui.QDialog):
 		"""
 		add the study info from the mapping file if available
 		"""
-		fieldlist=[('SRA_Study_s','SRA'),('project_name_s','Name'),('experiment_title','Name'),('experiment_design_description','Name')]
+		fieldlist=[('SRA_Study_s','SRA'),('project_name_s','Name'),('experiment_title','Name'),('experiment_design_description','Name'),('BioProject_s','SRA')]
 		cexp=self.cexp
 		for (cfield,infofield) in fieldlist:
 			if cfield in cexp.fields:
@@ -510,6 +518,7 @@ class DBAnnotateSave(QtGui.QDialog):
 		self.bstudyinfo.clicked.connect(self.studyinfo)
 		self.bisa.toggled.connect(self.radiotoggle)
 		self.bdiffpres.toggled.connect(self.radiotoggle)
+		self.bisatype.currentIndexChanged.connect(self.isatypechanged)
 		self.cexp=expdat
 		completer = QCompleter()
 		self.bontoinput.setCompleter(completer)
@@ -528,13 +537,12 @@ class DBAnnotateSave(QtGui.QDialog):
 
 		# in qt5 should work with middle complete as well...
 #		completer.setFilterMode(Qt.MatchContains)
-		print("loading ontology")
-		fl=open('/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle','rb')
-		self.ontologyfromid=pickle.load(fl)
-		fl.close()
+		if not hs.scdb.ontologyfromid:
+			hs.scdb=hs.supercooldb.loaddbonto(hs.scdb)
 
-		fl=open('/Users/amnon/Python/git/heatsequer/db/ontology.pickle','rb')
-		self.ontology=pickle.load(fl)
+		self.ontology=hs.scdb.ontology
+		self.ontologyfromid=hs.scdb.ontologyfromid
+
 		nlist=list(self.ontology.keys())
 #		nlist=sorted(nlist)
 		nlist=sorted(nlist, key=lambda s: s.lower())
@@ -542,6 +550,10 @@ class DBAnnotateSave(QtGui.QDialog):
 
 		model.setStringList(nlist)
 		self.setWindowTitle(self.cexp.studyname)
+		try:
+			tt=hs.lastdatamd5
+		except:
+			hs.lastdatamd5=''
 		if self.cexp.datamd5==hs.lastdatamd5:
 			for cdat in hs.lastcurations:
 				if cdat[0]=='ALL':
@@ -557,6 +569,12 @@ class DBAnnotateSave(QtGui.QDialog):
 		if self.bdiffpres.isChecked():
 			self.blow.setEnabled(True)
 			self.bhigh.setEnabled(True)
+
+	def isatypechanged(self):
+		"""
+		changed the selection of isatype combobox so need to activate the isa radio button
+		"""
+		self.bisa.setChecked(True)
 
 	def studyinfo(self):
 		getstudydata(self.cexp)

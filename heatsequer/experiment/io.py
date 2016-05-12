@@ -68,9 +68,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		idtable={}
 		foundids={}
 		ids=table.ids(axis='sample')
+		if len(set(ids))!=len(ids):
+			hs.Debug(8,'non unique ids identified')
 		for cid in ids:
 			if removefrom in cid:
-#				tid=cid[:cid.find(removefrom)]
 				fpos=hs.findn(cid,removefrom,removenum)
 				if fpos==-1:
 					hs.Debug(6,'Did not find enough %s in %s' % (removefrom,cid))
@@ -82,11 +83,13 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 				tid=cid
 			if tid in foundids:
 				hs.Debug(6,'already have id %s' % cid)
-				idtable[cid]=tid+str(foundids[tid])
 				foundids[tid]+=1
+				idtable[cid]=tid+'-rep-'+str(foundids[tid])
+				print(idtable[cid])
 			else:
 				foundids[tid]=1
 				idtable[cid]=tid
+		hs.Debug(6,'found %d keys %d values' % (len(set(idtable.keys())),len(set(idtable.values()))))
 		table=table.update_ids(idtable,axis='sample')
 
 	# if need to add constant string to sample names in table
@@ -609,7 +612,7 @@ def createbiomtablefromexp(expdat,addtax=True):
 	return table
 
 
-def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True,exporthistory=True):
+def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True,exporthistory=True,logtransform=False):
 	"""
 	Save an experiment to a biom table
 	input:
@@ -624,6 +627,8 @@ def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True,expor
 		True (default) to use original number of reads, False to use normalized (sum=10k)
 	exporthistory : bool
 		True (default) to save also the history (to filename.commands.txt)
+	logtransform : bool
+		True to log transform the data, false (default) to save original data
 	"""
 	savemap(expdat,filename+'.map.txt')
 	if exporthistory:
@@ -633,6 +638,14 @@ def savetobiom(expdat,filename,format='hdf5',addtax=True,useorigreads=True,expor
 		newexp=hs.toorigreads(expdat)
 	else:
 		newexp=expdat
+
+	# if we need to log tranfrom the reads
+	if logtransform:
+		lowcutoff=1
+		ldat=newexp.data
+		ldat[np.where(ldat<lowcutoff)]=lowcutoff
+		ldat=np.log2(ldat)
+
 	tab=createbiomtablefromexp(newexp,addtax=addtax)
 	if format=='hdf5':
 		with biom.util.biom_open(filename, 'w') as f:
@@ -711,6 +724,12 @@ def getfilemd5(filename):
 	fl=open(filename,'rU')
 	flmd5=hashlib.md5()
 	for cline in fl:
-		flmd5.update(cline.encode('utf-8'))
+		try:
+			flmd5.update(cline.encode('utf-8'))
+# for python 2
+#		flmd5.update(cline.decode('utf8').encode('utf-8'))
+		except:
+			hs.Debug(6,'map md5 cannot be calculated - utf problems?')
+			return ''
 	flmd5=flmd5.hexdigest()
 	return flmd5

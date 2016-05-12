@@ -235,3 +235,49 @@ def plotdistbar(gdist,uvals,crow=0,neworder=False):
 	ax.set_xticklabels(uvals,rotation=90)
 	plt.tight_layout()
 	plt.draw()
+
+
+
+def getgroupgroupdist(expdat,field,distmat,dsamp,uvals=False,subfield='host_subject_id'):
+	"""
+	calculate the distance matrix based on groups of samples according to field but calculate seperately for each individual and then combine
+	using a distance matrix and mapping
+	for the Amina skin cosmetics study
+
+	input:
+	expdat : Experiment
+	field : string
+		name of the field to group by
+	distmat : numpy 2d arrau
+		the distance matrix (from calcdistmat or loaddistmat)
+	dsamp : dict
+		the mapping of each sample id to the distance matrix position (from calcdistmat or loaddistmat)
+	uvals : string
+		empty to plot all values, or a list of values to plot only them (in field)
+	subfield : str
+		name of the subfield so all distances are calculated seperately for each subfield value (i.e. 'host_subject_id')
+
+	output:
+	gdist : numpy 2d array
+		the group distance matrix
+	uvals : list
+		group names in the matrix (ordered)
+	"""
+	vals=hs.getfieldvals(expdat,field)
+	if not uvals:
+		uvals=list(set(vals))
+	svals=hs.getfieldvals(expdat,subfield,ounique=True)
+	omat=np.zeros([len(uvals),len(uvals)])
+	numok=0
+	for cval in svals:
+		newexp=hs.filtersamples(expdat,subfield,cval)
+#		dmap,dmapd=hs.loaddistmat(newexp,'amnon/bray_curtis_armpit-diff-log.txt')
+		gdist,uvals=hs.getgroupdist(newexp,field,distmat,dsamp,plotit=False,uvals=uvals)
+		print(gdist)
+		if np.isnan(np.sum(np.sum(gdist))):
+			continue
+		omat=omat+gdist
+		numok+=1
+	omat=omat/numok
+	print(omat)
+	plotdistheatmap(omat,uvals)

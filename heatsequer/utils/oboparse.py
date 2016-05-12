@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-A very simple and not 100% compliant parser for the OBO file format
+A very simple and not 100 compliant parser for the OBO file format
 This parser is supplied "as is"; it is not an official parser, it
 might puke on perfectly valid OBO files, it might parse perfectly
 invalid OBO files, it might steal your kitten or set your garden shed

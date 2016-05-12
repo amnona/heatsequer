@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline=''):
 	"""
 	Plot an experiment
 	input:
@@ -46,6 +46,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		name of colormap or False (default) to use mpl default colormap
 	colorrange : [min,max] or False
 		[min,max] to set the colormap range, False to use data min,max (default) as specified in rangeall
+	subline : str
+		Name of category for subline plotting or '' (Default) for no sublines
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)
@@ -80,6 +82,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	hs.Debug(1,"New number of bacteria %d" % len(newexp.seqs))
 	newexp.seqdb=seqdb
 	newexp.cdb=cdb
+	newexp.scdb=hs.scdb
 
 	# if usegui:
 	# 	hs.Debug(1,"Using the GUI window")
@@ -126,6 +129,17 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 
 	ax=iax.get_axes()
 	ax.autoscale(False)
+
+	# plot the sublines (smaller category lines)
+	if subline:
+		slval=hs.getfieldvals(newexp,subline)
+		prevval=slval[0]
+		for idx,cval in enumerate(slval):
+			if cval!=prevval:
+				xpos=idx-0.5
+				plt.plot([xpos,xpos],[-0.5,np.size(ldat,0)-0.5],'w:')
+				prevval=cval
+
 	if showline:
 		hs.Debug(1,"Showing lines")
 		labs=[]
@@ -269,7 +283,15 @@ def onplotkeyclick(event):
 				cax.guiwin.updatecdb(info)
 			else:
 				for cinfo in info:
-					print (cinfo)
+					print(cinfo)
+				sys.stdout.flush()
+		if cexp.scdb:
+			info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
+			if cax.guiwin:
+				cax.guiwin.addtocdblist(info)
+			else:
+				for cinfo in info:
+					print(cinfo)
 				sys.stdout.flush()
 	if event.key=='.':
 		# select prev bacteria
@@ -283,7 +305,15 @@ def onplotkeyclick(event):
 				cax.guiwin.updatecdb(info)
 			else:
 				for cinfo in info:
-					print (cinfo)
+					print(cinfo)
+				sys.stdout.flush()
+		if cexp.scdb:
+			info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
+			if cax.guiwin:
+				cax.guiwin.addtocdblist(info)
+			else:
+				for cinfo in info:
+					print(cinfo)
 				sys.stdout.flush()
 
 	if event.key=='<':
@@ -436,7 +466,15 @@ def onplotmouseclick(event):
 			ax.guiwin.updatecdb(info)
 		else:
 			for cinfo in info:
-				print (cinfo)
+				print(cinfo)
+			sys.stdout.flush()
+	if cexp.scdb:
+		info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[ry])
+		if ax.guiwin:
+			ax.guiwin.addtocdblist(info)
+		else:
+			for cinfo in info:
+				print(cinfo)
 			sys.stdout.flush()
 
 

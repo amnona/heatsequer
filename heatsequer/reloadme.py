@@ -14,6 +14,7 @@ def reloadme():
 	imp.reload(hs.experiment)
 	imp.reload(hs.utils.amnonutils)
 	imp.reload(hs.utils.sequence)
+	imp.reload(hs.utils.ontologygraph)
 	imp.reload(hs.utils)
 #	reload(hs.plots.plotwingui)
 	imp.reload(hs.plots.plotwin)

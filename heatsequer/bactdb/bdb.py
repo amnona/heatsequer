@@ -28,6 +28,7 @@ from collections import defaultdict
 # for debugging - use XXX()
 from pdb import set_trace as XXX
 from scipy import stats
+import sys
 
 
 #def initdb(dbname="/Users/amnon/Python/SRBactDB/SRBactDB.db"):
@@ -305,7 +306,7 @@ def InitOntologyGraph(db,pv,field,ontohashname):
 
 	# add all unaccounted samples (i.e. don't have this field)
 	for cpos in range(len(pv)):
-		if not cpos+1 in sids:
+		if cpos+1 not in sids:
 			Debug(1,"in sample",cpos+1,"field was not found")
 			chash=AddOntologySample(db.Ontology[ontohashname],chash,cpos,"not found")
 			# get the study for the sample and add to dict
@@ -427,7 +428,10 @@ def InitOntologyGraph(db,pv,field,ontohashname):
 	db.OntoGraph[field]['sizes']=sizes
 	db.OntoGraph[field]['ndict']=ndict
 #	db.OntoGraph[field]['nodepositions']=nx.graphviz_layout(G)
-	db.OntoGraph[field]['nodepositions']=graphviz_layout(G)
+	if sys.version_info[0]<3:
+		db.OntoGraph[field]['nodepositions']=graphviz_layout(G)
+	else:
+		Debug(9,"Can't init the graph layout since using python 3")
 	return db
 
 
@@ -751,22 +755,22 @@ def GetSeqInfoSummary(bactdb,seq,field='HOST_TAXID',sortednodes=[]):
 	pv=GetSeqVec(bactdb,seq)
 	if len(pv)==0:
 		return(0,"not in db",0,"not in db",0)
-	nz=where(pv>self.MINFREQ)
+	nz=np.where(pv>bactdb.MINFREQ)
 	totalappear=len(nz[0])
 	fractotal=float(totalappear)/len(pv)
-	self.Debug(7,"--------Seq",seq)
-	self.Debug(7,"Found in",totalappear,"Samples")
-	self.Debug(7,"Fraction=",fractotal)
-	self.Debug(0,nz[0])
+	Debug(7,"--------Seq",seq)
+	Debug(7,"Found in",totalappear,"Samples")
+	Debug(7,"Fraction=",fractotal)
+	Debug(0,nz[0])
 	if fractotal==0:
 		return(0,"not present",0,"not present",0)
 
-	chash=self.OntoGraph[field]['chash']
-	ontohashname=self.OntoGraph[field]['ontohashname']
-	nodes=self.OntoGraph[field]['nodes']
-	sizes=self.OntoGraph[field]['sizes']
-	ndict=self.OntoGraph[field]['ndict']
-	G=self.OntoGraph[field]['G']
+	chash=bactdb.OntoGraph[field]['chash']
+	ontohashname=bactdb.OntoGraph[field]['ontohashname']
+	nodes=bactdb.OntoGraph[field]['nodes']
+	sizes=bactdb.OntoGraph[field]['sizes']
+	ndict=bactdbf.OntoGraph[field]['ndict']
+	G=bactdb.OntoGraph[field]['G']
 
 	# go over all ontology values (in the tree) starting from the leaves
 	# we're guaranteed to get all children before the parent

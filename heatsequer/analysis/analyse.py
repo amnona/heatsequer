@@ -72,7 +72,8 @@ def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1,nofreqpr
 		return newexp
 	else:
 		hs.Debug(6,'No bacteria found')
-		return False
+		newexp=hs.reorderbacteria(expdat,[])
+		return newexp
 
 
 def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1):
@@ -121,6 +122,22 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	elif method=='binary':
 		dat=(dat>np.log2(minthresh))
 	elif method=='freqpres':
+		dat[dat<=minthresh]=np.nan
+		# remove sequences that don't have >thresh in one group
+		keeplist=[]
+		for cbact in range(len(cexp.seqs)):
+			keepit=True
+			if np.sum(np.isnan(dat[cbact,0:len1]))==len1:
+				keepit=False
+			if np.sum(np.isnan(dat[cbact,len1:]))==len2:
+				keepit=False
+			if keepit:
+				keeplist.append(cbact)
+		hs.Debug(6,'keeping %d bacteria (out of %d) for freqpres analysis' % (len(keeplist),len(cexp.seqs)))
+		cexp=hs.reorderbacteria(cexp,keeplist)
+		dat=cexp.data
+		dat[dat<minthresh]=minthresh
+		dat=np.log2(dat)
 		dat[dat<=minthresh]=np.nan
 	else:
 		hs.Debug(9,"Method not supported!",method)
@@ -1996,6 +2013,9 @@ def groupbacteria(expdat,minreads=0,uselog=True):
 		seqpergroup.append(cseqs)
 		taxpergroup.append(ctax)
 		if len(cpos)>1:
+			print('-------')
+			print(cid)
+			print(newexp.data[cpos,:4])
 			newfreq=np.sum(newexp.data[cpos,:],axis=0)
 		else:
 			newfreq=newexp.data[cpos,:]

@@ -651,3 +651,60 @@ def get_data_path(fn, subfolder='data'):
 
 	return os.path.join(hs.heatsequerdir,subfolder,fn)
 
+
+
+def addmapfield(expdat,fieldname,defaultval='NA',inplace=False):
+	"""
+	add a new field to the mapping file
+
+	input:
+	expdat : Experiment
+	fieldname : str
+		name of the new field
+	defaultval : str
+		the value for all samples
+	inplace : bool
+		True to overwrite current experiment, False (default) to copy
+
+	output:
+	newexp : Experiment
+		with the new field added
+	"""
+	if inplace:
+		newexp=expdat
+	else:
+		newexp=hs.copyexp(expdat)
+
+	if fieldname in newexp.fields:
+		hs.Debug(8,'field %s already exists')
+		return newexp
+	newexp.fields.append(fieldname)
+	for csamp in newexp.samples:
+		newexp.smap[csamp][fieldname]=defaultval
+	return newexp
+
+
+def changemapval(expdat,newfield,newval,oldfield,vals,inplace=False):
+	"""
+	change values of a field in the mapping file according to another field
+
+	input:
+	expdat : Experiment
+	newfield : name of the field to change the values in (from addmapfield?)
+	newval : the new value to put
+	oldfield : the field with the values to test
+	vals : a list of values, so newfield is set to newval only if the the value of oldfield is in the list
+	inplace : bool
+		True to overwrite current experiment, False (default) to copy
+	"""
+
+	if inplace:
+		newexp=expdat
+	else:
+		newexp=hs.copyexp(expdat)
+
+	for csamp in newexp.samples:
+		if newexp.smap[csamp][oldfield] in vals:
+			newexp.smap[csamp][newfield]=newval
+
+	return newexp

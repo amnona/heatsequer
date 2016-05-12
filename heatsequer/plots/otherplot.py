@@ -94,7 +94,7 @@ def analyzenumreads(expdat,blanks=['blank','empty']):
 	ynb=[]
 	x=[]
 	print(max(nreads))
-	for cx in xrange(0,int(max(nreads)),500):
+	for cx in np.arange(0,int(max(nreads)),500):
 		y.append(float(sum(nreads>=cx))/tsamps)
 		yb.append(float(sum(nreadsb>=cx))/tsampsb)
 		ynb.append(float(sum(nreadsnb>=cx))/tsampsnb)
@@ -107,6 +107,7 @@ def analyzenumreads(expdat,blanks=['blank','empty']):
 	plt.xlabel('number of reads')
 	plt.ylabel('fraction of samples with >= reads')
 	plt.legend(['all','blanks','non blanks'])
+	hs.Debug(6,'total samples %d, blanks %d, other %d' % (tsamps,tsampsb,tsampsnb))
 	plt.show()
 
 
@@ -316,6 +317,66 @@ def plottimeseries(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 	toaxis.legend(list(set(ids)))
 	toaxis.title('lala')
 
+
+def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
+	"""
+	plot a line plot for a timeseries with a different line for each individual
+	with mean of points in same timepoint and scatter
+	input:
+	expdat : Experiment
+	idfield : string
+		name of the per individual id field
+	timefield : string
+		name of the timepoint field
+	seq : string (ACGT)
+		the sequence to plot
+	toaxis : axis
+		False (default) to draw in a new figure
+	numeric : bool
+		True (default) if timefield is numeric
+	"""
+
+	coloridx=0
+	colors=['b','r','k','g','c','m','y']
+	if not toaxis:
+		plt.figure()
+		toaxis=plt.gca()
+
+	newexp=hs.sortsamples(expdat,timefield,numeric=numeric)
+	times=hs.getfieldvals(expdat,timefield)
+	utimes=list(set(times))
+	if numeric:
+		utimes=hs.tofloat(utimes)
+	utimes=np.sort(utimes)
+	ids=hs.getfieldvals(newexp,idfield)
+	for cid in list(set(ids)):
+		print(coloridx)
+		ccolor=colors[coloridx]
+		coloridx+=1
+		if coloridx>=len(colors):
+			coloridx=0
+		x=[]
+		y=[]
+		xp=[]
+		yp=[]
+		for ctime in utimes:
+			tpoints=hs.findsamples(newexp,timefield,ctime)
+			if not tpoints:
+				continue
+			cx=[]
+			cy=[]
+			for cpoint in tpoints:
+				cx.append(ctime)
+				cy.append(newexp.data[newexp.seqdict[seq],cpoint])
+			xp+=cx
+			yp+=cy
+			x.append(np.mean(cx))
+			y.append(np.mean(cy))
+		toaxis.plot(x,y,'-',color=ccolor)
+		toaxis.plot(xp,yp,'o',color=ccolor)
+
+	toaxis.legend(list(set(ids)))
+	toaxis.title('lala')
 
 
 def plotgroupbar(expdat,field,seqs=[],type='meanse',uvals=[]):

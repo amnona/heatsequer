@@ -143,9 +143,12 @@ def tofloat(clist):
 	res=[]
 	for s in clist:
 		try:
-			res.append(float(s))
+			cval=float(s)
 		except:
-			res.append(0)
+			cval=0
+		if np.isnan(cval):
+			cval=0
+		res.append(cval)
 	return res
 
 

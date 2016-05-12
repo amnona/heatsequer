@@ -10,8 +10,10 @@ the sql cooldb implementation
 
 __version__ = "0.1"
 
+
 from ..utils.amnonutils import Debug,dictupper,listupper,delete
 from ..utils.oboparse import Parser
+from ..utils.ontologygraph import ontologysubtreeids,ontologytotree,getnodeparents,ontotreetonames
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,10 +34,13 @@ class scdbstruct:
 		self.ontology={}
 		# the ontology from id dict (key is id, and value is first name with this id) - used for save
 		self.ontologyfromid={}
+		# the dict of ontology graphs (load with loadontotree)
+		self.ontodict={}
+		# the names of the ontology files used:
+		self.ontologyfiles=['/Users/amnon/Databases/ontologies/doid.obo','/Users/amnon/Databases/ontologies/envo.obo','/Users/amnon/Databases/ontologies/uberon.obo','/Users/amnon/Databases/ontologies/efo.obo','/Users/amnon/Databases/ontologies/po.obo','/Users/amnon/Databases/ontologies/gaz.obo']
 
 
-
-def addontology(scdb,ontology,ontoprefix=''):
+def addontology(scdb,ontology,ontoprefix='',namelist={}):
 	"""
 	add an obo ontology file to scdb
 	input:
@@ -43,8 +48,10 @@ def addontology(scdb,ontology,ontoprefix=''):
 		from scdbstart()
 	ontology : str
 		name of the obo ontology file to add
-	ontoname : str
+	ontoprefix : str
 		the ontology prefix (i.e. ENVO) to show at end of each string, or '' for autodetect (default)
+	namelist : dict of ids
+		if non-empty, keep only items with ids from namelist (get namelist from ontologysubtreeids() )
 
 	output:
 	scdb :scdbstruct
@@ -58,6 +65,9 @@ def addontology(scdb,ontology,ontoprefix=''):
 			if len(tt)>1:
 				ontoprefix=tt[0]
 				Debug(2,'Found ontology prefix %s' % ontoprefix)
+		if namelist:
+			if cid not in namelist:
+				continue
 		names=[]
 		if "name" in citem.tags:
 			names.extend(citem.tags["name"])
@@ -81,17 +91,41 @@ def addontology(scdb,ontology,ontoprefix=''):
 	return scdb
 
 
-def loadontologies(scdb,pickleit=True,ontologies=['/Users/amnon/Databases/ontologies/doid.obo','/Users/amnon/Databases/ontologies/envo.obo','/Users/amnon/Databases/ontologies/uberon.obo','/Users/amnon/Databases/ontologies/efo.obo','/Users/amnon/Databases/ontologies/po.obo','/Users/amnon/Databases/ontologies/gaz.obo']):
+def loaddbonto(db,ontofile='db/ontology.pickle',ontofromidfile='db/ontologyfromid.pickle'):
 	"""
-	load the ontologies into the scfb class
+	load the pickled ontologies to the scdb structure
+	input:
+	db : from scdbstart
+	ontofile : str
+		name of the ontologies term file (from saveontologies)
+	ontofromidfile : str
+		name of the ontologies reverse dict file (from saveontologies)
+
+	output:
+	db : scdbstruct
+		with the loaded ontologies fields
+	"""
+	Debug(6,'loading ontology pickles')
+	db.ontology=pickle.load(open(ontofile,'rb'))
+	db.ontologyfromid=pickle.load(open(ontofromidfile,'rb'))
+	Debug(6,'ontologies loaded')
+	return db
+
+
+def loadontologies(scdb,pickleit=True,ontologies=[]):
+	"""
+	load the ontologies into the scdb class
 	input:
 	scdb : scdbstruct
 		from scdbstart()
 	pickleit : bool
 		True (default) to pickle the loaded ontologies to default location, False to not pickle
 	ontologylist : list of str
-		names of the obo ontology files to load
+		names of the obo ontology files to load or empty to use the default files (from scdb.ontologyfiles)
 	"""
+	if not ontologies:
+		ontologies=scdb.ontologyfiles
+
 	scdb.ontology={}
 	scdb.ontologyfromid={}
 	for contology in ontologies:
@@ -106,10 +140,10 @@ def saveontologies(scdb,ontofile='/Users/amnon/Python/git/heatsequer/db/ontology
 	use after loadontologies()
 	"""
 	fl=open(ontofile,'wb')
-	pickle.dump(scdb.ontology,fl)
+	pickle.dump(scdb.ontology,fl,protocol=2)
 	fl.close()
 	fl=open(ontofromidfile,'wb')
-	pickle.dump(scdb.ontologyfromid,fl)
+	pickle.dump(scdb.ontologyfromid,fl,protocol=2)
 	fl.close()
 
 
@@ -371,6 +405,27 @@ def addcuration(db,data,sequences,curtype,curations,submittername='NA',descripti
 	return curationid,data
 
 
+def delcuration(db,curid):
+	"""
+	delete a curation and the corresponding curationlist from the database
+
+	input:
+	db : : from startdb()
+	curid : int
+		the curationid
+
+	output:
+	deleted : bool
+		True if deleted, False if not found/not deleted
+	"""
+	Debug(6,'delcuration for id %d' % curid)
+	Debug(6,'deleting curationlist')
+	db.cur.execute("DELETE FROM CurationList WHERE CurationID = ?",(curid))
+	Debug(6,'deleting curation')
+	db.cur.execute("DELETE FROM Curations WHERE CurationID = ?",(curid))
+	return True
+
+
 def finddataid(db,datamd5='',mapmd5=''):
 	"""
 	find the data id for the data/map md5 (which are calculated on load)
@@ -475,26 +530,89 @@ def getseqcurations(db,sequence):
 	Get the manual curations for a sequence
 
 	input:
-	db : from sbdtart()
+	db : from scdbstart()
 	sequence : str (ACGT)
 
 	output:
-
+		curs : list of list of (curation dict,list of [Type,Value] of curation details)
 	"""
+	curs=[]
 	seqid=getseq(db,sequence,insert=False)
 	if seqid==0:
 		Debug(2,'Sequence not found')
-		return
+		return curs
 	curids=getseqcurationids(db,seqid)
 	for cid in curids:
 		cdat=select_column_and_value(db.cur,"SELECT * FROM Curations WHERE CurationID = ?",[cid])
 		if cdat=={}:
 			Debug(8,'no curation found for curationid %d' % cid)
 			continue
-		print(cdat)
-		curation=db.cur.execute('SELECT * from CurationList WHERE CurationID = ?',[cid])
+		ccur=cdat
+		Debug(2,cdat)
+		ccurdetails=[]
+		curation=db.cur.execute('SELECT Type,Value from CurationList WHERE CurationID = ?',[cid])
 		for ccuration in curation.fetchall():
-			print(ccuration)
+			Debug(2,ccuration)
+			ccurdetails.append([ccuration[0],ccuration[1]])
+		curs.append([ccur,ccurdetails])
+	return curs
+
+
+def getcurationstrings(db,sequence):
+	"""
+	get a nice string summary of a curation
+
+	input:
+	db : from scdbstart()
+	sequence : str (ACGT)
+
+	output:
+	shortdesc : list of str
+		a short summary of the curations (1 item per curation)
+	"""
+	shortdesc=[]
+	curs=getseqcurations(db,sequence)
+	for ccur in curs:
+		cdesc=''
+		curinfo=ccur[0]
+		curdetails=ccur[1]
+		if curinfo['Description']:
+			cdesc+=curinfo['Description']+' ('
+		if curinfo['CurType']=='COMMON':
+			cdesc+='common in '
+			for cdet in curdetails:
+				cdesc+=cdet[1]+' '
+		elif curinfo['CurType']=='HIGHFREQ':
+			cdesc+='high freq in '
+			for cdet in curdetails:
+				cdesc+=cdet[1]+' '
+		elif curinfo['CurType']=='DIFFEXP':
+			chigh=[]
+			clow=[]
+			call=[]
+			for cdet in curdetails:
+				if cdet[0]=='ALL':
+					call.append(cdet[1])
+					continue
+				if cdet[0]=='LOW':
+					clow.append(cdet[1])
+					continue
+				if cdet[0]=='HIGH':
+					chigh.append(cdet[1])
+					continue
+			cdesc+=' high in '
+			for cval in chigh:
+				cdesc+=cval+' '
+			cdesc+=' compared to '
+			for cval in clow:
+				cdesc+=cval+' '
+			cdesc+=' in '
+			for cval in call:
+				cdesc+=cval+' '
+		else:
+			Debug(2,'unknown curation %s.' % curinfo['CurType'])
+		shortdesc.append(cdesc)
+	return shortdesc
 
 
 def select_column_and_value(cur, sql, parameters=()):
@@ -508,3 +626,129 @@ def select_column_and_value(cur, sql, parameters=()):
 		return {}
 
 	return {k[0]: v for k, v in list(zip(execute.description, fetch))}
+
+
+def createontologytree(db,ontologies=[],outname='db/ontologygraph.pickle'):
+	"""
+	load the ontology tree graphs into the scdb and store them in a pickle dict
+
+	input:
+	db : from scdbstart()
+	ontologies : list of str
+		list of obo ontologies to use or empty to use the default files (db.ontologyfiles)
+	outname : str
+		name of the output pickle file
+
+	output:
+	db - scdbstruct
+		with the ontodict field added
+	"""
+	if not ontologies:
+		ontologies=db.ontologyfiles
+
+	if not db.ontologyfromid:
+		db=loaddbonto(db)
+
+	ontodict={}
+	for conto in ontologies:
+		Debug(6,'Processing ontology %s' % conto)
+		g=ontologytotree(conto)
+		g=ontotreetonames(g,db.ontologyfromid)
+		ontodict[conto]=g
+	Debug(6,'ontologies loaded. saving to pickel %s' % outname)
+	fl=open(outname,'wb')
+	pickle.dump(ontodict,fl,protocol=2)
+	Debug(6,'ontologies pickled')
+	db.ontodict=ontodict
+	return db
+
+
+
+def loadontotrees(db,ontopickle='db/ontologygraph.pickle'):
+	"""
+	load the ontology dict pickle file
+
+	input:
+	db : from scdbstart()
+	ontopickle : str
+		the pickled ontology dict filename (from createontologytree())
+
+	output:
+	db : scdbstruct
+		with the ontology dict in ontodict
+	"""
+	Debug(6,'loadding ontology trees')
+	fl=open(ontopickle,'rb')
+	db.ontodict=pickle.load(fl)
+	Debug(6,'loaded %d trees' % len(db.ontodict))
+	return db
+
+
+def getontoparents(db,term):
+	"""
+	get all the parent terms (including original term) for a given ontology term.
+	look in all ontology trees in db.ontodict
+
+	input:
+	db : from scdbstart()
+	term : str
+		the ontology term (lower case)
+
+	output:
+	terms : list of str
+		all the parent terms of this item
+	"""
+	terms=[]
+	for conto in db.ontodict.values():
+		parents=getnodeparents(conto,term)
+		terms+=parents
+	terms=list(set(terms))
+	return terms
+
+
+def getcurationontologies(db,sequence):
+	"""
+	get the curation for items and all upstream (ontology-wise) items for a given sequence
+
+	input:
+	db : from scdbstart()
+	sequence : str (ACGT)
+
+	output:
+	onto : dict of key=str and value dict of key=str and value=int
+		a dictionary of ['up','down','contaminant'] of dict of ontology item and number of times total we see it
+	"""
+	if not db.ontodict:
+		loadontotrees(db)
+	onto={}
+	curs=getseqcurations(db,sequence)
+	for ccur in curs:
+		curinfo=ccur[0]
+		curdetails=ccur[1]
+		ctype='other'
+		lookseparate=False
+		if curinfo['CurType']=='COMMON':
+			ctype='up'
+		elif curinfo['CurType']=='HIGHFREQ':
+			ctype='up'
+		else:
+			lookseparate=True
+		for cdet in curdetails:
+			if lookseparate:
+				if cdet[0]=='ALL':
+					ctype='up'
+				elif cdet[0]=='LOW':
+					ctype='down'
+				elif cdet[0]=='HIGH':
+					ctype='up'
+				else:
+					ctype='other'
+			if ctype not in onto:
+				onto[ctype]={}
+			ontoparents=getontoparents(db,cdet[1])
+			for conto in ontoparents:
+				if conto not in onto[ctype]:
+					onto[ctype][conto]=1
+				else:
+					onto[ctype][conto]+=1
+	return onto

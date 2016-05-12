@@ -546,10 +546,9 @@ def filtersimilarsamples(expdat,field,method='mean'):
 	"""
 	params=locals()
 
+	newexp=hs.copyexp(expdat)
 	if method=='sum':
-		newexp=hs.toorigreads(expdat)
-	else:
-		newexp=hs.copyexp(expdat)
+		newexp=hs.toorigreads(newexp)
 	uvals=hs.getfieldvals(expdat,field,ounique=True)
 	keep=[]
 	for cval in uvals:
@@ -864,4 +863,3 @@ def filternans(expdat,minpresence):
 	newexp.filters.append('filternans keep only with >=%d non nan reads' % minpresence)
 	hs.addcommand(newexp,"filternans",params=params,replaceparams={'expdat':expdat})
 	return newexp
-
