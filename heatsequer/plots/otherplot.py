@@ -436,3 +436,31 @@ def plotgroupbar(expdat,field,seqs=[],type='meanse',uvals=[]):
 #	cx.ofig.canvas.draw()
 
 #	ax.set_xscale('log')
+
+
+def plottwoexperimentreads(exp1,exp2):
+	"""
+	plot correlation between reads of 2 experiments
+	input:
+	exp1,exp2 : ExpClass
+		the experiments to compare (should have approx. same samples)
+	"""
+	allsamples=exp1.samples
+	allsamples.extend(exp2.samples)
+	allsamples=list(set(allsamples))
+	plt.figure()
+	plt.xlabel(exp1.tablefilename)
+	plt.ylabel(exp2.tablefilename)
+	mv=0
+	for csamp in allsamples:
+		reads1=0
+		reads2=0
+		if csamp in exp1.samples:
+			reads1=float(exp1.smap[csamp]['origReads'])
+		if csamp in exp2.samples:
+			reads2=float(exp2.smap[csamp]['origReads'])
+		print('sample %s read1 %d read2 %d' % (csamp,reads1,reads2))
+		plt.plot(reads1,reads2,'x')
+		mv=max(mv,reads1)
+		mv=max(mv,reads2)
+	plt.plot([0,mv],[0,mv],'k')

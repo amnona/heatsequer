@@ -71,7 +71,7 @@ def filtermean(expdat,meanval):
 	expdat : Experiment
 		the experiment
 	meanval : float
-		the minimum mean fraction of reads of per sample (NOT out of 10k/sample) for a bacteria to be kept
+		the minimum mean fraction of reads per sample (NOT out of 10k/sample) for a bacteria to be kept
 	output:
 	newexp : Experiment
 		the filtered experiment

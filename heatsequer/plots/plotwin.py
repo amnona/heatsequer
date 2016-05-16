@@ -337,6 +337,8 @@ def onplotkeyclick(event):
 	# show taxonomies
 	if event.key=='h':
 		showtaxonomies(cexp,cax)
+	if event.key=='H':
+		showsampleids(cexp,cax)
 	# nice taxonomies (genus+species)
 	if event.key=='n':
 		labs=[]
@@ -418,6 +420,54 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 				clab.set_color("blue")
 	cax.set_ylim(cylim[0], cylim[1])
 	cax.set_xlim(cxlim[0], cxlim[1])
+	plt.tight_layout()
+	cax.ofig.canvas.draw()
+
+
+def showsampleids(cexp,cax,show=True,maxsamples=25):
+	"""
+	show the y-lables (taxonomies) for the plot window
+
+	input:
+	cexp : Experiment
+	cax : axis (matplotlib)
+		the plot window axis
+	show : bool
+		True (default) to show the labels, False to remove them
+	maxsamples : int
+		Maximal number of samples to show (to prevent slow repsonse when looking at big experiment) or 0 to show all
+	"""
+
+	cylim=cax.get_ylim()
+	cxlim=cax.get_xlim()
+
+	# check if we show too many bacteria - don't show taxonomy labels
+	if maxsamples>0:
+		if cxlim[1]-cxlim[0]>maxsamples:
+			cax.set_xticklabels([])
+			hs.Debug(7,'Too many samples - zoom in (Q/A) to show labels')
+			return
+
+	labs=hs.clipstrings(cexp.samples,25,reverse=True)
+
+	cax.set_xticks(np.array(range(len(labs))))
+	cax.tick_params(axis='x', which='major', labelsize=8)
+	cax.set_xticklabels(labs,rotation=45)
+
+# 	nax = cax.twiny()
+# 	nax.set_xticks(np.array(range(len(labs))))
+# 	nax.tick_params(axis='x', which='major', labelsize=8)
+# 	nax.set_xticklabels(labs,rotation=45)
+# #	nax.set_ylim(cylim[0], cylim[1])
+# 	nax.set_xlim(cxlim[0], cxlim[1])
+# 	nax.expdat=cax.expdat
+# 	nax.ofig=cax.ofig
+# 	nax.guiwin=cax.guiwin
+
+	cax.set_ylim(cylim[0], cylim[1])
+	cax.set_xlim(cxlim[0], cxlim[1])
+	plt.sca(cax)
+
 	plt.tight_layout()
 	cax.ofig.canvas.draw()
 

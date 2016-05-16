@@ -349,6 +349,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		for cid in self.selection:
 			sequences.append(self.cexp.seqs[cid])
 
+		self.cexp.selectedseqs=sequences
 		dbs = DBAnnotateSave(self.cexp)
 		res=dbs.exec_()
 		if res==QtGui.QDialog.Accepted:
@@ -411,7 +412,11 @@ class PlotGUIWindow(QtGui.QDialog):
 				hs.Debug(6,'Data found. id is %s' % cdata[0])
 				cdata=cdata[0]
 			hs.supercooldb.addcuration(scdb,data=cdata,sequences=sequences,curtype=curtype,curations=curations,submittername=submittername,description=description,method=method,primerid=primerid)
-			hs.lastcurations=curations
+			# store the history
+			try:
+				hs.lastcurations.append(curations)
+			except:
+				hs.lastcurations=[curations]
 			hs.lastdatamd5=self.cexp.datamd5
 
 
@@ -519,7 +524,9 @@ class DBAnnotateSave(QtGui.QDialog):
 		self.bisa.toggled.connect(self.radiotoggle)
 		self.bdiffpres.toggled.connect(self.radiotoggle)
 		self.bisatype.currentIndexChanged.connect(self.isatypechanged)
+		self.bhistory.clicked.connect(self.history)
 		self.cexp=expdat
+		self.lnumbact.setText(str(len(expdat.selectedseqs)))
 		completer = QCompleter()
 		self.bontoinput.setCompleter(completer)
 		scdb=hs.scdb
@@ -555,12 +562,48 @@ class DBAnnotateSave(QtGui.QDialog):
 		except:
 			hs.lastdatamd5=''
 		if self.cexp.datamd5==hs.lastdatamd5:
-			for cdat in hs.lastcurations:
-				if cdat[0]=='ALL':
-					self.addtolist(cdat[0],cdat[1])
+			self.fillfromcuration(hs.lastcurations[-1],onlyall=True)
 
 		self.prefillinfo()
 		self.bontoinput.setFocus()
+
+
+	def history(self):
+		curtext=[]
+		for cur in hs.lastcurations:
+			ct=''
+			for dat in cur:
+				ct+=dat[0]+'-'+dat[1]+','
+			curtext.append(ct)
+		slistwin = SListWindow(curtext,'select curation from history')
+		res=slistwin.exec_()
+		if res:
+			items=slistwin.lList.selectedItems()
+			for citem in items:
+				print(citem)
+				spos=slistwin.lList.row(citem)
+				print(spos)
+				self.fillfromcuration(hs.lastcurations[spos],onlyall=False)
+
+
+	def fillfromcuration(self,curation,onlyall=True,clearit=True):
+		"""
+		fill gui list from curation
+		input:
+		curation : from hs.lastcurations
+		onlyall : bool
+			True to show only curations which have ALL, False to show also HIGH/LOW
+		clearit : bool
+			True to remove previous curations from list, False to keep
+		"""
+		if clearit:
+			self.blistall.clear()
+		for cdat in curation:
+			if onlyall:
+				if cdat[0]!='ALL':
+					continue
+			self.addtolist(cdat[0],cdat[1])
+
 
 	def radiotoggle(self):
 		if self.bisa.isChecked():
