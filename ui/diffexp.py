@@ -221,6 +221,38 @@
     <string>Method:</string>
    </property>
   </widget>
+  <widget class="QLabel" name="lFSExpSamples_5">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>170</y>
+     <width>31</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>FDR:</string>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="sFDR">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>170</y>
+     <width>67</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>1.000000000000000</double>
+   </property>
+   <property name="singleStep">
+    <double>0.050000000000000</double>
+   </property>
+   <property name="value">
+    <double>0.100000000000000</double>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections>
