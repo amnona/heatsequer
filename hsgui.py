@@ -789,13 +789,14 @@ class AppWindow(QtGui.QMainWindow):
 				value2=str(diffexpwin.tValue2.text())
 				newname=str(diffexpwin.tNewName.text())
 				method=str(diffexpwin.cMethod.currentText())
+				fdr=diffexpwin.sFDR.value()
 				compareall=diffexpwin.cAll.checkState()
 				if compareall:
 					value2=False
 				if method=='all':
-					newexp=hs.getdiffsigall(cexp,field,value1,value2)
+					newexp=hs.getdiffsigall(cexp,field,value1,value2,maxfval=fdr)
 				else:
-					newexp=hs.getdiffsig(cexp,field,value1,value2,method=method)
+					newexp=hs.getdiffsig(cexp,field,value1,value2,method=method,maxfval=fdr)
 				if newexp:
 					newexp.studyname=newname+'_'+field
 					self.addexp(newexp)
