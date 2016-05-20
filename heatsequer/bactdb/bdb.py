@@ -431,6 +431,7 @@ def InitOntologyGraph(db,pv,field,ontohashname):
 	if sys.version_info[0]<3:
 		db.OntoGraph[field]['nodepositions']=graphviz_layout(G)
 	else:
+		db.OntoGraph[field]['nodepositions']=[]
 		Debug(9,"Can't init the graph layout since using python 3")
 	return db
 
@@ -505,6 +506,32 @@ def PlotOntologyGraph(db,seq,field,tofig=False,toax=False):
 		else:
 			Debug(6,"fraction not found for",nodes[a])
 
+	# save the graph
+	tg=G.copy()
+	sizedict={}
+	colordict={}
+	labsizedict={}
+	labshapedict={}
+	for cnode in tg.nodes():
+		sizedict[cnode]=sizes[cnode]
+		colordict[cnode]=int(1000*fraccol[cnode]/(max(fraccol)+0.00001))
+		if ndict[cnode][:5]=='study':
+			labsizedict[cnode]=1
+			labshapedict[cnode]=1
+		else:
+			labsizedict[cnode]=int(1000*fraccol[cnode]/(max(fraccol)+0.00001))
+			labshapedict[cnode]=0
+	nx.set_node_attributes(tg,'nodenames',ndict)
+	nx.set_node_attributes(tg,'nodecolors',sizedict)
+	nx.set_node_attributes(tg,'nodesizes',colordict)
+	nx.set_node_attributes(tg,'nodelabelsizes',labsizedict)
+	nx.set_node_attributes(tg,'nodeshapes',labshapedict)
+	simplifygraph(tg,'nodeshapes')
+	tg=tg.to_undirected()
+#	nx.set_node_attributes(tg,'origsizes',sizes)
+	nx.write_graphml(tg,'/Users/amnon/test.graphml')
+	Debug(6,'saved graphml ~/test.graphml')
+
 	# and draw the graph!!!
 	if toax:
 		nx.draw_networkx(G,nodes=range(len(nodes)),node_size=1000*fraccol/(max(fraccol)+0.00001),labels=ndict,node_color=sizes,vmin=-1,vmax=50,with_labels=True,font_color='g',pos=cnodepositions,ax=toax)
@@ -515,6 +542,8 @@ def PlotOntologyGraph(db,seq,field,tofig=False,toax=False):
 		clf()
 	else:
 		plt.figure()
+
+
 	nx.draw_networkx(G,nodes=range(len(nodes)),node_size=1000*fraccol/(max(fraccol)+0.00001),labels=ndict,node_color=sizes,vmin=-1,vmax=50,with_labels=True,font_color='g',pos=cnodepositions)
 
 
