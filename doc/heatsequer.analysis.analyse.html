@@ -1,0 +1,429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.analysis.analyse</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.analysis.html"><font color="#ffffff">analysis</font></a>.analyse</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/analysis/analyse.py">/Users/amnon/Python/git/heatsequer/heatsequer/analysis/analyse.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;analysis&nbsp;module</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="copy.html">copy</a><br>
+<a href="heatsequer.html">heatsequer</a><br>
+<a href="sklearn.metrics.html">sklearn.metrics</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.html">matplotlib</a><br>
+<a href="numpy.html">numpy</a><br>
+<a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top><a href="sklearn.html">sklearn</a><br>
+<a href="scipy.spatial.html">scipy.spatial</a><br>
+<a href="scipy.stats.html">scipy.stats</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-BayZeroClassify"><strong>BayZeroClassify</strong></a>(expdat, valexp, field, val1, val2=False, istreeexpand=False)</dt><dd><tt>Do&nbsp;the&nbsp;Zero&nbsp;inflated&nbsp;Naive&nbsp;Bayes&nbsp;Classifier<br>
+Does&nbsp;a&nbsp;p-value&nbsp;based&nbsp;on&nbsp;presence/absence&nbsp;if&nbsp;bacteria&nbsp;is&nbsp;0&nbsp;in&nbsp;sample,&nbsp;otherwise&nbsp;do&nbsp;non-parametric&nbsp;permutaion&nbsp;test&nbsp;p-value<br>
+combine&nbsp;p-values&nbsp;for&nbsp;all&nbsp;bacteria&nbsp;as&nbsp;if&nbsp;independent&nbsp;and&nbsp;look&nbsp;at&nbsp;log&nbsp;ratio&nbsp;of&nbsp;2&nbsp;categories&nbsp;as&nbsp;prediction<br>
+input:<br>
+expdat&nbsp;-&nbsp;the&nbsp;training&nbsp;set<br>
+valexp&nbsp;-&nbsp;the&nbsp;validation&nbsp;set&nbsp;(to&nbsp;be&nbsp;classified)<br>
+field&nbsp;-&nbsp;the&nbsp;field&nbsp;to&nbsp;use&nbsp;for&nbsp;classification<br>
+val1&nbsp;-&nbsp;the&nbsp;value&nbsp;of&nbsp;group1&nbsp;in&nbsp;field<br>
+val2&nbsp;-&nbsp;value&nbsp;of&nbsp;group2&nbsp;in&nbsp;field,&nbsp;or&nbsp;False&nbsp;to&nbsp;use&nbsp;all&nbsp;non&nbsp;val1&nbsp;as&nbsp;group2<br>
+istreeexpand&nbsp;-&nbsp;True&nbsp;if&nbsp;we&nbsp;want&nbsp;to&nbsp;use&nbsp;the&nbsp;tree&nbsp;shrinkage&nbsp;on&nbsp;each&nbsp;training&nbsp;set&nbsp;(if&nbsp;the&nbsp;exp&nbsp;is&nbsp;from&nbsp;addsubtrees)<br>
+&nbsp;<br>
+output:<br>
+pred&nbsp;-&nbsp;the&nbsp;log2(ratio)&nbsp;prediction&nbsp;score&nbsp;for&nbsp;each&nbsp;sample&nbsp;in&nbsp;the&nbsp;validation&nbsp;experiment&nbsp;(&gt;0&nbsp;means&nbsp;from&nbsp;val1,&nbsp;&lt;0&nbsp;means&nbsp;from&nbsp;val2)</tt></dd></dl>
+ <dl><dt><a name="-BaysZeroClassifyTest"><strong>BaysZeroClassifyTest</strong></a>(oexpdat, field, val1, val2=False, n_folds=10, istreeexpand=False, randseed=False, numiter=1, method='kfold')</dt><dd><tt>Test&nbsp;the&nbsp;baysian&nbsp;zero&nbsp;inflated&nbsp;classifier&nbsp;by&nbsp;doing&nbsp;n_fold&nbsp;cross&nbsp;validation&nbsp;on&nbsp;a&nbsp;given&nbsp;dataset<br>
+input:<br>
+expdat<br>
+field&nbsp;-&nbsp;the&nbsp;field&nbsp;to&nbsp;use&nbsp;for&nbsp;classification<br>
+val1&nbsp;-&nbsp;the&nbsp;value&nbsp;of&nbsp;group1&nbsp;in&nbsp;field<br>
+val2&nbsp;-&nbsp;value&nbsp;of&nbsp;group2&nbsp;in&nbsp;field,&nbsp;or&nbsp;False&nbsp;to&nbsp;use&nbsp;all&nbsp;non&nbsp;val1&nbsp;as&nbsp;group2<br>
+n_folds&nbsp;-&nbsp;number&nbsp;of&nbsp;groups&nbsp;to&nbsp;divide&nbsp;to&nbsp;for&nbsp;crossvalidation<br>
+istreeexpand&nbsp;-&nbsp;True&nbsp;if&nbsp;we&nbsp;want&nbsp;to&nbsp;use&nbsp;the&nbsp;tree&nbsp;shrinkage&nbsp;on&nbsp;each&nbsp;training&nbsp;set&nbsp;(if&nbsp;the&nbsp;exp&nbsp;is&nbsp;from&nbsp;addsubtrees)<br>
+randseed&nbsp;-&nbsp;if&nbsp;non&nbsp;False,&nbsp;use&nbsp;the&nbsp;specified&nbsp;random&nbsp;seed&nbsp;for&nbsp;the&nbsp;test/validation&nbsp;division<br>
+numiter&nbsp;-&nbsp;the&nbsp;number&nbsp;of&nbsp;times&nbsp;to&nbsp;run&nbsp;the&nbsp;cross&nbsp;validation<br>
+method&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;'kfold'&nbsp;-&nbsp;k-fold&nbsp;cross&nbsp;validation&nbsp;(using&nbsp;n_folds&nbsp;variable)&nbsp;(default)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;'loo'&nbsp;-&nbsp;leave&nbsp;one&nbsp;out&nbsp;cross&nbsp;validation<br>
+&nbsp;<br>
+output:<br>
+auc&nbsp;-&nbsp;the&nbsp;auc&nbsp;of&nbsp;each&nbsp;iteration</tt></dd></dl>
+ <dl><dt><a name="-FindSimValBact"><strong>FindSimValBact</strong></a>(expdat, field)</dt><dd><tt>EXPERIMENTAL<br>
+find&nbsp;bacteria&nbsp;showing&nbsp;similar&nbsp;behavior&nbsp;on&nbsp;same&nbsp;value&nbsp;in&nbsp;field&nbsp;(i.e.&nbsp;same&nbsp;family)<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;field&nbsp;containing&nbsp;the&nbsp;values&nbsp;to&nbsp;group&nbsp;by<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sorted&nbsp;by&nbsp;effect&nbsp;size</tt></dd></dl>
+ <dl><dt><a name="-bicluster"><strong>bicluster</strong></a>(expdat, numiter=5, startb=False, starts=False, method='binary', sampkeep=0.5, bactkeep=0.25, justcount=False, numruns=1)</dt><dd><tt>EXPERIMENTAL<br>
+cluster&nbsp;bacteria&nbsp;and&nbsp;samples&nbsp;from&nbsp;subgroup<br>
+input:<br>
+expdat<br>
+numiter&nbsp;-&nbsp;number&nbsp;of&nbsp;iterations&nbsp;to&nbsp;run&nbsp;the&nbsp;biclustering<br>
+startb&nbsp;-&nbsp;start&nbsp;list&nbsp;of&nbsp;bacteria&nbsp;[acgt]&nbsp;of&nbsp;False&nbsp;for&nbsp;random<br>
+method:&nbsp;the&nbsp;method&nbsp;for&nbsp;choosing&nbsp;which&nbsp;sample/bacteria&nbsp;to&nbsp;keep.&nbsp;options&nbsp;areL<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'zscore'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'ranksum'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'binary'&nbsp;-&nbsp;only&nbsp;one&nbsp;working&nbsp;currently!!!<br>
+sampkeep&nbsp;-&nbsp;the&nbsp;minimal&nbsp;fraction&nbsp;of&nbsp;bacteria&nbsp;to&nbsp;be&nbsp;present&nbsp;in&nbsp;a&nbsp;sample&nbsp;in&nbsp;order&nbsp;to&nbsp;keep&nbsp;the&nbsp;sample&nbsp;(for&nbsp;binary)&nbsp;or&nbsp;0&nbsp;for&nbsp;random<br>
+bactkeep&nbsp;-&nbsp;the&nbsp;minimal&nbsp;difference&nbsp;in&nbsp;the&nbsp;number&nbsp;of&nbsp;samples&nbsp;a&nbsp;bacteria&nbsp;apprears&nbsp;in&nbsp;order&nbsp;to&nbsp;keep&nbsp;the&nbsp;bacteria&nbsp;(for&nbsp;binary)&nbsp;or&nbsp;0&nbsp;for&nbsp;random<br>
+justcount&nbsp;-&nbsp;True&nbsp;to&nbsp;not&nbsp;reorder&nbsp;the&nbsp;experiment&nbsp;-&nbsp;just&nbsp;the&nbsp;bacteria&nbsp;&amp;&nbsp;samples&nbsp;(to&nbsp;run&nbsp;faster)<br>
+numruns&nbsp;-&nbsp;number&nbsp;of&nbsp;times&nbsp;to&nbsp;run<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;reordered&nbsp;experiment<br>
+seqs&nbsp;-&nbsp;the&nbsp;sequences&nbsp;in&nbsp;the&nbsp;cluster<br>
+samples&nbsp;-&nbsp;the&nbsp;samples&nbsp;in&nbsp;the&nbsp;cluster&nbsp;(position&nbsp;in&nbsp;experiment)</tt></dd></dl>
+ <dl><dt><a name="-corrfunc"><strong>corrfunc</strong></a>(dat, compareto)</dt><dd><tt>calculate&nbsp;the&nbsp;partial&nbsp;correlation&nbsp;between&nbsp;dat&nbsp;and&nbsp;compareto<br>
+for&nbsp;the&nbsp;permutation&nbsp;tests</tt></dd></dl>
+ <dl><dt><a name="-corrfunc2"><strong>corrfunc2</strong></a>(dat, compareto)</dt><dd><tt>calculate&nbsp;the&nbsp;partial&nbsp;correlation&nbsp;between&nbsp;dat&nbsp;and&nbsp;compareto<br>
+for&nbsp;the&nbsp;permutation&nbsp;tests<br>
+TESTING.&nbsp;NOT&nbsp;WORKING!!!!</tt></dd></dl>
+ <dl><dt><a name="-diffexpfastpermute"><strong>diffexpfastpermute</strong></a>(expdat, field, val1, val2=False, method='mean', numperm=[100, 1000], maxfval=0.1, mineffect=0.1, permutefield=False)</dt><dd><tt>test&nbsp;the&nbsp;differential&nbsp;expression&nbsp;between&nbsp;2&nbsp;groups&nbsp;(val1&nbsp;and&nbsp;val2&nbsp;in&nbsp;field&nbsp;field)<br>
+for&nbsp;bacteria&nbsp;that&nbsp;have&nbsp;a&nbsp;high&nbsp;difference.<br>
+using&nbsp;the&nbsp;fast&nbsp;permutation&nbsp;test&nbsp;(see&nbsp;fastpermutepv)<br>
+input:<br>
+expdat<br>
+field&nbsp;-&nbsp;the&nbsp;field&nbsp;for&nbsp;the&nbsp;2&nbsp;categories<br>
+val1&nbsp;-&nbsp;values&nbsp;for&nbsp;the&nbsp;first&nbsp;group<br>
+val2&nbsp;-&nbsp;value&nbsp;for&nbsp;the&nbsp;second&nbsp;group&nbsp;or&nbsp;false&nbsp;to&nbsp;compare&nbsp;to&nbsp;all&nbsp;other<br>
+method&nbsp;-&nbsp;the&nbsp;test&nbsp;to&nbsp;compare&nbsp;the&nbsp;2&nbsp;groups:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mean&nbsp;-&nbsp;absolute&nbsp;difference&nbsp;in&nbsp;mean&nbsp;frequency<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;binary&nbsp;-&nbsp;abs&nbsp;diff&nbsp;in&nbsp;binary&nbsp;presence/absence<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ranksum&nbsp;-&nbsp;abs&nbsp;diff&nbsp;in&nbsp;rank&nbsp;order&nbsp;(to&nbsp;ignore&nbsp;outliers)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;freqpres&nbsp;-&nbsp;abs&nbsp;diff&nbsp;in&nbsp;frequency&nbsp;only&nbsp;in&nbsp;samples&nbsp;where&nbsp;bacteria&nbsp;is&nbsp;present&nbsp;(NOT&nbsp;SUPPORTED&nbsp;YET)<br>
+numperm&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;number&nbsp;of&nbsp;random&nbsp;permutations&nbsp;to&nbsp;run&nbsp;in&nbsp;each&nbsp;step&nbsp;(small&nbsp;to&nbsp;large)<br>
+maxfval&nbsp;-&nbsp;the&nbsp;maximal&nbsp;f-value&nbsp;(FDR)&nbsp;for&nbsp;a&nbsp;bacteria&nbsp;to&nbsp;keep<br>
+mineffect&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimal&nbsp;effect&nbsp;size&nbsp;to&nbsp;keep&nbsp;(abs(diff)/mean)<br>
+permutefield&nbsp;:&nbsp;string&nbsp;or&nbsp;False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;False&nbsp;(default)&nbsp;permute&nbsp;all&nbsp;samples,&nbsp;otherwise&nbsp;permute&nbsp;separately&nbsp;on&nbsp;samples&nbsp;with&nbsp;same&nbsp;value&nbsp;on&nbsp;field&nbsp;permutefield<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;experiment&nbsp;with&nbsp;only&nbsp;significant&nbsp;(FDR&lt;=maxfval)&nbsp;difference,&nbsp;sorted&nbsp;according&nbsp;to&nbsp;difference</tt></dd></dl>
+ <dl><dt><a name="-fastpermutecorr"><strong>fastpermutecorr</strong></a>(expdat, field, numeric=True, method='ranksum', numperm=[100, 1000], maxfval=0.05, mineffect=0.1)</dt><dd><tt>do&nbsp;a&nbsp;fast&nbsp;iterative&nbsp;permutation&nbsp;test&nbsp;for&nbsp;correlation&nbsp;to&nbsp;continuous&nbsp;field&nbsp;in&nbsp;the&nbsp;experiment&nbsp;(each&nbsp;row&nbsp;is&nbsp;tested&nbsp;independently)<br>
+by&nbsp;skipping&nbsp;the&nbsp;row&nbsp;if&nbsp;it&nbsp;is&nbsp;clearly&nbsp;above&nbsp;the&nbsp;p-value&nbsp;or&nbsp;if&nbsp;the&nbsp;effect&nbsp;size&nbsp;is&nbsp;not&nbsp;big&nbsp;enough<br>
+input:<br>
+dat&nbsp;:&nbsp;2d&nbsp;np&nbsp;array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;row&nbsp;per&nbsp;bacteria,&nbsp;column&nbsp;per&nbsp;sample.&nbsp;NOTE&nbsp;it&nbsp;needs&nbsp;to&nbsp;be&nbsp;preprocessed&nbsp;for&nbsp;the&nbsp;appropriate&nbsp;method&nbsp;(i.e.&nbsp;binary,ranksum,&nbsp;etc)<br>
+tfunc&nbsp;:&nbsp;the&nbsp;test&nbsp;function&nbsp;(takes&nbsp;dat&nbsp;and&nbsp;returns&nbsp;a&nbsp;vector&nbsp;of&nbsp;values&nbsp;(1&nbsp;per&nbsp;row))<br>
+maxfv&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;maximal&nbsp;f-value&nbsp;to&nbsp;keep<br>
+group1,group2&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;indices&nbsp;of&nbsp;group1,group2&nbsp;in&nbsp;the&nbsp;data<br>
+numperm&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;number&nbsp;of&nbsp;permutations&nbsp;in&nbsp;each&nbsp;step<br>
+mineffect&nbsp;-&nbsp;the&nbsp;minimal&nbsp;effect&nbsp;size&nbsp;(abs&nbsp;correlation&nbsp;of&nbsp;the&nbsp;true&nbsp;data)&nbsp;-&nbsp;keep&nbsp;only&nbsp;bacteria&nbsp;with&nbsp;at&nbsp;least&nbsp;this&nbsp;effect&nbsp;size&nbsp;or&nbsp;0&nbsp;to&nbsp;use&nbsp;all<br>
+output:<br>
+pvals&nbsp;-&nbsp;np&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p-value&nbsp;for&nbsp;each&nbsp;row&nbsp;(approximate&nbsp;if&nbsp;high)<br>
+odif&nbsp;-&nbsp;np&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;statistic&nbsp;for&nbsp;the&nbsp;original&nbsp;(non-permuted)&nbsp;groups</tt></dd></dl>
+ <dl><dt><a name="-fastpermutegroupsim"><strong>fastpermutegroupsim</strong></a>(expdat, field, method='binary', numperm=[100, 1000], maxfval=0.05, mineffect=2)</dt><dd><tt>do&nbsp;a&nbsp;fast&nbsp;iterative&nbsp;permutation&nbsp;test&nbsp;for&nbsp;group&nbsp;similarity&nbsp;(like&nbsp;twins)<br>
+by&nbsp;skipping&nbsp;the&nbsp;row&nbsp;if&nbsp;it&nbsp;is&nbsp;clearly&nbsp;above&nbsp;the&nbsp;p-value&nbsp;or&nbsp;if&nbsp;the&nbsp;effect&nbsp;size&nbsp;is&nbsp;not&nbsp;big&nbsp;enough<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;the&nbsp;field&nbsp;containing&nbsp;the&nbsp;per-group&nbsp;identifier<br>
+numperm&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;number&nbsp;of&nbsp;permutations&nbsp;in&nbsp;each&nbsp;step<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment</tt></dd></dl>
+ <dl><dt><a name="-fastpermuteoverlap"><strong>fastpermuteoverlap</strong></a>(expdat, tfunc, taxgroups={}, numperm=[100, 1000], maxpval=0.05, mineffect=0.1, method='binary')</dt><dd><tt>do&nbsp;a&nbsp;fast&nbsp;iterative&nbsp;permutation&nbsp;test&nbsp;for&nbsp;taxonomic&nbsp;group&nbsp;overlap<br>
+by&nbsp;skipping&nbsp;the&nbsp;row&nbsp;if&nbsp;it&nbsp;is&nbsp;clearly&nbsp;above&nbsp;the&nbsp;p-value&nbsp;or&nbsp;if&nbsp;the&nbsp;effect&nbsp;size&nbsp;is&nbsp;not&nbsp;big&nbsp;enough<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+taxgroups&nbsp;:&nbsp;dictionary&nbsp;of&nbsp;Name&nbsp;(string)&nbsp;,pos&nbsp;(list&nbsp;of&nbsp;int)&nbsp;or&nbsp;empty&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;taxonomic&nbsp;groups&nbsp;to&nbsp;test&nbsp;for&nbsp;overlap&nbsp;-&nbsp;name&nbsp;and&nbsp;position&nbsp;in&nbsp;the&nbsp;data&nbsp;matrix.&nbsp;Empty&nbsp;(default)&nbsp;to&nbsp;calculate&nbsp;here<br>
+tfunc&nbsp;:&nbsp;the&nbsp;test&nbsp;function&nbsp;(takes&nbsp;dat&nbsp;and&nbsp;a&nbsp;list&nbsp;of&nbsp;taxonomic&nbsp;group&nbsp;positions,&nbsp;returns&nbsp;value&nbsp;per&nbsp;group<br>
+maxpv&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;maximal&nbsp;p-value&nbsp;to&nbsp;test<br>
+numperm&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;number&nbsp;of&nbsp;permutations&nbsp;in&nbsp;each&nbsp;step<br>
+mineffect&nbsp;-&nbsp;the&nbsp;minimal&nbsp;effect&nbsp;size&nbsp;(abs(group&nbsp;difference)/mean)&nbsp;-&nbsp;keep&nbsp;only&nbsp;bacteria&nbsp;with&nbsp;at&nbsp;least&nbsp;this&nbsp;effect&nbsp;size&nbsp;or&nbsp;0&nbsp;to&nbsp;use&nbsp;all<br>
+output:<br>
+taxgroups&nbsp;-&nbsp;dict&nbsp;of&nbsp;name,list&nbsp;of&nbsp;positions<br>
+pvals&nbsp;-&nbsp;np&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p-value&nbsp;for&nbsp;each&nbsp;taxonomic&nbsp;group&nbsp;(approximate&nbsp;if&nbsp;high)<br>
+odif&nbsp;-&nbsp;np&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;statistic&nbsp;for&nbsp;the&nbsp;original&nbsp;(non-permuted)&nbsp;groups</tt></dd></dl>
+ <dl><dt><a name="-fastpermutepv"><strong>fastpermutepv</strong></a>(dat, tfunc, group1, group2, numperm=[100, 1000], maxpval=0.05, mineffect=0.1, permutegroups=False)</dt><dd><tt>do&nbsp;a&nbsp;fast&nbsp;iterative&nbsp;permutation&nbsp;test&nbsp;for&nbsp;differential&nbsp;expression&nbsp;dat&nbsp;(each&nbsp;row&nbsp;is&nbsp;tested&nbsp;independently)<br>
+by&nbsp;skipping&nbsp;the&nbsp;row&nbsp;if&nbsp;it&nbsp;is&nbsp;clearly&nbsp;above&nbsp;the&nbsp;p-value&nbsp;or&nbsp;if&nbsp;the&nbsp;effect&nbsp;size&nbsp;is&nbsp;not&nbsp;big&nbsp;enough<br>
+input:<br>
+dat&nbsp;:&nbsp;2d&nbsp;np&nbsp;array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;row&nbsp;per&nbsp;bacteria,&nbsp;column&nbsp;per&nbsp;sample.&nbsp;NOTE&nbsp;it&nbsp;needs&nbsp;to&nbsp;be&nbsp;preprocessed&nbsp;for&nbsp;the&nbsp;appropriate&nbsp;method&nbsp;(i.e.&nbsp;binary,ranksum,&nbsp;etc)<br>
+tfunc&nbsp;:&nbsp;the&nbsp;test&nbsp;function&nbsp;(takes&nbsp;dat&nbsp;and&nbsp;returns&nbsp;a&nbsp;vector&nbsp;of&nbsp;values&nbsp;(1&nbsp;per&nbsp;row))<br>
+maxpv&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;maximal&nbsp;p-value&nbsp;to&nbsp;test<br>
+group1,group2&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;indices&nbsp;of&nbsp;group1,group2&nbsp;in&nbsp;the&nbsp;data<br>
+numperm&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;number&nbsp;of&nbsp;permutations&nbsp;in&nbsp;each&nbsp;step<br>
+mineffect&nbsp;-&nbsp;the&nbsp;minimal&nbsp;effect&nbsp;size&nbsp;(abs(group&nbsp;difference)/mean)&nbsp;-&nbsp;keep&nbsp;only&nbsp;bacteria&nbsp;with&nbsp;at&nbsp;least&nbsp;this&nbsp;effect&nbsp;size&nbsp;or&nbsp;0&nbsp;to&nbsp;use&nbsp;all<br>
+output:<br>
+pvals&nbsp;-&nbsp;np&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p-value&nbsp;for&nbsp;each&nbsp;row&nbsp;(approximate&nbsp;if&nbsp;high)<br>
+odif&nbsp;-&nbsp;np&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;statistic&nbsp;for&nbsp;the&nbsp;original&nbsp;(non-permuted)&nbsp;groups<br>
+permutegroups&nbsp;:&nbsp;list&nbsp;of&nbsp;lists<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;False&nbsp;(default)&nbsp;permute&nbsp;all&nbsp;samples,&nbsp;otherwise&nbsp;permute&nbsp;separately&nbsp;on&nbsp;samples&nbsp;within&nbsp;each&nbsp;group</tt></dd></dl>
+ <dl><dt><a name="-fastpermutetwogroupsim"><strong>fastpermutetwogroupsim</strong></a>(expdat, twofield, twoval1, twoval2=False, field='', method='binary', numperm=[100, 1000], maxfval=0.05, mineffect=2, twoway=True)</dt><dd><tt>do&nbsp;a&nbsp;fast&nbsp;iterative&nbsp;permutation&nbsp;test&nbsp;for&nbsp;group&nbsp;similarity&nbsp;(like&nbsp;twins)<br>
+by&nbsp;skipping&nbsp;the&nbsp;row&nbsp;if&nbsp;it&nbsp;is&nbsp;clearly&nbsp;above&nbsp;the&nbsp;p-value&nbsp;or&nbsp;if&nbsp;the&nbsp;effect&nbsp;size&nbsp;is&nbsp;not&nbsp;big&nbsp;enough<br>
+compare&nbsp;the&nbsp;values&nbsp;in&nbsp;the&nbsp;2&nbsp;groups&nbsp;and&nbsp;see&nbsp;where&nbsp;it&nbsp;is&nbsp;bigger&nbsp;in&nbsp;one&nbsp;group<br>
+input:<br>
+expdat1,expdat2&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiments&nbsp;to&nbsp;test&nbsp;(a&nbsp;division&nbsp;of&nbsp;1&nbsp;experiment)<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;the&nbsp;field&nbsp;containing&nbsp;the&nbsp;per-group&nbsp;identifier<br>
+numperm&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;number&nbsp;of&nbsp;permutations&nbsp;in&nbsp;each&nbsp;step<br>
+twoway&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;test&nbsp;significant&nbsp;differences&nbsp;in&nbsp;both&nbsp;directions,&nbsp;False&nbsp;to&nbsp;only&nbsp;test&nbsp;group1&gt;group2<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment</tt></dd></dl>
+ <dl><dt><a name="-get2expcorr"><strong>get2expcorr</strong></a>(exp1, exp2, field, method='spearman', maxfval=0.1)</dt><dd><tt>test&nbsp;the&nbsp;correlation&nbsp;between&nbsp;the&nbsp;same&nbsp;bacteria&nbsp;in&nbsp;2&nbsp;experiments<br>
+input:<br>
+exp1,exp2&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiments&nbsp;containing&nbsp;the&nbsp;same&nbsp;bacteria<br>
+field&nbsp;-&nbsp;the&nbsp;field&nbsp;containing&nbsp;the&nbsp;same&nbsp;unique&nbsp;value&nbsp;for&nbsp;both&nbsp;experiments&nbsp;(i.e.&nbsp;subject_id&nbsp;etc.)<br>
+method&nbsp;-&nbsp;the&nbsp;test&nbsp;to&nbsp;compare&nbsp;the&nbsp;2&nbsp;groups:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'spearman'&nbsp;-&nbsp;nonparametric&nbsp;correlation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'binary'&nbsp;-&nbsp;spearman&nbsp;correlation&nbsp;of&nbsp;presence/absence<br>
+maxfval&nbsp;-&nbsp;the&nbsp;maximal&nbsp;f-value&nbsp;(FDR)&nbsp;for&nbsp;a&nbsp;bacteria&nbsp;to&nbsp;keep<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;with&nbsp;2&nbsp;lines&nbsp;per&nbsp;bacteria&nbsp;-&nbsp;from&nbsp;exp1&nbsp;and&nbsp;exp2.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;only&nbsp;significant&nbsp;(FDR&lt;=maxfval)&nbsp;difference,&nbsp;sorted&nbsp;according&nbsp;to&nbsp;difference</tt></dd></dl>
+ <dl><dt><a name="-getbigfreqsource"><strong>getbigfreqsource</strong></a>(expdat, seqdb)</dt><dd><tt>EXPERIMENTAL<br>
+get&nbsp;the&nbsp;most&nbsp;common&nbsp;automatic&nbsp;db&nbsp;annotation&nbsp;for&nbsp;each&nbsp;sequence&nbsp;in&nbsp;the&nbsp;experiment<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;with&nbsp;sequences&nbsp;to&nbsp;annotate<br>
+seqdb&nbsp;:&nbsp;BactDB<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;automatic&nbsp;bacterial&nbsp;database&nbsp;(from&nbsp;bactdb.load())<br>
+&nbsp;<br>
+output:<br>
+newep&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;annotated&nbsp;experiment&nbsp;(source&nbsp;instead&nbsp;of&nbsp;taxonomy&nbsp;for&nbsp;each&nbsp;bacteria)</tt></dd></dl>
+ <dl><dt><a name="-getdiffsig"><strong>getdiffsig</strong></a>(expdat, field, val1, val2=False, method='mean', numperm=1000, maxfval=0.1)</dt><dd><tt>test&nbsp;the&nbsp;differential&nbsp;expression&nbsp;between&nbsp;2&nbsp;groups&nbsp;(val1&nbsp;and&nbsp;val2&nbsp;in&nbsp;field&nbsp;field)<br>
+for&nbsp;bacteria&nbsp;that&nbsp;have&nbsp;a&nbsp;high&nbsp;difference.<br>
+input:<br>
+expdat<br>
+field&nbsp;-&nbsp;the&nbsp;field&nbsp;for&nbsp;the&nbsp;2&nbsp;categories<br>
+val1&nbsp;-&nbsp;values&nbsp;for&nbsp;the&nbsp;first&nbsp;group<br>
+val2&nbsp;-&nbsp;value&nbsp;for&nbsp;the&nbsp;second&nbsp;group&nbsp;or&nbsp;false&nbsp;to&nbsp;compare&nbsp;to&nbsp;all&nbsp;other<br>
+method&nbsp;-&nbsp;the&nbsp;test&nbsp;to&nbsp;compare&nbsp;the&nbsp;2&nbsp;groups:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mean&nbsp;-&nbsp;absolute&nbsp;difference&nbsp;in&nbsp;mean&nbsp;frequency<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;binary&nbsp;-&nbsp;abs&nbsp;diff&nbsp;in&nbsp;binary&nbsp;presence/absence<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ranksum&nbsp;-&nbsp;abs&nbsp;diff&nbsp;in&nbsp;rank&nbsp;order&nbsp;(to&nbsp;ignore&nbsp;outliers)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;freqpres&nbsp;-&nbsp;abs&nbsp;diff&nbsp;in&nbsp;frequency&nbsp;only&nbsp;in&nbsp;samples&nbsp;where&nbsp;bacteria&nbsp;is&nbsp;present<br>
+numperm&nbsp;-&nbsp;number&nbsp;of&nbsp;random&nbsp;permutations&nbsp;to&nbsp;run<br>
+maxfval&nbsp;-&nbsp;the&nbsp;maximal&nbsp;f-value&nbsp;(FDR)&nbsp;for&nbsp;a&nbsp;bacteria&nbsp;to&nbsp;keep<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;experiment&nbsp;with&nbsp;only&nbsp;significant&nbsp;(FDR&lt;=maxfval)&nbsp;difference,&nbsp;sorted&nbsp;according&nbsp;to&nbsp;difference</tt></dd></dl>
+ <dl><dt><a name="-getdiffsigall"><strong>getdiffsigall</strong></a>(expdat, field, val1, val2=False, numperm=1000, maxfval=0.1, nofreqpres=False)</dt><dd><tt>Get&nbsp;the&nbsp;differentially&nbsp;abundant&nbsp;bacteria&nbsp;(using&nbsp;getdiffsig)&nbsp;using&nbsp;all&nbsp;methods&nbsp;possible.<br>
+Sort&nbsp;results&nbsp;according&nbsp;to&nbsp;combined&nbsp;effect&nbsp;order<br>
+input:<br>
+see&nbsp;<a href="#-getdiffsig">getdiffsig</a>()<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;new&nbsp;experiment&nbsp;with&nbsp;bacteria&nbsp;significantly&nbsp;differentiating&nbsp;the&nbsp;2&nbsp;groups&nbsp;by&nbsp;at&nbsp;least&nbsp;1&nbsp;method</tt></dd></dl>
+ <dl><dt><a name="-getdiffsummary"><strong>getdiffsummary</strong></a>(expdat, seqs, field, val1, val2=False, method='mean', threshold=0.1)</dt><dd><tt>get&nbsp;the&nbsp;fold&nbsp;change&nbsp;between&nbsp;2&nbsp;groups&nbsp;in&nbsp;each&nbsp;of&nbsp;the&nbsp;sequences&nbsp;in&nbsp;seqs<br>
+for&nbsp;zech&nbsp;chinese&nbsp;ibd&nbsp;paper<br>
+input:<br>
+expdat<br>
+seqs&nbsp;-&nbsp;the&nbsp;sequences&nbsp;to&nbsp;examine<br>
+field&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;dividing&nbsp;the&nbsp;2&nbsp;groups<br>
+val1&nbsp;-&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;group&nbsp;1<br>
+val2&nbsp;-&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;group&nbsp;2&nbsp;or&nbsp;False&nbsp;for&nbsp;all&nbsp;the&nbsp;rest&nbsp;(not&nbsp;val1)<br>
+method:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;'mean'&nbsp;-&nbsp;calculate&nbsp;the&nbsp;difference&nbsp;in&nbsp;the&nbsp;mean&nbsp;of&nbsp;the&nbsp;2&nbsp;groups<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;'binary'&nbsp;-&nbsp;calculate&nbsp;the&nbsp;difference&nbsp;in&nbsp;the&nbsp;presence/abscence&nbsp;of&nbsp;the&nbsp;2&nbsp;groups<br>
+threshold&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;detection&nbsp;limit&nbsp;(out&nbsp;of&nbsp;10k&nbsp;reads)&nbsp;-&nbsp;round&nbsp;up&nbsp;means&nbsp;below&nbsp;this&nbsp;number.&nbsp;should&nbsp;be&nbsp;~10k/rarefaction<br>
+&nbsp;<br>
+output:<br>
+diff&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;difference&nbsp;between&nbsp;the&nbsp;2&nbsp;groups&nbsp;for&nbsp;each&nbsp;sequence</tt></dd></dl>
+ <dl><dt><a name="-getexpdbsources"><strong>getexpdbsources</strong></a>(expdat, seqdb=False)</dt><dd><tt>EXPERIMENTAL<br>
+predict&nbsp;the&nbsp;probable&nbsp;source&nbsp;for&nbsp;each&nbsp;bacteria<br>
+based&nbsp;on&nbsp;the&nbsp;bactdb&nbsp;automatic&nbsp;bacteria&nbsp;database,<br>
+by&nbsp;each&nbsp;time&nbsp;taking&nbsp;the&nbsp;sample&nbsp;with&nbsp;the&nbsp;highest&nbsp;number&nbsp;of&nbsp;common&nbsp;bacteria&nbsp;with&nbsp;the&nbsp;experiment<br>
+and&nbsp;defining&nbsp;that&nbsp;sample&nbsp;as&nbsp;the&nbsp;source&nbsp;for&nbsp;these&nbsp;bacteria.<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+seqdb&nbsp;:&nbsp;the&nbsp;bactdb&nbsp;automatic&nbsp;database&nbsp;(&nbsp;from&nbsp;bactdb.load()&nbsp;)<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;same&nbsp;as&nbsp;expdat,&nbsp;but&nbsp;taxonomy&nbsp;now&nbsp;modified&nbsp;to&nbsp;include&nbsp;predicted&nbsp;source&nbsp;for&nbsp;each&nbsp;bacteria</tt></dd></dl>
+ <dl><dt><a name="-getgroupcover"><strong>getgroupcover</strong></a>(dat, taxgroups)</dt><dd><tt>for&nbsp;fastpermuteoverlap.&nbsp;Get&nbsp;the&nbsp;number&nbsp;of&nbsp;samples&nbsp;that&nbsp;have&nbsp;at&nbsp;least&nbsp;1&nbsp;bacteria&nbsp;out&nbsp;of&nbsp;the&nbsp;tax&nbsp;group<br>
+input:<br>
+dat&nbsp;-&nbsp;the&nbsp;experiment&nbsp;data&nbsp;matrix<br>
+taxgroups&nbsp;:&nbsp;list&nbsp;of&nbsp;list&nbsp;of&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;bacteria&nbsp;positions&nbsp;per&nbsp;group<br>
+&nbsp;<br>
+output:<br>
+cover&nbsp;:&nbsp;numpy&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number&nbsp;of&nbsp;samples&nbsp;that&nbsp;have&nbsp;coverage&nbsp;for&nbsp;each&nbsp;taxgroup</tt></dd></dl>
+ <dl><dt><a name="-getgroupcoverstd"><strong>getgroupcoverstd</strong></a>(dat, taxgroups)</dt><dd><tt>for&nbsp;fastpermuteoverlap.&nbsp;Get&nbsp;the&nbsp;std&nbsp;of&nbsp;the&nbsp;sum&nbsp;of&nbsp;all&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;group<br>
+input:<br>
+dat&nbsp;-&nbsp;the&nbsp;experiment&nbsp;data&nbsp;matrix<br>
+taxgroups&nbsp;:&nbsp;list&nbsp;of&nbsp;list&nbsp;of&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;bacteria&nbsp;positions&nbsp;per&nbsp;group<br>
+&nbsp;<br>
+output:<br>
+cover&nbsp;:&nbsp;numpy&nbsp;array&nbsp;of&nbsp;floats<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1/std&nbsp;of&nbsp;each&nbsp;group</tt></dd></dl>
+ <dl><dt><a name="-getsigcorr"><strong>getsigcorr</strong></a>(expdat, field=False, numeric=True, numperm=1000, maxfval=0.1, method='ranksum')</dt><dd><tt>find&nbsp;bacteria&nbsp;significantly&nbsp;associated&nbsp;(correlated)&nbsp;with&nbsp;a&nbsp;mapping&nbsp;file&nbsp;sortable&nbsp;field<br>
+input:<br>
+expdat<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;field&nbsp;to&nbsp;sort&nbsp;experiment&nbsp;by,&nbsp;or&nbsp;false&nbsp;to&nbsp;use&nbsp;current&nbsp;order<br>
+numeric&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;values&nbsp;in&nbsp;field&nbsp;are&nbsp;numeric,&nbsp;False&nbsp;if&nbsp;not&nbsp;(for&nbsp;ascii&nbsp;sort)<br>
+method&nbsp;-&nbsp;the&nbsp;test&nbsp;to&nbsp;compare&nbsp;the&nbsp;2&nbsp;groups:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'ranksum'&nbsp;-&nbsp;ranksum&nbsp;correlation<br>
+numperm&nbsp;-&nbsp;number&nbsp;of&nbsp;random&nbsp;permutations&nbsp;to&nbsp;run<br>
+maxfval&nbsp;-&nbsp;the&nbsp;maximal&nbsp;f-value&nbsp;(FDR)&nbsp;for&nbsp;a&nbsp;bacteria&nbsp;to&nbsp;keep<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;experiment&nbsp;with&nbsp;only&nbsp;significant&nbsp;(FDR&lt;=maxfval)&nbsp;difference,&nbsp;sorted&nbsp;according&nbsp;to&nbsp;difference</tt></dd></dl>
+ <dl><dt><a name="-getsimilarfreqseqs"><strong>getsimilarfreqseqs</strong></a>(expdat, seqs)</dt><dd><tt>NOT&nbsp;READY&nbsp;YET!!!!<br>
+get&nbsp;a&nbsp;list&nbsp;if&nbsp;sequences&nbsp;with&nbsp;similar&nbsp;frequency&nbsp;distribution&nbsp;to&nbsp;seqs<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;containing&nbsp;the&nbsp;sequences<br>
+seqs&nbsp;:&nbsp;list&nbsp;of&nbsp;sequences&nbsp;('ACGT')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;list&nbsp;of&nbsp;sequences&nbsp;to&nbsp;which&nbsp;we&nbsp;are&nbsp;looking&nbsp;for&nbsp;simiar&nbsp;sequences<br>
+&nbsp;<br>
+output:<br>
+simseqs&nbsp;:&nbsp;list&nbsp;of&nbsp;sequences&nbsp;('ACGT')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;sequences&nbsp;with&nbsp;frequency&nbsp;distribution&nbsp;similar&nbsp;to&nbsp;seqs</tt></dd></dl>
+ <dl><dt><a name="-getsubtaxdict"><strong>getsubtaxdict</strong></a>(expdat, separator=';', removemin=2, removemax=250)</dt><dd><tt>get&nbsp;a&nbsp;dict&nbsp;of&nbsp;all&nbsp;sub&nbsp;taxonomies&nbsp;and&nbsp;sequence&nbsp;positions&nbsp;associated&nbsp;with&nbsp;it<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+separator&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;sperator&nbsp;between&nbsp;different&nbsp;taxonomic&nbsp;levels<br>
+removemin&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;minimal&nbsp;number&nbsp;of&nbsp;bacteria&nbsp;in&nbsp;a&nbsp;group&nbsp;in&nbsp;order&nbsp;to&nbsp;keep&nbsp;the&nbsp;group&nbsp;(0&nbsp;to&nbsp;keep&nbsp;all)<br>
+removemax&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;maximal&nbsp;number&nbsp;of&nbsp;bacteria&nbsp;in&nbsp;a&nbsp;group&nbsp;in&nbsp;order&nbsp;to&nbsp;keep&nbsp;the&nbsp;group&nbsp;(0&nbsp;to&nbsp;keep&nbsp;all)<br>
+&nbsp;<br>
+&nbsp;<br>
+output:<br>
+taxgroups&nbsp;:&nbsp;dictionary&nbsp;of&nbsp;Name&nbsp;(string)&nbsp;,pos&nbsp;(list&nbsp;of&nbsp;int)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;taxonomic&nbsp;groups</tt></dd></dl>
+ <dl><dt><a name="-groupbacteria"><strong>groupbacteria</strong></a>(expdat, minreads=0, uselog=True)</dt><dd><tt>group&nbsp;the&nbsp;bacteria&nbsp;into&nbsp;distinct&nbsp;clusters<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+minreads&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minimal&nbsp;reads&nbsp;for&nbsp;a&nbsp;bacteria&nbsp;to&nbsp;keep.<br>
+uselog&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;log&nbsp;scale&nbsp;the&nbsp;data,&nbsp;False&nbsp;to&nbsp;not<br>
+&nbsp;<br>
+output:<br>
+outexp&nbsp;:&nbsp;experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;the&nbsp;sum&nbsp;of&nbsp;all&nbsp;bacteria&nbsp;in&nbsp;each&nbsp;group<br>
+seqpergroup&nbsp;:&nbsp;list&nbsp;of&nbsp;list&nbsp;of&nbsp;seqs&nbsp;(ACGT)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequences&nbsp;in&nbsp;each&nbsp;group<br>
+taxpergroup&nbsp;:&nbsp;list&nbsp;of&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;taxonomies&nbsp;in&nbsp;each&nbsp;group</tt></dd></dl>
+ <dl><dt><a name="-groupfunc"><strong>groupfunc</strong></a>(dat, groups)</dt><dd><tt>for&nbsp;group&nbsp;similarity<br>
+count&nbsp;the&nbsp;number&nbsp;of&nbsp;1s&nbsp;the&nbsp;appear&nbsp;in&nbsp;the&nbsp;2&nbsp;samples&nbsp;of&nbsp;the&nbsp;same&nbsp;group</tt></dd></dl>
+ <dl><dt><a name="-keeptreebest"><strong>keeptreebest</strong></a>(expdat, field, val1, val2, method='meandif')</dt><dd><tt>EXPERIMENTAL<br>
+keep&nbsp;only&nbsp;the&nbsp;best&nbsp;combinations&nbsp;wrt&nbsp;given&nbsp;criteria<br>
+use&nbsp;after&nbsp;addsubtrees()<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;-&nbsp;after&nbsp;addsubtrees<br>
+field&nbsp;-&nbsp;the&nbsp;field&nbsp;to&nbsp;use&nbsp;for&nbsp;comparison<br>
+val1&nbsp;-&nbsp;value&nbsp;for&nbsp;group1<br>
+val2&nbsp;-&nbsp;value&nbsp;for&nbsp;group2&nbsp;or&nbsp;False&nbsp;for&nbsp;all&nbsp;except&nbsp;group1<br>
+method:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;meandif&nbsp;-&nbsp;keep&nbsp;the&nbsp;largest&nbsp;mean&nbsp;difference&nbsp;between&nbsp;groups&nbsp;/&nbsp;total&nbsp;mean</tt></dd></dl>
+ <dl><dt><a name="-meanfunc"><strong>meanfunc</strong></a>(dat, axis=1)</dt><dd><tt>calculate&nbsp;the&nbsp;mean&nbsp;of&nbsp;each&nbsp;row<br>
+for&nbsp;the&nbsp;permutation&nbsp;tests</tt></dd></dl>
+ <dl><dt><a name="-randomizeexp"><strong>randomizeexp</strong></a>(expdat, normalize=False)</dt><dd><tt>randomly&nbsp;permute&nbsp;each&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;experiment&nbsp;indepenedently&nbsp;(permute&nbsp;the&nbsp;samples&nbsp;where&nbsp;it&nbsp;appears)<br>
+input:<br>
+expdat<br>
+normalize&nbsp;-&nbsp;True&nbsp;to&nbsp;renormalize&nbsp;each&nbsp;sample&nbsp;to&nbsp;constant&nbsp;sum,&nbsp;False&nbsp;to&nbsp;not&nbsp;normalize<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;permuted&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-sortenrichment"><strong>sortenrichment</strong></a>(enrich, method='bidirectional', epsilon=2)</dt><dd><tt>sort&nbsp;an&nbsp;enrichment&nbsp;list&nbsp;(with&nbsp;'observed',&nbsp;'expected'&nbsp;dict&nbsp;values)&nbsp;according&nbsp;to&nbsp;effect&nbsp;size<br>
+the&nbsp;effect&nbsp;size&nbsp;is&nbsp;abs(log(obs/(expected+EPS)))<br>
+input:<br>
+enrich&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;dict&nbsp;with&nbsp;'observed'&nbsp;abd&nbsp;'expected'&nbsp;keys&nbsp;(i.e.e&nbsp;from&nbsp;testmdenrichmentall)<br>
+method:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bidirectional&nbsp;-&nbsp;use&nbsp;abs(log(o+EPS)/log(E+EPS))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;single&nbsp;-&nbsp;use&nbsp;log(o)/log(E)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;val&nbsp;-&nbsp;use&nbsp;o<br>
+epsilon&nbsp;-&nbsp;the&nbsp;value&nbsp;used&nbsp;to&nbsp;reduce&nbsp;effect&nbsp;of&nbsp;low&nbsp;counts&nbsp;(a+eps)/(b+eps)<br>
+&nbsp;<br>
+output:<br>
+newenrich&nbsp;-&nbsp;the&nbsp;sorted&nbsp;list</tt></dd></dl>
+ <dl><dt><a name="-testbactenrichment"><strong>testbactenrichment</strong></a>(expdat, seqs, cdb=False, bdb=False, dbexpres=False, translatestudy=False)</dt><dd><tt>EXPERIMENTAL<br>
+test&nbsp;for&nbsp;enrichment&nbsp;in&nbsp;bacteria&nbsp;database&nbsp;categories&nbsp;for&nbsp;the&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;list&nbsp;seqs<br>
+enrichment&nbsp;is&nbsp;tested&nbsp;against&nbsp;manual&nbsp;curation&nbsp;(if&nbsp;cdb&nbsp;not&nbsp;False)&nbsp;and&nbsp;automatic&nbsp;curation&nbsp;(if&nbsp;bactdb&nbsp;not&nbsp;false)<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+seqs&nbsp;-&nbsp;the&nbsp;sequences&nbsp;in&nbsp;the&nbsp;cluster<br>
+cdb&nbsp;-&nbsp;the&nbsp;cooldb&nbsp;(manual&nbsp;curation)&nbsp;or&nbsp;false&nbsp;to&nbsp;skip<br>
+bactdb&nbsp;-&nbsp;the&nbsp;automatic&nbsp;database&nbsp;or&nbsp;false&nbsp;to&nbsp;skip<br>
+dbexpres&nbsp;-&nbsp;the&nbsp;assignment&nbsp;of&nbsp;values&nbsp;to&nbsp;all&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;experiment&nbsp;(for&nbsp;bactdb)&nbsp;or&nbsp;false&nbsp;to&nbsp;calulate&nbsp;it.&nbsp;it&nbsp;is&nbsp;the&nbsp;output&nbsp;of&nbsp;bactdb.GetSeqListInfo()<br>
+&nbsp;<br>
+output:<br>
+dbexpres&nbsp;-&nbsp;new&nbsp;if&nbsp;calculated</tt></dd></dl>
+ <dl><dt><a name="-testbicluster"><strong>testbicluster</strong></a>(expdat, numiter=5, numruns=100)</dt><dd><tt>show&nbsp;the&nbsp;sizes&nbsp;of&nbsp;clusters&nbsp;in&nbsp;data,&nbsp;random&nbsp;and&nbsp;random&nbsp;normalized</tt></dd></dl>
+ <dl><dt><a name="-testenrichment"><strong>testenrichment</strong></a>(data, group, method='binary', fdr=0.05, twosided=False, printit=True)</dt><dd><tt>test&nbsp;for&nbsp;enrichment&nbsp;for&nbsp;samples&nbsp;in&nbsp;groupind&nbsp;in&nbsp;the&nbsp;dict&nbsp;of&nbsp;arrays&nbsp;data<br>
+input:<br>
+data&nbsp;-&nbsp;a&nbsp;dict&nbsp;(by&nbsp;category&nbsp;value)&nbsp;of&nbsp;numpy&nbsp;arrays&nbsp;(each&nbsp;of&nbsp;length&nbsp;totseqs)&nbsp;of&nbsp;the&nbsp;value&nbsp;of&nbsp;each&nbsp;sequence<br>
+group&nbsp;-&nbsp;the&nbsp;indices&nbsp;of&nbsp;the&nbsp;group&nbsp;elements<br>
+method&nbsp;-&nbsp;the&nbsp;test&nbsp;to&nbsp;apply:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'binary'&nbsp;-&nbsp;presence/abscence<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'ranksum'&nbsp;-&nbsp;not&nbsp;implemented&nbsp;yet<br>
+fdr&nbsp;-&nbsp;the&nbsp;false&nbsp;discovery&nbsp;rate&nbsp;value&nbsp;or&nbsp;false&nbsp;for&nbsp;no&nbsp;fdr<br>
+twosided&nbsp;-&nbsp;True&nbsp;to&nbsp;test&nbsp;both&nbsp;lower&nbsp;and&nbsp;higher,&nbsp;False&nbsp;to&nbsp;test&nbsp;just&nbsp;higher&nbsp;in&nbsp;group<br>
+printit&nbsp;-&nbsp;True&nbsp;to&nbsp;print&nbsp;the&nbsp;significant,&nbsp;False&nbsp;to&nbsp;not&nbsp;print<br>
+&nbsp;<br>
+output:<br>
+plist&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;dict&nbsp;entries&nbsp;('pval','observed','expected','name')</tt></dd></dl>
+ <dl><dt><a name="-testmdenrichment"><strong>testmdenrichment</strong></a>(expdat, samples, field, numeric=False)</dt><dd><tt>test&nbsp;for&nbsp;enrichment&nbsp;in&nbsp;a&nbsp;subset&nbsp;of&nbsp;samples&nbsp;of&nbsp;the&nbsp;experiment&nbsp;for&nbsp;metadata&nbsp;field&nbsp;field<br>
+input:<br>
+expdat<br>
+samples&nbsp;-&nbsp;the&nbsp;samples&nbsp;(positions)&nbsp;for&nbsp;the&nbsp;enrichment&nbsp;testing<br>
+field&nbsp;-&nbsp;the&nbsp;field&nbsp;to&nbsp;test<br>
+numeric&nbsp;-&nbsp;True&nbsp;if&nbsp;the&nbsp;field&nbsp;is&nbsp;numeric&nbsp;(test&nbsp;mean)</tt></dd></dl>
+ <dl><dt><a name="-testmdenrichmentall"><strong>testmdenrichmentall</strong></a>(expdat, samples, maxpv=0.001, fdr=0.05)</dt><dd><tt>test&nbsp;enrichment&nbsp;in&nbsp;all&nbsp;metadata&nbsp;fields/values<br>
+input:<br>
+expdat<br>
+samples&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;samples&nbsp;to&nbsp;test&nbsp;(positions,&nbsp;not&nbsp;sample&nbsp;names)<br>
+fdr&nbsp;-&nbsp;the&nbsp;false&nbsp;discovery&nbsp;rate&nbsp;in&nbsp;order&nbsp;to&nbsp;show&nbsp;a&nbsp;category<br>
+&nbsp;<br>
+output:<br>
+upv&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;dict&nbsp;of&nbsp;pvalues&nbsp;for&nbsp;significant&nbsp;fields/values&nbsp;('pval','expected','observed','field','val')</tt></dd></dl>
+</td></tr></table>
+</body></html>

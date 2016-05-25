@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.experiment.normalization</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.experiment.html"><font color="#ffffff">experiment</font></a>.normalization</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/experiment/normalization.py">/Users/amnon/Python/git/heatsequer/heatsequer/experiment/normalization.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;experiment&nbsp;normalization&nbsp;module</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="heatsequer.html">heatsequer</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-findcandidatecompositional"><strong>findcandidatecompositional</strong></a>(expdat, fracappear=0.1, minlevel=3000)</dt><dd><tt>find&nbsp;the&nbsp;sequences&nbsp;that&nbsp;may&nbsp;affect&nbsp;compositional&nbsp;data<br>
+for&nbsp;georg&nbsp;nose&nbsp;analysis<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+fracappear&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fraction&nbsp;of&nbsp;samples&nbsp;where&nbsp;the&nbsp;otu&nbsp;is&nbsp;above&nbsp;the&nbsp;minlevel<br>
+minlevel&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimal&nbsp;number&nbsp;of&nbsp;reads&nbsp;in&nbsp;a&nbsp;sample&nbsp;to&nbsp;count&nbsp;it<br>
+&nbsp;<br>
+output:<br>
+oseqs&nbsp;:&nbsp;list&nbsp;of&nbsp;sequences<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;candidate&nbsp;sequences</tt></dd></dl>
+ <dl><dt><a name="-normalizebyseqs"><strong>normalizebyseqs</strong></a>(expdat, seqs, exclude=False, fixorig=True)</dt><dd><tt>normalize&nbsp;experiment&nbsp;by&nbsp;making&nbsp;the&nbsp;sum&nbsp;of&nbsp;frequencies&nbsp;in&nbsp;seqs&nbsp;constant&nbsp;in&nbsp;each&nbsp;sample<br>
+input:<br>
+expdat<br>
+seqs&nbsp;-&nbsp;the&nbsp;sequences&nbsp;to&nbsp;use&nbsp;as&nbsp;the&nbsp;normalization&nbsp;factor&nbsp;(sum&nbsp;of&nbsp;the&nbsp;sequences)<br>
+exclude&nbsp;-&nbsp;true&nbsp;to&nbsp;use&nbsp;all&nbsp;sequences&nbsp;except&nbsp;in&nbsp;seqs&nbsp;as&nbsp;the&nbsp;normalization&nbsp;factor,&nbsp;False&nbsp;to&nbsp;use&nbsp;seqs<br>
+fixorig&nbsp;-&nbsp;True&nbsp;to&nbsp;modify&nbsp;the&nbsp;origreads&nbsp;field,&nbsp;false&nbsp;to&nbsp;leave&nbsp;it&nbsp;as&nbsp;it&nbsp;was</tt></dd></dl>
+ <dl><dt><a name="-normalizeprctile"><strong>normalizeprctile</strong></a>(expdat, percent=80)</dt><dd><tt>normalize&nbsp;reads&nbsp;per&nbsp;experiment&nbsp;so&nbsp;percentile&nbsp;(rather&nbsp;than&nbsp;mean)&nbsp;will&nbsp;be&nbsp;normalized<br>
+used&nbsp;to&nbsp;reduce&nbsp;effect&nbsp;of&nbsp;outliers&nbsp;(compositionality&nbsp;correction)<br>
+note&nbsp;normalization&nbsp;is&nbsp;done&nbsp;on&nbsp;the&nbsp;same&nbsp;set&nbsp;of&nbsp;bacteria&nbsp;for&nbsp;all&nbsp;samples<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+percent&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;percentile&nbsp;to&nbsp;normalize&nbsp;(0-100)<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;new&nbsp;normalized&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-normalizereads"><strong>normalizereads</strong></a>(expdat, numreads=10000, fixorig=False, inplace=False)</dt><dd><tt>normalize&nbsp;the&nbsp;number&nbsp;of&nbsp;reads&nbsp;per&nbsp;sample&nbsp;to&nbsp;10k<br>
+input:<br>
+expdat<br>
+numreads&nbsp;-&nbsp;the&nbsp;number&nbsp;of&nbsp;reads&nbsp;to&nbsp;normalize&nbsp;to<br>
+fixorig&nbsp;-&nbsp;True&nbsp;to&nbsp;fix&nbsp;origreads&nbsp;with&nbsp;the&nbsp;same&nbsp;ratio,&nbsp;False&nbsp;to&nbsp;keep&nbsp;as&nbsp;before<br>
+inplace&nbsp;-&nbsp;true&nbsp;to&nbsp;replace&nbsp;orig&nbsp;experiment,&nbsp;false&nbsp;to&nbsp;create&nbsp;a&nbsp;new&nbsp;experiment<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;normalized&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-subsample"><strong>subsample</strong></a>(expdat, numreads=10000, inplace=False)</dt><dd><tt>subsample&nbsp;(rarify)&nbsp;reads&nbsp;from&nbsp;all&nbsp;samples&nbsp;in&nbsp;an&nbsp;experiment<br>
+input:<br>
+expdat<br>
+numreads&nbsp;-&nbsp;number&nbsp;of&nbsp;reads&nbsp;to&nbsp;subsample&nbsp;to<br>
+inplace&nbsp;-&nbsp;true&nbsp;to&nbsp;replace&nbsp;current&nbsp;experiment<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;new&nbsp;subsampled&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-toorigreads"><strong>toorigreads</strong></a>(expdat, inplace=False)</dt><dd><tt>convert&nbsp;the&nbsp;number&nbsp;of&nbsp;reads&nbsp;to&nbsp;absolute&nbsp;using&nbsp;the&nbsp;origreads&nbsp;field<br>
+input:<br>
+expdat<br>
+inplace&nbsp;-&nbsp;True&nbsp;to&nbsp;replace&nbsp;current&nbsp;exp,&nbsp;false&nbsp;to&nbsp;create&nbsp;a&nbsp;new&nbsp;one<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;each&nbsp;sample&nbsp;has&nbsp;origreads&nbsp;reads&nbsp;(instead&nbsp;of&nbsp;10k)</tt></dd></dl>
+ <dl><dt><a name="-updateorigreads"><strong>updateorigreads</strong></a>(expdat, logit=True)</dt></dl>
+</td></tr></table>
+</body></html>

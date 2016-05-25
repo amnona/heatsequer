@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.plots.plotwin</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.plots.html"><font color="#ffffff">plots</font></a>.plotwin</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/plots/plotwin.py">/Users/amnon/Python/git/heatsequer/heatsequer/plots/plotwin.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;heatmap&nbsp;plot&nbsp;module</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="heatsequer.html">heatsequer</a><br>
+<a href="matplotlib.html">matplotlib</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-addplotmetadata"><strong>addplotmetadata</strong></a>(expdat, field, value=False, inverse=False, color='g', ax=False, beforesample=True, partial=False)</dt><dd><tt>plot&nbsp;lines&nbsp;on&nbsp;an&nbsp;experiment&nbsp;plot&nbsp;from&nbsp;plotexp.&nbsp;NOTE:&nbsp;need&nbsp;to&nbsp;use&nbsp;with&nbsp;the&nbsp;output&nbsp;of&nbsp;plotexp!!!<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;metadata&nbsp;field&nbsp;to&nbsp;use<br>
+value&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;value&nbsp;that&nbsp;when&nbsp;present&nbsp;we&nbsp;will&nbsp;plot,&nbsp;or&nbsp;False&nbsp;to&nbsp;plot&nbsp;whenever&nbsp;not&nbsp;empty<br>
+inverse&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inverse&nbsp;the&nbsp;logic&nbsp;of&nbsp;value<br>
+color&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;color&nbsp;to&nbsp;plot&nbsp;(matplotlib&nbsp;plot&nbsp;style&nbsp;-&nbsp;i.e.&nbsp;'r:')<br>
+beforesample&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;it&nbsp;happened&nbsp;between&nbsp;the&nbsp;prev.&nbsp;and&nbsp;current&nbsp;sample,&nbsp;False&nbsp;if&nbsp;in&nbsp;the&nbsp;middle&nbsp;of&nbsp;the&nbsp;sample<br>
+partial&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;allow&nbsp;substring&nbsp;match&nbsp;for&nbsp;field/value,&nbsp;False&nbsp;for&nbsp;exact&nbsp;match</tt></dd></dl>
+ <dl><dt><a name="-getlabelnames"><strong>getlabelnames</strong></a>(cexp, showdb=True, showcontam=True)</dt><dd><tt>Get&nbsp;the&nbsp;sequence&nbsp;label&nbsp;list&nbsp;for&nbsp;an&nbsp;experiment<br>
+&nbsp;<br>
+input:</tt></dd></dl>
+ <dl><dt><a name="-onplotkeyclick"><strong>onplotkeyclick</strong></a>(event)</dt></dl>
+ <dl><dt><a name="-onplotmouseclick"><strong>onplotmouseclick</strong></a>(event)</dt></dl>
+ <dl><dt><a name="-plotexp"><strong>plotexp</strong></a>(exp, sortby=False, numeric=False, minreads=4, rangeall=False, seqdb=None, cdb=None, showline=True, ontofig=False, usegui=True, showxall=False, showcolorbar=False, ptitle=False, lowcutoff=1, uselog=True, showxlabel=True, colormap=False, colorrange=False, linewidth=2, subline='')</dt><dd><tt>Plot&nbsp;an&nbsp;experiment<br>
+input:<br>
+exp&nbsp;-&nbsp;from&nbsp;load()<br>
+sortby&nbsp;-&nbsp;name&nbsp;of&nbsp;mapping&nbsp;file&nbsp;field&nbsp;to&nbsp;sort&nbsp;by&nbsp;or&nbsp;Flase&nbsp;to&nbsp;not&nbsp;sort<br>
+numeric&nbsp;-&nbsp;True&nbsp;if&nbsp;the&nbsp;field&nbsp;is&nbsp;numeric<br>
+minreads&nbsp;-&nbsp;minimum&nbsp;number&nbsp;of&nbsp;reads&nbsp;per&nbsp;bacteria&nbsp;in&nbsp;order&nbsp;to&nbsp;show&nbsp;it&nbsp;or&nbsp;0&nbsp;to&nbsp;show&nbsp;all<br>
+rangeall&nbsp;-&nbsp;True&nbsp;to&nbsp;show&nbsp;all&nbsp;frequencies&nbsp;in&nbsp;image&nbsp;scale,&nbsp;false&nbsp;to&nbsp;saturate&nbsp;at&nbsp;10%<br>
+seqdb&nbsp;-&nbsp;the&nbsp;SRBactDB&nbsp;database&nbsp;(from&nbsp;bactdb.load)<br>
+cdb&nbsp;-&nbsp;the&nbsp;cool&nbsp;sequences&nbsp;database&nbsp;(from&nbsp;cooldb.load),&nbsp;or&nbsp;None&nbsp;(default)&nbsp;to&nbsp;use&nbsp;the&nbsp;heatsequer&nbsp;loaded&nbsp;cdb<br>
+showline&nbsp;-&nbsp;if&nbsp;True&nbsp;plot&nbsp;lines&nbsp;between&nbsp;category&nbsp;values<br>
+ontofig&nbsp;-&nbsp;name&nbsp;of&nbsp;ontology&nbsp;to&nbsp;plot&nbsp;for&nbsp;bactdb&nbsp;or&nbsp;false&nbsp;to&nbsp;no&nbsp;plot<br>
+usegui&nbsp;-&nbsp;True&nbsp;use&nbsp;a&nbsp;gui&nbsp;for&nbsp;otu&nbsp;summary,&nbsp;False&nbsp;just&nbsp;print<br>
+showxall&nbsp;-&nbsp;True&nbsp;to&nbsp;show&nbsp;all&nbsp;sample&nbsp;names&nbsp;when&nbsp;not&nbsp;sorting,&nbsp;False&nbsp;to&nbsp;show&nbsp;no&nbsp;more&nbsp;than&nbsp;10<br>
+showcolorbar&nbsp;-&nbsp;True&nbsp;to&nbsp;plot&nbsp;the&nbsp;colorbar.&nbsp;False&nbsp;to&nbsp;not&nbsp;plot<br>
+ptitle&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;figure&nbsp;or&nbsp;False&nbsp;to&nbsp;show&nbsp;processing&nbsp;history&nbsp;as&nbsp;name<br>
+lowcutoff&nbsp;-&nbsp;minimal&nbsp;value&nbsp;for&nbsp;read&nbsp;(for&nbsp;0&nbsp;log&nbsp;transform)&nbsp;-&nbsp;the&nbsp;minimal&nbsp;resolution&nbsp;-&nbsp;could&nbsp;be&nbsp;10000*2/origreads<br>
+showxlabel&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;show&nbsp;the&nbsp;x&nbsp;label&nbsp;(default),&nbsp;False&nbsp;to&nbsp;hide&nbsp;it<br>
+colormap&nbsp;:&nbsp;string&nbsp;or&nbsp;False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;colormap&nbsp;or&nbsp;False&nbsp;(default)&nbsp;to&nbsp;use&nbsp;mpl&nbsp;default&nbsp;colormap<br>
+colorrange&nbsp;:&nbsp;[min,max]&nbsp;or&nbsp;False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[min,max]&nbsp;to&nbsp;set&nbsp;the&nbsp;colormap&nbsp;range,&nbsp;False&nbsp;to&nbsp;use&nbsp;data&nbsp;min,max&nbsp;(default)&nbsp;as&nbsp;specified&nbsp;in&nbsp;rangeall<br>
+subline&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;category&nbsp;for&nbsp;subline&nbsp;plotting&nbsp;or&nbsp;''&nbsp;(Default)&nbsp;for&nbsp;no&nbsp;sublines<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;plotted&nbsp;experiment&nbsp;(sorted&nbsp;and&nbsp;filtered)<br>
+ax&nbsp;-&nbsp;the&nbsp;plot&nbsp;axis</tt></dd></dl>
+ <dl><dt><a name="-showsampleids"><strong>showsampleids</strong></a>(cexp, cax, show=True, maxsamples=25)</dt><dd><tt>show&nbsp;the&nbsp;y-lables&nbsp;(taxonomies)&nbsp;for&nbsp;the&nbsp;plot&nbsp;window<br>
+&nbsp;<br>
+input:<br>
+cexp&nbsp;:&nbsp;Experiment<br>
+cax&nbsp;:&nbsp;axis&nbsp;(matplotlib)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;plot&nbsp;window&nbsp;axis<br>
+show&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;show&nbsp;the&nbsp;labels,&nbsp;False&nbsp;to&nbsp;remove&nbsp;them<br>
+maxsamples&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Maximal&nbsp;number&nbsp;of&nbsp;samples&nbsp;to&nbsp;show&nbsp;(to&nbsp;prevent&nbsp;slow&nbsp;repsonse&nbsp;when&nbsp;looking&nbsp;at&nbsp;big&nbsp;experiment)&nbsp;or&nbsp;0&nbsp;to&nbsp;show&nbsp;all</tt></dd></dl>
+ <dl><dt><a name="-showtaxonomies"><strong>showtaxonomies</strong></a>(cexp, cax, show=True, showdb=True, showcontam=True, maxtax=250)</dt><dd><tt>show&nbsp;the&nbsp;y-lables&nbsp;(taxonomies)&nbsp;for&nbsp;the&nbsp;plot&nbsp;window<br>
+&nbsp;<br>
+input:<br>
+cexp&nbsp;:&nbsp;Experiment<br>
+cax&nbsp;:&nbsp;axis&nbsp;(matplotlib)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;plot&nbsp;window&nbsp;axis<br>
+show&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;show&nbsp;the&nbsp;labels,&nbsp;False&nbsp;to&nbsp;remove&nbsp;them<br>
+showdb&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;add&nbsp;'*'&nbsp;to&nbsp;sequences&nbsp;in&nbsp;the&nbsp;cooldb&nbsp;database,&nbsp;False&nbsp;to&nbsp;not&nbsp;add&nbsp;'*'<br>
+showcontam&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;show&nbsp;suspected&nbsp;contamination&nbsp;bacteria&nbsp;in&nbsp;red,&nbsp;False&nbsp;to&nbsp;not&nbsp;color&nbsp;separately<br>
+maxtax&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Maximal&nbsp;number&nbsp;of&nbsp;taxonomies&nbsp;to&nbsp;show&nbsp;(to&nbsp;prevent&nbsp;slow&nbsp;repsonse&nbsp;when&nbsp;looking&nbsp;at&nbsp;big&nbsp;experiment)&nbsp;or&nbsp;0&nbsp;to&nbsp;show&nbsp;all</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>absolute_import</strong> = _Feature((2, 5, 0, 'alpha', 1), (3, 0, 0, 'alpha', 0), 16384)</td></tr></table>
+</body></html>

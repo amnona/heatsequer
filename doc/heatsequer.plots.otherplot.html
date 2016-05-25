@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.plots.otherplot</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.plots.html"><font color="#ffffff">plots</font></a>.otherplot</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/plots/otherplot.py">/Users/amnon/Python/git/heatsequer/heatsequer/plots/otherplot.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;other&nbsp;plot&nbsp;functions&nbsp;module</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="copy.html">copy</a><br>
+<a href="heatsequer.html">heatsequer</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.html">matplotlib</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-analyzenumreads"><strong>analyzenumreads</strong></a>(expdat, blanks=['blank', 'empty'])</dt><dd><tt>Plot&nbsp;a&nbsp;graph&nbsp;of&nbsp;cumulative&nbsp;number&nbsp;of&nbsp;reads&nbsp;per&nbsp;sample&nbsp;in&nbsp;the&nbsp;biom&nbsp;table.<br>
+we&nbsp;assume&nbsp;all&nbsp;samples&nbsp;with&nbsp;an&nbsp;element&nbsp;of&nbsp;blanks&nbsp;in&nbsp;their&nbsp;name&nbsp;a&nbsp;blanks&nbsp;(for&nbsp;a&nbsp;different&nbsp;graph)<br>
+input:<br>
+expdat<br>
+blanks&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;if&nbsp;appearing&nbsp;in&nbsp;the&nbsp;sample&nbsp;name&nbsp;indicate&nbsp;they&nbsp;are&nbsp;blanks&nbsp;(case&nbsp;insensitive!)</tt></dd></dl>
+ <dl><dt><a name="-barplotexp"><strong>barplotexp</strong></a>(exp, bseq='', sortby=False, numeric=False, showxall=False, uselog=True, showxlabel=True, subline='', lowcutoff=1, ptitle='', showline=True, linewidth=1)</dt><dd><tt>Plot&nbsp;an&nbsp;experiment<br>
+input:<br>
+exp&nbsp;-&nbsp;from&nbsp;load()<br>
+sortby&nbsp;-&nbsp;name&nbsp;of&nbsp;mapping&nbsp;file&nbsp;field&nbsp;to&nbsp;sort&nbsp;by&nbsp;or&nbsp;Flase&nbsp;to&nbsp;not&nbsp;sort<br>
+numeric&nbsp;-&nbsp;True&nbsp;if&nbsp;the&nbsp;field&nbsp;is&nbsp;numeric<br>
+minreads&nbsp;-&nbsp;minimum&nbsp;number&nbsp;of&nbsp;reads&nbsp;per&nbsp;bacteria&nbsp;in&nbsp;order&nbsp;to&nbsp;show&nbsp;it&nbsp;or&nbsp;0&nbsp;to&nbsp;show&nbsp;all<br>
+rangeall&nbsp;-&nbsp;True&nbsp;to&nbsp;show&nbsp;all&nbsp;frequencies&nbsp;in&nbsp;image&nbsp;scale,&nbsp;false&nbsp;to&nbsp;saturate&nbsp;at&nbsp;10%<br>
+seqdb&nbsp;-&nbsp;the&nbsp;SRBactDB&nbsp;database&nbsp;(from&nbsp;bactdb.load)<br>
+cdb&nbsp;-&nbsp;the&nbsp;cool&nbsp;sequences&nbsp;database&nbsp;(from&nbsp;cooldb.load),&nbsp;or&nbsp;None&nbsp;(default)&nbsp;to&nbsp;use&nbsp;the&nbsp;heatsequer&nbsp;loaded&nbsp;cdb<br>
+showline&nbsp;-&nbsp;if&nbsp;True&nbsp;plot&nbsp;lines&nbsp;between&nbsp;category&nbsp;values<br>
+ontofig&nbsp;-&nbsp;name&nbsp;of&nbsp;ontology&nbsp;to&nbsp;plot&nbsp;for&nbsp;bactdb&nbsp;or&nbsp;false&nbsp;to&nbsp;no&nbsp;plot<br>
+usegui&nbsp;-&nbsp;True&nbsp;use&nbsp;a&nbsp;gui&nbsp;for&nbsp;otu&nbsp;summary,&nbsp;False&nbsp;just&nbsp;print<br>
+showxall&nbsp;-&nbsp;True&nbsp;to&nbsp;show&nbsp;all&nbsp;sample&nbsp;names&nbsp;when&nbsp;not&nbsp;sorting,&nbsp;False&nbsp;to&nbsp;show&nbsp;no&nbsp;more&nbsp;than&nbsp;10<br>
+showcolorbar&nbsp;-&nbsp;True&nbsp;to&nbsp;plot&nbsp;the&nbsp;colorbar.&nbsp;False&nbsp;to&nbsp;not&nbsp;plot<br>
+ptitle&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;figure&nbsp;or&nbsp;False&nbsp;to&nbsp;show&nbsp;processing&nbsp;history&nbsp;as&nbsp;name<br>
+lowcutoff&nbsp;-&nbsp;minimal&nbsp;value&nbsp;for&nbsp;read&nbsp;(for&nbsp;0&nbsp;log&nbsp;transform)&nbsp;-&nbsp;the&nbsp;minimal&nbsp;resolution&nbsp;-&nbsp;could&nbsp;be&nbsp;10000*2/origreads<br>
+showxlabel&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;show&nbsp;the&nbsp;x&nbsp;label&nbsp;(default),&nbsp;False&nbsp;to&nbsp;hide&nbsp;it<br>
+colormap&nbsp;:&nbsp;string&nbsp;or&nbsp;False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;colormap&nbsp;or&nbsp;False&nbsp;(default)&nbsp;to&nbsp;use&nbsp;mpl&nbsp;default&nbsp;colormap<br>
+colorrange&nbsp;:&nbsp;[min,max]&nbsp;or&nbsp;False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[min,max]&nbsp;to&nbsp;set&nbsp;the&nbsp;colormap&nbsp;range,&nbsp;False&nbsp;to&nbsp;use&nbsp;data&nbsp;min,max&nbsp;(default)&nbsp;as&nbsp;specified&nbsp;in&nbsp;rangeall<br>
+subline&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;category&nbsp;for&nbsp;subline&nbsp;plotting&nbsp;or&nbsp;''&nbsp;(Default)&nbsp;for&nbsp;no&nbsp;sublines<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;plotted&nbsp;experiment&nbsp;(sorted&nbsp;and&nbsp;filtered)<br>
+ax&nbsp;-&nbsp;the&nbsp;plot&nbsp;axis</tt></dd></dl>
+ <dl><dt><a name="-getcolor"><strong>getcolor</strong></a>(idx)</dt></dl>
+ <dl><dt><a name="-plotdiffsummary"><strong>plotdiffsummary</strong></a>(expdatlist, seqs, field, val1, val2=False, method='mean', sortit=True, threshold=0.1, ptitle=False, showallfirstexp=True)</dt><dd><tt>plot&nbsp;a&nbsp;heat&nbsp;map&nbsp;for&nbsp;the&nbsp;fold&nbsp;change&nbsp;in&nbsp;each&nbsp;experiment&nbsp;in&nbsp;expdatlist<br>
+for&nbsp;the&nbsp;log2&nbsp;foldchange&nbsp;between&nbsp;the&nbsp;2&nbsp;groups&nbsp;(val1,val2&nbsp;values&nbsp;in&nbsp;field)<br>
+for&nbsp;zech&nbsp;chinese&nbsp;ibd&nbsp;paper<br>
+input:<br>
+expdatlist&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;experiments&nbsp;to&nbsp;plot&nbsp;(row&nbsp;per&nbsp;experiment&nbsp;-&nbsp;all&nbsp;must&nbsp;contain&nbsp;field&nbsp;and&nbsp;val1,val2&nbsp;in&nbsp;it)<br>
+seqs&nbsp;-&nbsp;the&nbsp;sequences&nbsp;to&nbsp;examine<br>
+field&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;dividing&nbsp;the&nbsp;2&nbsp;groups<br>
+val1&nbsp;-&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;group&nbsp;1&nbsp;(or&nbsp;a&nbsp;list&nbsp;of&nbsp;values&nbsp;1&nbsp;per&nbsp;experiment)<br>
+val2&nbsp;-&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;group&nbsp;2&nbsp;or&nbsp;False&nbsp;for&nbsp;all&nbsp;the&nbsp;rest&nbsp;(not&nbsp;val1)&nbsp;(or&nbsp;a&nbsp;list&nbsp;of&nbsp;values&nbsp;1&nbsp;per&nbsp;experiment)<br>
+method:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;mean&nbsp;-&nbsp;calculate&nbsp;the&nbsp;difference&nbsp;in&nbsp;the&nbsp;mean&nbsp;of&nbsp;the&nbsp;2&nbsp;groups<br>
+sortit&nbsp;-&nbsp;True&nbsp;to&nbsp;sort&nbsp;according&nbsp;to&nbsp;difference&nbsp;in&nbsp;the&nbsp;first&nbsp;expdat,&nbsp;False&nbsp;to&nbsp;use&nbsp;the&nbsp;order&nbsp;in&nbsp;seqs<br>
+threshold&nbsp;-&nbsp;minimum&nbsp;value&nbsp;of&nbsp;stat&nbsp;for&nbsp;ratio&nbsp;calculation&nbsp;(otherwise&nbsp;rounded&nbsp;up&nbsp;to&nbsp;threshold)<br>
+ptitle&nbsp;-&nbsp;name&nbsp;of&nbsp;figure&nbsp;of&nbsp;False&nbsp;for&nbsp;auto&nbsp;title<br>
+showallfirstexp&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;-&nbsp;show&nbsp;all&nbsp;sequences,&nbsp;False&nbsp;-&nbsp;show&nbsp;only&nbsp;sequences&nbsp;present&nbsp;in&nbsp;at&nbsp;least&nbsp;one&nbsp;other&nbsp;study&nbsp;except&nbsp;the&nbsp;first<br>
+&nbsp;<br>
+output:<br>
+diffsum&nbsp;-&nbsp;the&nbsp;same&nbsp;as&nbsp;the&nbsp;plotted&nbsp;heatmap&nbsp;(row&nbsp;per&nbsp;otu,&nbsp;column&nbsp;per&nbsp;experiment)<br>
+expnames&nbsp;-&nbsp;names&nbsp;(studyname)&nbsp;of&nbsp;the&nbsp;experiments&nbsp;plotted&nbsp;(for&nbsp;label)<br>
+otus&nbsp;-&nbsp;the&nbsp;otu&nbsp;sequences&nbsp;for&nbsp;the&nbsp;rows</tt></dd></dl>
+ <dl><dt><a name="-plotdiffsummary2"><strong>plotdiffsummary2</strong></a>(expdatlist1, expdatlist2, seqs1, seqs2, field, val1, val2=False, method='mean', sortit=True, threshold=0.1)</dt><dd><tt>plot&nbsp;a&nbsp;heat&nbsp;map&nbsp;for&nbsp;2&nbsp;results&nbsp;(i.e.&nbsp;16s&nbsp;and&nbsp;KO&nbsp;predictions)&nbsp;for&nbsp;zech&nbsp;chinese&nbsp;ibd&nbsp;study<br>
+input:<br>
+expdatlist1,expdatlist2&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;experiments&nbsp;to&nbsp;plot&nbsp;(row&nbsp;per&nbsp;experiment&nbsp;-&nbsp;all&nbsp;must&nbsp;contain&nbsp;field&nbsp;and&nbsp;val1,val2&nbsp;in&nbsp;it)<br>
+seqs1,seqs2&nbsp;-&nbsp;the&nbsp;sequences&nbsp;to&nbsp;examine<br>
+field&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;dividing&nbsp;the&nbsp;2&nbsp;groups<br>
+val1&nbsp;-&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;group&nbsp;1&nbsp;(or&nbsp;a&nbsp;list&nbsp;of&nbsp;values&nbsp;1&nbsp;per&nbsp;experiment)<br>
+val2&nbsp;-&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;group&nbsp;2&nbsp;or&nbsp;False&nbsp;for&nbsp;all&nbsp;the&nbsp;rest&nbsp;(not&nbsp;val1)&nbsp;(or&nbsp;a&nbsp;list&nbsp;of&nbsp;values&nbsp;1&nbsp;per&nbsp;experiment)<br>
+method:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;mean&nbsp;-&nbsp;calculate&nbsp;the&nbsp;difference&nbsp;in&nbsp;the&nbsp;mean&nbsp;of&nbsp;the&nbsp;2&nbsp;groups<br>
+sortit&nbsp;-&nbsp;True&nbsp;to&nbsp;sort&nbsp;according&nbsp;to&nbsp;difference&nbsp;in&nbsp;the&nbsp;first&nbsp;expdat,&nbsp;False&nbsp;to&nbsp;use&nbsp;the&nbsp;order&nbsp;in&nbsp;seqs</tt></dd></dl>
+ <dl><dt><a name="-plotgroupbar"><strong>plotgroupbar</strong></a>(expdat, field, seqs=[], type='meanse', uvals=[])</dt><dd><tt>plot&nbsp;a&nbsp;bar&nbsp;graph&nbsp;of&nbsp;the&nbsp;mean&nbsp;frequency&nbsp;of&nbsp;each&nbsp;sequence&nbsp;in&nbsp;seqs&nbsp;as&nbsp;a&nbsp;function&nbsp;of&nbsp;field.<br>
+for&nbsp;skin-gallo&nbsp;analysis<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;group&nbsp;by<br>
+seqs&nbsp;:&nbsp;list&nbsp;of&nbsp;str&nbsp;(ACGT)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list&nbsp;of&nbsp;sequences&nbsp;to&nbsp;plot&nbsp;or&nbsp;[]&nbsp;for&nbsp;all&nbsp;sequences&nbsp;in&nbsp;expdat&nbsp;(default)<br>
+type&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'meanstd'&nbsp;(default)&nbsp;-&nbsp;plot&nbsp;mean&nbsp;+&nbsp;standard&nbsp;error&nbsp;per&nbsp;group<br>
+uvals&nbsp;:&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;order&nbsp;of&nbsp;the&nbsp;unique&nbsp;field&nbsp;values&nbsp;to&nbsp;use,&nbsp;or&nbsp;[]&nbsp;for&nbsp;all&nbsp;(default)</tt></dd></dl>
+ <dl><dt><a name="-plotnucdistribution"><strong>plotnucdistribution</strong></a>(expdat, position)</dt><dd><tt>EXPERIMENTAL<br>
+get&nbsp;the&nbsp;distribution&nbsp;of&nbsp;nucleotides&nbsp;in&nbsp;the&nbsp;positions&nbsp;in&nbsp;position<br>
+for&nbsp;conserved/nonconserved&nbsp;positions<br>
+note&nbsp;this&nbsp;is&nbsp;unweighted<br>
+input:<br>
+expdat<br>
+position&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;positions&nbsp;(0&nbsp;based)&nbsp;to&nbsp;test<br>
+&nbsp;<br>
+output:</tt></dd></dl>
+ <dl><dt><a name="-plotseqfreq"><strong>plotseqfreq</strong></a>(expdat, seqs, toaxis=False, xfield=False, normalizey=False)</dt><dd><tt>plot&nbsp;the&nbsp;frequency&nbsp;of&nbsp;sequences&nbsp;in&nbsp;seq&nbsp;as&nbsp;a&nbsp;function&nbsp;of&nbsp;the&nbsp;sortfield<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+seqs&nbsp;:&nbsp;list&nbsp;of&nbsp;sequence&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;sequnces&nbsp;(acgt)&nbsp;to&nbsp;plot<br>
+toaxis&nbsp;:&nbsp;matplotlib&nbsp;axis<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;not&nbsp;empty&nbsp;-&nbsp;the&nbsp;axis&nbsp;to&nbsp;plot&nbsp;to,&nbsp;False&nbsp;plot&nbsp;a&nbsp;new&nbsp;figure<br>
+xfield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;not&nbsp;empty&nbsp;-&nbsp;space&nbsp;the&nbsp;points&nbsp;on&nbsp;the&nbsp;x&nbsp;axis&nbsp;according&nbsp;to&nbsp;(numeric)&nbsp;value&nbsp;of&nbsp;in&nbsp;xfield,&nbsp;False&nbsp;-&nbsp;just&nbsp;according&nbsp;to&nbsp;the&nbsp;sorted&nbsp;order<br>
+normalizey&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True:&nbsp;normalize&nbsp;all&nbsp;y&nbsp;values&nbsp;to&nbsp;0-1,&nbsp;False:&nbsp;no&nbsp;normalization</tt></dd></dl>
+ <dl><dt><a name="-plottimeseries"><strong>plottimeseries</strong></a>(expdat, idfield, timefield, seq, toaxis=False, numeric=True)</dt><dd><tt>plot&nbsp;a&nbsp;line&nbsp;plot&nbsp;for&nbsp;a&nbsp;timeseries&nbsp;with&nbsp;a&nbsp;different&nbsp;line&nbsp;for&nbsp;each&nbsp;individual<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+idfield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;per&nbsp;individual&nbsp;id&nbsp;field<br>
+timefield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;timepoint&nbsp;field<br>
+seq&nbsp;:&nbsp;string&nbsp;(ACGT)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequence&nbsp;to&nbsp;plot<br>
+toaxis&nbsp;:&nbsp;axis<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;False&nbsp;(default)&nbsp;to&nbsp;draw&nbsp;in&nbsp;a&nbsp;new&nbsp;figure<br>
+numeric&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;if&nbsp;timefield&nbsp;is&nbsp;numeric</tt></dd></dl>
+ <dl><dt><a name="-plottimeseries2"><strong>plottimeseries2</strong></a>(expdat, idfield, timefield, seq, toaxis=False, numeric=True)</dt><dd><tt>plot&nbsp;a&nbsp;line&nbsp;plot&nbsp;for&nbsp;a&nbsp;timeseries&nbsp;with&nbsp;a&nbsp;different&nbsp;line&nbsp;for&nbsp;each&nbsp;individual<br>
+with&nbsp;mean&nbsp;of&nbsp;points&nbsp;in&nbsp;same&nbsp;timepoint&nbsp;and&nbsp;scatter<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+idfield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;per&nbsp;individual&nbsp;id&nbsp;field<br>
+timefield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;timepoint&nbsp;field<br>
+seq&nbsp;:&nbsp;string&nbsp;(ACGT)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequence&nbsp;to&nbsp;plot<br>
+toaxis&nbsp;:&nbsp;axis<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;False&nbsp;(default)&nbsp;to&nbsp;draw&nbsp;in&nbsp;a&nbsp;new&nbsp;figure<br>
+numeric&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;if&nbsp;timefield&nbsp;is&nbsp;numeric</tt></dd></dl>
+ <dl><dt><a name="-plottwoexperimentreads"><strong>plottwoexperimentreads</strong></a>(exp1, exp2)</dt><dd><tt>plot&nbsp;correlation&nbsp;between&nbsp;reads&nbsp;of&nbsp;2&nbsp;experiments<br>
+input:<br>
+exp1,exp2&nbsp;:&nbsp;ExpClass<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiments&nbsp;to&nbsp;compare&nbsp;(should&nbsp;have&nbsp;approx.&nbsp;same&nbsp;samples)</tt></dd></dl>
+ <dl><dt><a name="-showleakage"><strong>showleakage</strong></a>(expdat, seq, wwpp=['1', '2', '3', '4', '5', '6', '7', '8'])</dt></dl>
+</td></tr></table>
+</body></html>

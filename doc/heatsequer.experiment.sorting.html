@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.experiment.sorting</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.experiment.html"><font color="#ffffff">experiment</font></a>.sorting</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/experiment/sorting.py">/Users/amnon/Python/git/heatsequer/heatsequer/experiment/sorting.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;experiment&nbsp;sorting&nbsp;module</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="scipy.cluster.html">scipy.cluster</a><br>
+<a href="copy.html">copy</a><br>
+</td><td width="25%" valign=top><a href="heatsequer.html">heatsequer</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="scipy.spatial.html">scipy.spatial</a><br>
+<a href="scipy.stats.html">scipy.stats</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-clusterbacteria"><strong>clusterbacteria</strong></a>(exp, minreads=0, uselog=True)</dt><dd><tt>cluster&nbsp;bacteria&nbsp;in&nbsp;an&nbsp;experiment&nbsp;according&nbsp;to&nbsp;similar&nbsp;behavior<br>
+input:<br>
+exp&nbsp;:&nbsp;Experiment<br>
+minreads&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimal&nbsp;number&nbsp;of&nbsp;reads&nbsp;to&nbsp;keep&nbsp;before&nbsp;clustering&nbsp;(to&nbsp;make&nbsp;faster)<br>
+uselog&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;log&nbsp;transform&nbsp;reads&nbsp;for&nbsp;clustering&nbsp;(before&nbsp;normalizing),&nbsp;false&nbsp;to&nbsp;use&nbsp;full&nbsp;reads<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;and&nbsp;clustered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-clustersamples"><strong>clustersamples</strong></a>(exp, minreads=0)</dt><dd><tt>cluster&nbsp;samples&nbsp;in&nbsp;an&nbsp;experiment&nbsp;according&nbsp;to&nbsp;similar&nbsp;behavior<br>
+input:<br>
+exp&nbsp;:Experiment<br>
+minreads&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimal&nbsp;original&nbsp;number&nbsp;of&nbsp;reads&nbsp;per&nbsp;sample&nbsp;to&nbsp;keep&nbsp;it<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;and&nbsp;clustered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-sortbacteria"><strong>sortbacteria</strong></a>(exp, inplace=False, logit=True)</dt><dd><tt>sort&nbsp;bacteria&nbsp;according&nbsp;to&nbsp;taxonomy&nbsp;(alphabetically)<br>
+&nbsp;<br>
+input:<br>
+exp&nbsp;:&nbsp;experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;to&nbsp;sort<br>
+inplace&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;sort&nbsp;in&nbsp;place&nbsp;(replace&nbsp;current&nbsp;experiment),&nbsp;False&nbsp;to&nbsp;create&nbsp;a&nbsp;new&nbsp;experiment<br>
+logit&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;add&nbsp;to&nbsp;command&nbsp;log,&nbsp;False&nbsp;to&nbsp;skip&nbsp;(if&nbsp;called&nbsp;from&nbsp;other&nbsp;heatsequer&nbsp;function)<br>
+&nbsp;<br>
+output:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;newexp&nbsp;:&nbsp;experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;sorted&nbsp;experiment&nbsp;(by&nbsp;taxonomy&nbsp;name)</tt></dd></dl>
+ <dl><dt><a name="-sortbycentermass"><strong>sortbycentermass</strong></a>(expdat, field=False, numeric=True, uselog=True)</dt><dd><tt>sort&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;experiment&nbsp;according&nbsp;to&nbsp;a&nbsp;1d&nbsp;gradient&nbsp;by&nbsp;calculating&nbsp;the&nbsp;center&nbsp;of&nbsp;mass<br>
+input:<br>
+expdat<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;sort&nbsp;by&nbsp;or&nbsp;False&nbsp;to&nbsp;skip&nbsp;sorting<br>
+numeric&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;the&nbsp;sort&nbsp;field&nbsp;is&nbsp;numeric&nbsp;(ignored&nbsp;if&nbsp;no&nbsp;sort&nbsp;field)<br>
+uselog&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;log&nbsp;transform&nbsp;the&nbsp;data&nbsp;before&nbsp;mass&nbsp;center&nbsp;calculation<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;experiment&nbsp;with&nbsp;sorted&nbsp;bacteria</tt></dd></dl>
+ <dl><dt><a name="-sortbyfreq"><strong>sortbyfreq</strong></a>(expdat, field=False, value=False, exact=False, exclude=False, logscale=True, useabs=False)</dt><dd><tt>sort&nbsp;bacteria&nbsp;in&nbsp;experiment&nbsp;according&nbsp;to&nbsp;frequency<br>
+sorting&nbsp;is&nbsp;performed&nbsp;based&nbsp;on&nbsp;a&nbsp;subset&nbsp;of&nbsp;samples&nbsp;(field/val/exact)&nbsp;and&nbsp;then<br>
+all&nbsp;the&nbsp;experiment&nbsp;is&nbsp;sorted&nbsp;according&nbsp;to&nbsp;them<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;filter&nbsp;samples&nbsp;for&nbsp;freq.&nbsp;sorting&nbsp;or&nbsp;False&nbsp;for&nbsp;all&nbsp;samples<br>
+value&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;of&nbsp;samples&nbsp;to&nbsp;use&nbsp;for&nbsp;the&nbsp;freq.&nbsp;sorting<br>
+exact&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;the&nbsp;value&nbsp;exact&nbsp;or&nbsp;partial&nbsp;string<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;sort&nbsp;on&nbsp;all&nbsp;samples&nbsp;except&nbsp;the&nbsp;field/value&nbsp;ones,&nbsp;False&nbsp;to&nbsp;sort&nbsp;only&nbsp;on&nbsp;field/value&nbsp;samples&nbsp;(default=False)<br>
+logscale&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;use&nbsp;log2&nbsp;transform&nbsp;for&nbsp;frequencies&nbsp;before&nbsp;mean&nbsp;and&nbsp;sorting,&nbsp;False&nbsp;to&nbsp;use&nbsp;original&nbsp;values<br>
+useabs&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;sort&nbsp;by&nbsp;absolute&nbsp;value&nbsp;of&nbsp;freq,&nbsp;False&nbsp;(default)&nbsp;to&nbsp;sort&nbsp;by&nbsp;freq<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;with&nbsp;bacteria&nbsp;sorted&nbsp;according&nbsp;to&nbsp;subgroup&nbsp;freq.</tt></dd></dl>
+ <dl><dt><a name="-sortbygroupdiff"><strong>sortbygroupdiff</strong></a>(expdat, field, val1, val2)</dt><dd><tt>sort&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;experiment&nbsp;by&nbsp;the&nbsp;difference&nbsp;in&nbsp;the&nbsp;mean&nbsp;between&nbsp;the&nbsp;2&nbsp;groups&nbsp;(val1,val2&nbsp;in&nbsp;field)<br>
+input:<br>
+expdat<br>
+field&nbsp;-&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;the&nbsp;2&nbsp;groups<br>
+val1,val2&nbsp;-&nbsp;the&nbsp;values&nbsp;for&nbsp;the&nbsp;2&nbsp;groups<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;experiment&nbsp;with&nbsp;sorted&nbsp;bacteria</tt></dd></dl>
+ <dl><dt><a name="-sortbysign"><strong>sortbysign</strong></a>(expdat, field=False, value='', exclude=False, exact=True, maxfval=0.2)</dt><dd><tt>sort&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;experiment&nbsp;based&nbsp;on&nbsp;the&nbsp;number&nbsp;of&nbsp;positive/negative&nbsp;samples<br>
+(ignoring&nbsp;nans)<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field,value,exclude,exact&nbsp;:&nbsp;name&nbsp;of&nbsp;field&nbsp;and&nbsp;value&nbsp;of&nbsp;field&nbsp;in&nbsp;order&nbsp;to&nbsp;sort&nbsp;based&nbsp;only&nbsp;on&nbsp;these&nbsp;samples<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;field=False&nbsp;for&nbsp;all&nbsp;samples&nbsp;(default)<br>
+maxfval&nbsp;-&nbsp;the&nbsp;maximal&nbsp;f-value<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sorted&nbsp;by&nbsp;difference&nbsp;between&nbsp;positive/negative</tt></dd></dl>
+ <dl><dt><a name="-sortbyvariance"><strong>sortbyvariance</strong></a>(expdat, field=False, value=False, exact=False, norm=False)</dt><dd><tt>sort&nbsp;bacteria&nbsp;by&nbsp;their&nbsp;variance<br>
+sorting&nbsp;is&nbsp;performed&nbsp;based&nbsp;on&nbsp;a&nbsp;subset&nbsp;of&nbsp;samples&nbsp;(field/val/exact)&nbsp;and&nbsp;then<br>
+all&nbsp;the&nbsp;experiment&nbsp;is&nbsp;sorted&nbsp;according&nbsp;to&nbsp;them<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;filter&nbsp;samples&nbsp;for&nbsp;freq.&nbsp;sorting&nbsp;or&nbsp;False&nbsp;for&nbsp;all&nbsp;samples<br>
+value&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;of&nbsp;samples&nbsp;to&nbsp;use&nbsp;for&nbsp;the&nbsp;freq.&nbsp;sorting<br>
+exact&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;the&nbsp;value&nbsp;exact&nbsp;or&nbsp;partial&nbsp;string<br>
+norm&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;False&nbsp;to&nbsp;sort&nbsp;by&nbsp;varinace,&nbsp;True&nbsp;to&nbsp;sort&nbsp;by&nbsp;variance/mean<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;with&nbsp;bacteria&nbsp;sorted&nbsp;according&nbsp;to&nbsp;subgroup&nbsp;freq.</tt></dd></dl>
+ <dl><dt><a name="-sortcorrelation"><strong>sortcorrelation</strong></a>(expdat, method='all')</dt><dd><tt>EXPERIMENTAL<br>
+sort&nbsp;bacteria&nbsp;according&nbsp;to&nbsp;highest&nbsp;correlation/anti-correlation<br>
+&nbsp;<br>
+input:<br>
+expdat<br>
+method:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pres&nbsp;-&nbsp;use&nbsp;correlation&nbsp;only&nbsp;on&nbsp;samples&nbsp;where&nbsp;present&nbsp;in&nbsp;one&nbsp;of&nbsp;the&nbsp;two&nbsp;sequnences<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;all&nbsp;-&nbsp;use&nbsp;correlation&nbsp;on&nbsp;all&nbsp;samples&nbsp;(default)<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;experiment&nbsp;with&nbsp;bacteria&nbsp;sorted&nbsp;by&nbsp;correlation&nbsp;(each&nbsp;time&nbsp;next&nbsp;bacteria&nbsp;the&nbsp;most&nbsp;abs(corr)&nbsp;to&nbsp;the&nbsp;current&nbsp;bacteria)</tt></dd></dl>
+ <dl><dt><a name="-sortsamples"><strong>sortsamples</strong></a>(exp, field, numeric=False, logit=True)</dt><dd><tt>sort&nbsp;samples&nbsp;according&nbsp;to&nbsp;field<br>
+input:<br>
+exp&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;sort&nbsp;by<br>
+numeric&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;for&nbsp;numeric&nbsp;values&nbsp;in&nbsp;field,&nbsp;false&nbsp;for&nbsp;text<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sorted&nbsp;experiment</tt></dd></dl>
+</td></tr></table>
+</body></html>

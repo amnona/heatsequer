@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.supercooldb.scdb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.supercooldb.html"><font color="#ffffff">supercooldb</font></a>.scdb</strong></big></big> (version 0.1)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/supercooldb/scdb.py">/Users/amnon/Python/git/heatsequer/heatsequer/supercooldb/scdb.py</a></font></td></tr></table>
+    <p><tt>amnonscript<br>
+heatsequer<br>
+supercooldb.py<br>
+&nbsp;<br>
+the&nbsp;sql&nbsp;cooldb&nbsp;implementation</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="csv.html">csv</a><br>
+<a href="datetime.html">datetime</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="pickle.html">pickle</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+<a href="sqlite3.html">sqlite3</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="heatsequer.supercooldb.scdb.html#scdbstruct">scdbstruct</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="scdbstruct">class <strong>scdbstruct</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="scdbstruct-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-CreateTables"><strong>CreateTables</strong></a>(dbfilename='db/supercooldb.db', areyousure='no')</dt><dd><tt>Create&nbsp;the&nbsp;database&nbsp;tables<br>
+NOTE:&nbsp;will&nbsp;delete&nbsp;old&nbsp;database!!!!<br>
+input:<br>
+dbfilename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;database&nbsp;file&nbsp;to&nbsp;create<br>
+areyousure&nbsp;-&nbsp;must&nbsp;be&nbsp;'yes'&nbsp;in&nbsp;order&nbsp;to&nbsp;create&nbsp;the&nbsp;database<br>
+&nbsp;<br>
+output:<br>
+db&nbsp;-&nbsp;the&nbsp;database&nbsp;structure</tt></dd></dl>
+ <dl><dt><a name="-addcuration"><strong>addcuration</strong></a>(db, data, sequences, curtype, curations, submittername='NA', description='', method='', primerid=1, submitteragent='HeatSequer')</dt><dd><tt>Add&nbsp;a&nbsp;new&nbsp;manual&nbsp;curation&nbsp;to&nbsp;the&nbsp;database<br>
+input:<br>
+db&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;<a href="#-dbstart">dbstart</a>()<br>
+data&nbsp;:&nbsp;int&nbsp;or&nbsp;dict&nbsp;of&nbsp;(Type:Value)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;int&nbsp;-&nbsp;the&nbsp;value&nbsp;of&nbsp;DataID&nbsp;from&nbsp;Data&nbsp;table,&nbsp;otherwise&nbsp;a&nbsp;list&nbsp;of&nbsp;(Type,Value)&nbsp;tuples&nbsp;to&nbsp;add&nbsp;to&nbsp;Data&nbsp;table<br>
+sequences&nbsp;:&nbsp;list&nbsp;of&nbsp;ACGT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequences&nbsp;to&nbsp;curate<br>
+curtype&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;curation&nbsp;type&nbsp;(COMMON,DIFFEXP,CONTAM,HIGHFREQ,PATHOGEN)<br>
+curations&nbsp;:&nbsp;list&nbsp;of&nbsp;Type,Value<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;curations&nbsp;to&nbsp;add&nbsp;to&nbsp;the&nbsp;CurationList&nbsp;table&nbsp;(Type,Value)<br>
+submittername&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;the&nbsp;submitter&nbsp;(first,last)&nbsp;or&nbsp;NA<br>
+description&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;description&nbsp;of&nbsp;the&nbsp;curation&nbsp;entry&nbsp;(i.e.&nbsp;"lower&nbsp;in&nbsp;whole&nbsp;wheat&nbsp;pita&nbsp;bread")<br>
+method&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text&nbsp;description&nbsp;of&nbsp;how&nbsp;the&nbsp;curation&nbsp;was&nbsp;detected&nbsp;-&nbsp;only&nbsp;if&nbsp;needed<br>
+primerid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;PrimerID&nbsp;from&nbsp;Primers&nbsp;table&nbsp;of&nbsp;the&nbsp;sequences&nbsp;(usually&nbsp;1&nbsp;-&nbsp;the&nbsp;V4&nbsp;515F,806R)<br>
+submitteragent&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;program&nbsp;submitting&nbsp;the&nbsp;curation<br>
+&nbsp;<br>
+output:<br>
+curationid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;CurationID&nbsp;(in&nbsp;Curations&nbsp;table)&nbsp;of&nbsp;the&nbsp;new&nbsp;curation,&nbsp;or&nbsp;0&nbsp;if&nbsp;not&nbsp;added<br>
+data&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;DataID&nbsp;from&nbsp;Data&nbsp;table</tt></dd></dl>
+ <dl><dt><a name="-adddata"><strong>adddata</strong></a>(db, data, studyid=[])</dt><dd><tt>add&nbsp;new&nbsp;data&nbsp;entries&nbsp;(for&nbsp;a&nbsp;new&nbsp;study)<br>
+input:<br>
+db&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;<a href="#-dbstart">dbstart</a>()<br>
+data&nbsp;:&nbsp;list&nbsp;of&nbsp;tuples&nbsp;(Type:Value)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;tuples&nbsp;of&nbsp;(Type,Value)&nbsp;to&nbsp;add&nbsp;to&nbsp;Data&nbsp;table&nbsp;(i.e.&nbsp;("PUBMEDID","322455")&nbsp;etc)<br>
+studyid&nbsp;:&nbsp;list&nbsp;of&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;ids&nbsp;in&nbsp;which&nbsp;this&nbsp;study&nbsp;appears&nbsp;(from&nbsp;finddataid)<br>
+&nbsp;<br>
+output:<br>
+suid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;value&nbsp;of&nbsp;DataID&nbsp;for&nbsp;the&nbsp;new&nbsp;study&nbsp;(from&nbsp;Data&nbsp;table)</tt></dd></dl>
+ <dl><dt><a name="-addontology"><strong>addontology</strong></a>(scdb, ontology, ontoprefix='', namelist={})</dt><dd><tt>add&nbsp;an&nbsp;obo&nbsp;ontology&nbsp;file&nbsp;to&nbsp;scdb<br>
+input:<br>
+scdb&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;scdbstart()<br>
+ontology&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;obo&nbsp;ontology&nbsp;file&nbsp;to&nbsp;add<br>
+ontoprefix&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;ontology&nbsp;prefix&nbsp;(i.e.&nbsp;ENVO)&nbsp;to&nbsp;show&nbsp;at&nbsp;end&nbsp;of&nbsp;each&nbsp;string,&nbsp;or&nbsp;''&nbsp;for&nbsp;autodetect&nbsp;(default)<br>
+namelist&nbsp;:&nbsp;dict&nbsp;of&nbsp;ids<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;non-empty,&nbsp;keep&nbsp;only&nbsp;items&nbsp;with&nbsp;ids&nbsp;from&nbsp;namelist&nbsp;(get&nbsp;namelist&nbsp;from&nbsp;ontologysubtreeids()&nbsp;)<br>
+&nbsp;<br>
+output:<br>
+scdb&nbsp;:<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;the&nbsp;new&nbsp;ontology&nbsp;items&nbsp;added&nbsp;to&nbsp;scdb.ontology&nbsp;dict</tt></dd></dl>
+ <dl><dt><a name="-createontologytree"><strong>createontologytree</strong></a>(db, ontologies=[], outname='db/ontologygraph.pickle')</dt><dd><tt>load&nbsp;the&nbsp;ontology&nbsp;tree&nbsp;graphs&nbsp;into&nbsp;the&nbsp;scdb&nbsp;and&nbsp;store&nbsp;them&nbsp;in&nbsp;a&nbsp;pickle&nbsp;dict<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;scdbstart()<br>
+ontologies&nbsp;:&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list&nbsp;of&nbsp;obo&nbsp;ontologies&nbsp;to&nbsp;use&nbsp;or&nbsp;empty&nbsp;to&nbsp;use&nbsp;the&nbsp;default&nbsp;files&nbsp;(db.ontologyfiles)<br>
+outname&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;pickle&nbsp;file<br>
+&nbsp;<br>
+output:<br>
+db&nbsp;-&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;the&nbsp;ontodict&nbsp;field&nbsp;added</tt></dd></dl>
+ <dl><dt><a name="-dbconnect"><strong>dbconnect</strong></a>(scdb, dbname='db/supercooldb.db')</dt><dd><tt>connect&nbsp;to&nbsp;the&nbsp;database<br>
+input:<br>
+scdb&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;scdbstart()<br>
+dbname&nbsp;-&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;database&nbsp;to&nbsp;connect&nbsp;to</tt></dd></dl>
+ <dl><dt><a name="-dbstart"><strong>dbstart</strong></a>(dbname='db/supercooldb.db')</dt><dd><tt>start&nbsp;the&nbsp;database&nbsp;structure&nbsp;and&nbsp;connect&nbsp;to&nbsp;database<br>
+input:<br>
+dbname&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;database&nbsp;to&nbsp;connect&nbsp;to<br>
+output:<br>
+db&nbsp;:&nbsp;dbstruct<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;database&nbsp;variable</tt></dd></dl>
+ <dl><dt><a name="-delcuration"><strong>delcuration</strong></a>(db, curid)</dt><dd><tt>delete&nbsp;a&nbsp;curation&nbsp;and&nbsp;the&nbsp;corresponding&nbsp;curationlist&nbsp;from&nbsp;the&nbsp;database<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;:&nbsp;from&nbsp;startdb()<br>
+curid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;curationid<br>
+&nbsp;<br>
+output:<br>
+deleted&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;deleted,&nbsp;False&nbsp;if&nbsp;not&nbsp;found/not&nbsp;deleted</tt></dd></dl>
+ <dl><dt><a name="-finddataid"><strong>finddataid</strong></a>(db, datamd5='', mapmd5='')</dt><dd><tt>find&nbsp;the&nbsp;data&nbsp;id&nbsp;for&nbsp;the&nbsp;data/map&nbsp;md5&nbsp;(which&nbsp;are&nbsp;calculated&nbsp;on&nbsp;load)<br>
+note&nbsp;the&nbsp;md5s&nbsp;don't&nbsp;change&nbsp;following&nbsp;filtering/normalization/etc...&nbsp;-&nbsp;only&nbsp;the&nbsp;original&nbsp;data<br>
+input:<br>
+scdb&nbsp;:&nbsp;from&nbsp;startdb()<br>
+datamd5&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;Experiment.datamd5<br>
+mapmd5&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;Experiment.mapmd5<br>
+&nbsp;<br>
+output:<br>
+outlist:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;ints&nbsp;of&nbsp;matching&nbsp;dataID&nbsp;indices&nbsp;(or&nbsp;empty&nbsp;if&nbsp;no&nbsp;match)</tt></dd></dl>
+ <dl><dt><a name="-getcurationontologies"><strong>getcurationontologies</strong></a>(db, sequence)</dt><dd><tt>get&nbsp;the&nbsp;curation&nbsp;for&nbsp;items&nbsp;and&nbsp;all&nbsp;upstream&nbsp;(ontology-wise)&nbsp;items&nbsp;for&nbsp;a&nbsp;given&nbsp;sequence<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;scdbstart()<br>
+sequence&nbsp;:&nbsp;str&nbsp;(ACGT)<br>
+&nbsp;<br>
+output:<br>
+onto&nbsp;:&nbsp;dict&nbsp;of&nbsp;key=str&nbsp;and&nbsp;value&nbsp;dict&nbsp;of&nbsp;key=str&nbsp;and&nbsp;value=int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;dictionary&nbsp;of&nbsp;['up','down','contaminant']&nbsp;of&nbsp;dict&nbsp;of&nbsp;ontology&nbsp;item&nbsp;and&nbsp;number&nbsp;of&nbsp;times&nbsp;total&nbsp;we&nbsp;see&nbsp;it</tt></dd></dl>
+ <dl><dt><a name="-getcurationstrings"><strong>getcurationstrings</strong></a>(db, sequence)</dt><dd><tt>get&nbsp;a&nbsp;nice&nbsp;string&nbsp;summary&nbsp;of&nbsp;a&nbsp;curation<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;scdbstart()<br>
+sequence&nbsp;:&nbsp;str&nbsp;(ACGT)<br>
+&nbsp;<br>
+output:<br>
+shortdesc&nbsp;:&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;short&nbsp;summary&nbsp;of&nbsp;the&nbsp;curations&nbsp;(1&nbsp;item&nbsp;per&nbsp;curation)</tt></dd></dl>
+ <dl><dt><a name="-getdatainfo"><strong>getdatainfo</strong></a>(db, dataid)</dt><dd><tt>get&nbsp;the&nbsp;information&nbsp;about&nbsp;a&nbsp;given&nbsp;study&nbsp;dataid<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;<a href="#-dbstart">dbstart</a>()<br>
+dataid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;dataid&nbsp;on&nbsp;the&nbsp;study&nbsp;(DataID&nbsp;field)<br>
+&nbsp;<br>
+output:<br>
+info&nbsp;:&nbsp;list&nbsp;of&nbsp;(str,str,str)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list&nbsp;of&nbsp;tuples&nbsp;for&nbsp;each&nbsp;entry&nbsp;in&nbsp;the&nbsp;study:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type,value,descstring&nbsp;about&nbsp;dataid<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;if&nbsp;dataid&nbsp;not&nbsp;found</tt></dd></dl>
+ <dl><dt><a name="-getontoparents"><strong>getontoparents</strong></a>(db, term)</dt><dd><tt>get&nbsp;all&nbsp;the&nbsp;parent&nbsp;terms&nbsp;(including&nbsp;original&nbsp;term)&nbsp;for&nbsp;a&nbsp;given&nbsp;ontology&nbsp;term.<br>
+look&nbsp;in&nbsp;all&nbsp;ontology&nbsp;trees&nbsp;in&nbsp;db.ontodict<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;scdbstart()<br>
+term&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;ontology&nbsp;term&nbsp;(lower&nbsp;case)<br>
+&nbsp;<br>
+output:<br>
+terms&nbsp;:&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;all&nbsp;the&nbsp;parent&nbsp;terms&nbsp;of&nbsp;this&nbsp;item</tt></dd></dl>
+ <dl><dt><a name="-getseq"><strong>getseq</strong></a>(db, seq, primerid=1, insert=False)</dt><dd><tt>get&nbsp;the&nbsp;sequence&nbsp;id&nbsp;for&nbsp;the&nbsp;sequence&nbsp;seq&nbsp;in&nbsp;the&nbsp;database.<br>
+if&nbsp;it&nbsp;doesn't&nbsp;exist&nbsp;-&nbsp;create&nbsp;it&nbsp;and&nbsp;return&nbsp;the&nbsp;new&nbsp;id<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;<a href="#-dbstart">dbstart</a>()<br>
+seq&nbsp;:&nbsp;sequence&nbsp;(ACGT)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequence&nbsp;to&nbsp;find/add<br>
+primerid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;PrimerID&nbsp;from&nbsp;Primers&nbsp;table&nbsp;of&nbsp;the&nbsp;sequenced&nbsp;region<br>
+insert&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;insert&nbsp;the&nbsp;sequence&nbsp;if&nbsp;not&nbsp;in&nbsp;table,&nbsp;False&nbsp;to&nbsp;return&nbsp;0&nbsp;and&nbsp;not&nbsp;insert<br>
+&nbsp;<br>
+output:<br>
+seqid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;SeqID&nbsp;from&nbsp;the&nbsp;Sequences&nbsp;table&nbsp;for&nbsp;the&nbsp;sequence</tt></dd></dl>
+ <dl><dt><a name="-getseqcurationids"><strong>getseqcurationids</strong></a>(db, seqid)</dt><dd><tt>get&nbsp;the&nbsp;curation&nbsp;ids&nbsp;for&nbsp;the&nbsp;sequence&nbsp;with&nbsp;the&nbsp;id&nbsp;seqid<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;sbdtart()<br>
+seqid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequence&nbsp;identifier&nbsp;(from&nbsp;getseq)<br>
+&nbsp;<br>
+output:<br>
+curids&nbsp;:&nbsp;list&nbsp;of&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ids&nbsp;of&nbsp;all&nbsp;the&nbsp;curations&nbsp;for&nbsp;this&nbsp;sequence</tt></dd></dl>
+ <dl><dt><a name="-getseqcurations"><strong>getseqcurations</strong></a>(db, sequence)</dt><dd><tt>Get&nbsp;the&nbsp;manual&nbsp;curations&nbsp;for&nbsp;a&nbsp;sequence<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;scdbstart()<br>
+sequence&nbsp;:&nbsp;str&nbsp;(ACGT)<br>
+&nbsp;<br>
+output:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;curs&nbsp;:&nbsp;list&nbsp;of&nbsp;list&nbsp;of&nbsp;(curation&nbsp;dict,list&nbsp;of&nbsp;[Type,Value]&nbsp;of&nbsp;curation&nbsp;details)</tt></dd></dl>
+ <dl><dt><a name="-getstudyannotations"><strong>getstudyannotations</strong></a>(db, studyid)</dt><dd><tt>get&nbsp;the&nbsp;list&nbsp;of&nbsp;annotations&nbsp;for&nbsp;study&nbsp;studyid<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;<a href="#-dbstart">dbstart</a>()<br>
+studyid&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;dataid&nbsp;of&nbsp;the&nbsp;study<br>
+&nbsp;<br>
+output:<br>
+info:&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;list&nbsp;of&nbsp;curations&nbsp;for&nbsp;this&nbsp;study&nbsp;(1&nbsp;item&nbsp;per&nbsp;curation)</tt></dd></dl>
+ <dl><dt><a name="-loaddbonto"><strong>loaddbonto</strong></a>(db, ontofile='db/ontology.pickle', ontofromidfile='db/ontologyfromid.pickle')</dt><dd><tt>load&nbsp;the&nbsp;pickled&nbsp;ontologies&nbsp;to&nbsp;the&nbsp;scdb&nbsp;structure<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;scdbstart<br>
+ontofile&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;ontologies&nbsp;term&nbsp;file&nbsp;(from&nbsp;saveontologies)<br>
+ontofromidfile&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;ontologies&nbsp;reverse&nbsp;dict&nbsp;file&nbsp;(from&nbsp;saveontologies)<br>
+&nbsp;<br>
+output:<br>
+db&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;the&nbsp;loaded&nbsp;ontologies&nbsp;fields</tt></dd></dl>
+ <dl><dt><a name="-loadontologies"><strong>loadontologies</strong></a>(scdb, pickleit=True, ontologies=[])</dt><dd><tt>load&nbsp;the&nbsp;ontologies&nbsp;into&nbsp;the&nbsp;scdb&nbsp;class<br>
+input:<br>
+scdb&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;scdbstart()<br>
+pickleit&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;pickle&nbsp;the&nbsp;loaded&nbsp;ontologies&nbsp;to&nbsp;default&nbsp;location,&nbsp;False&nbsp;to&nbsp;not&nbsp;pickle<br>
+ontologylist&nbsp;:&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;names&nbsp;of&nbsp;the&nbsp;obo&nbsp;ontology&nbsp;files&nbsp;to&nbsp;load&nbsp;or&nbsp;empty&nbsp;to&nbsp;use&nbsp;the&nbsp;default&nbsp;files&nbsp;(from&nbsp;scdb.ontologyfiles)</tt></dd></dl>
+ <dl><dt><a name="-loadontotrees"><strong>loadontotrees</strong></a>(db, ontopickle='db/ontologygraph.pickle')</dt><dd><tt>load&nbsp;the&nbsp;ontology&nbsp;dict&nbsp;pickle&nbsp;file<br>
+&nbsp;<br>
+input:<br>
+db&nbsp;:&nbsp;from&nbsp;scdbstart()<br>
+ontopickle&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;pickled&nbsp;ontology&nbsp;dict&nbsp;filename&nbsp;(from&nbsp;<a href="#-createontologytree">createontologytree</a>())<br>
+&nbsp;<br>
+output:<br>
+db&nbsp;:&nbsp;<a href="#scdbstruct">scdbstruct</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;the&nbsp;ontology&nbsp;dict&nbsp;in&nbsp;ontodict</tt></dd></dl>
+ <dl><dt><a name="-saveontologies"><strong>saveontologies</strong></a>(scdb, ontofile='/Users/amnon/Python/git/heatsequer/db/ontology.pickle', ontofromidfile='/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle')</dt><dd><tt>save&nbsp;the&nbsp;ontologies&nbsp;to&nbsp;pickle&nbsp;files.<br>
+use&nbsp;after&nbsp;<a href="#-loadontologies">loadontologies</a>()</tt></dd></dl>
+ <dl><dt><a name="-select_column_and_value"><strong>select_column_and_value</strong></a>(cur, sql, parameters=())</dt><dd><tt>get&nbsp;a&nbsp;dict&nbsp;with&nbsp;field&nbsp;as&nbsp;key,&nbsp;value&nbsp;as&nbsp;values&nbsp;for&nbsp;an&nbsp;sql&nbsp;query</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__warningregistry__</strong> = {("unclosed file &lt;_io.BufferedReader name='db/ontology.pickle'&gt;", &lt;class 'ResourceWarning'&gt;, 109): True, 'version': 1286, ("unclosed file &lt;_io.BufferedReader name='db/ontologyfromid.pickle'&gt;", &lt;class 'ResourceWarning'&gt;, 110): True}</td></tr></table>
+</body></html>

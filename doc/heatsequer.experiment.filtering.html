@@ -1,0 +1,293 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.experiment.filtering</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.experiment.html"><font color="#ffffff">experiment</font></a>.filtering</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/experiment/filtering.py">/Users/amnon/Python/git/heatsequer/heatsequer/experiment/filtering.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;experiment&nbsp;filtering&nbsp;module</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="heatsequer.html">heatsequer</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="scipy.stats.html">scipy.stats</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-cleantaxonomy"><strong>cleantaxonomy</strong></a>(expdat, mitochondria=True, chloroplast=True, bacteria=True, unknown=True, exclude=True)</dt><dd><tt>remove&nbsp;common&nbsp;non-16s&nbsp;sequences&nbsp;from&nbsp;the&nbsp;experiment&nbsp;and&nbsp;renormalize<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+mitochondria&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;mitochondrial&nbsp;sequences<br>
+chloroplast&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;chloroplast&nbsp;sequences<br>
+bacteria&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;sequences&nbsp;only&nbsp;identified&nbsp;as&nbsp;"Bacteria"&nbsp;(no&nbsp;finer&nbsp;identification)<br>
+unknown&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remove&nbsp;unknown&nbsp;sequences<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;remove&nbsp;these&nbsp;sequecnes,&nbsp;False&nbsp;to&nbsp;keep&nbsp;them&nbsp;and&nbsp;throw&nbsp;other<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;renormalized&nbsp;experiment&nbsp;without&nbsp;these&nbsp;bacteria</tt></dd></dl>
+ <dl><dt><a name="-clearexp"><strong>clearexp</strong></a>(expdat)</dt><dd><tt>clear&nbsp;experiment&nbsp;from&nbsp;missing&nbsp;samples&nbsp;and&nbsp;bacteria<br>
+remove&nbsp;samples&nbsp;with&nbsp;&lt;1&nbsp;reads&nbsp;and&nbsp;bacteria&nbsp;with&nbsp;total&nbsp;&lt;1&nbsp;reads<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;new&nbsp;experiment&nbsp;without&nbsp;&lt;1&nbsp;reads&nbsp;samples&nbsp;or&nbsp;bacteria</tt></dd></dl>
+ <dl><dt><a name="-filterandnormalize"><strong>filterandnormalize</strong></a>(expdat, seqs, exclude=False, subseq=False, numreads=10000)</dt><dd><tt>filter&nbsp;away&nbsp;sequences&nbsp;in&nbsp;seqs<br>
+and&nbsp;then&nbsp;renormalize&nbsp;the&nbsp;data&nbsp;and&nbsp;recalculate&nbsp;origreads&nbsp;per&nbsp;sample<br>
+input:<br>
+expdat<br>
+seqs&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;sequences&nbsp;(ACGT)&nbsp;to&nbsp;remove<br>
+exclude&nbsp;-&nbsp;False&nbsp;to&nbsp;remove&nbsp;seqs,&nbsp;True&nbsp;to&nbsp;only&nbsp;keep&nbsp;seqs<br>
+subseq&nbsp;-&nbsp;False&nbsp;to&nbsp;look&nbsp;for&nbsp;exact&nbsp;match&nbsp;only,&nbsp;True&nbsp;to&nbsp;look&nbsp;for&nbsp;subsequence&nbsp;match&nbsp;(slower)<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;experiment&nbsp;without&nbsp;seqs&nbsp;and&nbsp;renormalied&nbsp;to&nbsp;10k&nbsp;reads/sample</tt></dd></dl>
+ <dl><dt><a name="-filterannotations"><strong>filterannotations</strong></a>(expdat, annotation, cdb=None, exclude=False)</dt><dd><tt>filter&nbsp;keeping&nbsp;only&nbsp;samples&nbsp;which&nbsp;have&nbsp;annotation&nbsp;in&nbsp;their&nbsp;cooldb&nbsp;description<br>
+input:<br>
+expdat<br>
+annotation&nbsp;-&nbsp;substring&nbsp;of&nbsp;the&nbsp;annotation&nbsp;(case&nbsp;insensitive)<br>
+cdb&nbsp;-&nbsp;the&nbsp;database&nbsp;of&nbsp;cool&nbsp;sequences&nbsp;(from&nbsp;cooldb.load())&nbsp;or&nbsp;None&nbsp;(default)&nbsp;to&nbsp;use&nbsp;the&nbsp;heatsequer&nbsp;loaded&nbsp;cdb<br>
+exclude&nbsp;-&nbsp;False&nbsp;to&nbsp;keep&nbsp;matching&nbsp;bacteria,&nbsp;True&nbsp;to&nbsp;remove&nbsp;matching&nbsp;bacteria<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterbacteriafromfile"><strong>filterbacteriafromfile</strong></a>(expdat, filename, exclude=False, subseq=False)</dt><dd><tt>filter&nbsp;bacteria&nbsp;from&nbsp;an&nbsp;experiment&nbsp;based&nbsp;on&nbsp;a&nbsp;file&nbsp;with&nbsp;sequences&nbsp;(one&nbsp;per&nbsp;line)<br>
+input:<br>
+expdat<br>
+filename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;sequence&nbsp;file&nbsp;(1&nbsp;per&nbsp;line)<br>
+exclude&nbsp;-&nbsp;remove&nbsp;bacteria&nbsp;from&nbsp;the&nbsp;file&nbsp;instead&nbsp;of&nbsp;keeping&nbsp;them<br>
+subseq&nbsp;-&nbsp;the&nbsp;sequences&nbsp;in&nbsp;the&nbsp;file&nbsp;can&nbsp;be&nbsp;subsequences&nbsp;of&nbsp;the&nbsp;experiment&nbsp;sequences&nbsp;(different&nbsp;lengths).&nbsp;but&nbsp;slower.<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterfasta"><strong>filterfasta</strong></a>(expdat, filename, exclude=False, subseq=False)</dt><dd><tt>Filter&nbsp;bacteria&nbsp;based&nbsp;on&nbsp;a&nbsp;fasta&nbsp;file&nbsp;(keeping&nbsp;only&nbsp;sequences&nbsp;in&nbsp;the&nbsp;fasta&nbsp;file)<br>
+input:<br>
+expdat<br>
+filename&nbsp;-&nbsp;the&nbsp;fasta&nbsp;file&nbsp;name<br>
+exclude&nbsp;-&nbsp;False&nbsp;to&nbsp;keep&nbsp;only&nbsp;seqs&nbsp;from&nbsp;the&nbsp;file,&nbsp;True&nbsp;to&nbsp;throw&nbsp;away&nbsp;seqs&nbsp;from&nbsp;the&nbsp;file<br>
+subseq&nbsp;-&nbsp;match&nbsp;subsequences&nbsp;(slower)<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterfieldwave"><strong>filterfieldwave</strong></a>(expdat, field, val1, val2=False, mineffect=1, method='mean', uselog=True)</dt><dd><tt>find&nbsp;all&nbsp;sequences&nbsp;which&nbsp;show&nbsp;an&nbsp;effect&nbsp;size&nbsp;of&nbsp;at&nbsp;least&nbsp;mineffect&nbsp;between&nbsp;val1&nbsp;and&nbsp;val2&nbsp;samples&nbsp;in&nbsp;field<br>
+no&nbsp;statistical&nbsp;significance&nbsp;testing&nbsp;is&nbsp;performed<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;field&nbsp;to&nbsp;use&nbsp;for&nbsp;group&nbsp;separation<br>
+val1&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;in&nbsp;field&nbsp;for&nbsp;group1<br>
+val2&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;in&nbsp;field&nbsp;for&nbsp;group2&nbsp;or&nbsp;False&nbsp;for&nbsp;all&nbsp;the&nbsp;other&nbsp;samples&nbsp;except&nbsp;val1<br>
+mineffect&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;min&nbsp;difference&nbsp;between&nbsp;groups&nbsp;per&nbsp;OTU&nbsp;in&nbsp;order&nbsp;to&nbsp;keep<br>
+method:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'ranksum'<br>
+uselog&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;log&nbsp;transform&nbsp;the&nbsp;data<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;only&nbsp;with&nbsp;sequences&nbsp;showing&nbsp;a&nbsp;mineffect&nbsp;difference</tt></dd></dl>
+ <dl><dt><a name="-filterid"><strong>filterid</strong></a>(expdat, sids, exclude=False)</dt><dd><tt>filter&nbsp;bacteria&nbsp;keeping&nbsp;only&nbsp;ones&nbsp;in&nbsp;sids<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+sids&nbsp;:&nbsp;list&nbsp;of&nbsp;integers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;list&nbsp;of&nbsp;(hashed)&nbsp;sequence&nbsp;ids<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;False&nbsp;to&nbsp;keep&nbsp;these&nbsp;bacteria,&nbsp;True&nbsp;to&nbsp;filter&nbsp;away<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterknownbact"><strong>filterknownbact</strong></a>(expdat, cdb=None, exclude=False)</dt><dd><tt>filter&nbsp;keeping&nbsp;only&nbsp;bacteria&nbsp;which&nbsp;we&nbsp;know&nbsp;about&nbsp;in&nbsp;cooldb<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+cdb&nbsp;:&nbsp;cooldb<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;manual&nbsp;annotation&nbsp;database&nbsp;(fromn&nbsp;cooldb.loaddb)<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;throw&nbsp;away&nbsp;known&nbsp;bacteria,&nbsp;False&nbsp;to&nbsp;keep&nbsp;only&nbsp;them<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filtermean"><strong>filtermean</strong></a>(expdat, meanval)</dt><dd><tt>filter&nbsp;keeping&nbsp;bacteria&nbsp;with&nbsp;a&nbsp;mean&nbsp;frequency&nbsp;&gt;=&nbsp;meanval<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment<br>
+meanval&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimum&nbsp;mean&nbsp;fraction&nbsp;of&nbsp;reads&nbsp;per&nbsp;sample&nbsp;(NOT&nbsp;out&nbsp;of&nbsp;10k/sample)&nbsp;for&nbsp;a&nbsp;bacteria&nbsp;to&nbsp;be&nbsp;kept<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterminreads"><strong>filterminreads</strong></a>(exp, minreads, logit=True)</dt><dd><tt>filter&nbsp;away&nbsp;all&nbsp;bacteria&nbsp;that&nbsp;contain&nbsp;less&nbsp;than&nbsp;minreads&nbsp;in&nbsp;all&nbsp;samples&nbsp;together&nbsp;(out&nbsp;of&nbsp;10k/samples)<br>
+input:<br>
+exp&nbsp;:&nbsp;Experiment<br>
+minreads&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimum&nbsp;number&nbsp;of&nbsp;reads&nbsp;total&nbsp;for&nbsp;all&nbsp;samples&nbsp;(and&nbsp;out&nbsp;of&nbsp;10k/sample)&nbsp;for&nbsp;a&nbsp;bacteria&nbsp;to&nbsp;be&nbsp;kept<br>
+logit&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;add&nbsp;to&nbsp;command&nbsp;log,&nbsp;False&nbsp;to&nbsp;not&nbsp;(if&nbsp;called&nbsp;from&nbsp;another&nbsp;heatsequer&nbsp;function)<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filtern"><strong>filtern</strong></a>(expdat)</dt><dd><tt>delete&nbsp;sequences&nbsp;containing&nbsp;"N"&nbsp;from&nbsp;experiment&nbsp;and&nbsp;renormalize<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;experiment&nbsp;without&nbsp;sequences&nbsp;containing&nbsp;"N"</tt></dd></dl>
+ <dl><dt><a name="-filternans"><strong>filternans</strong></a>(expdat, minpresence)</dt><dd><tt>filter&nbsp;an&nbsp;experiment&nbsp;containing&nbsp;nans&nbsp;in&nbsp;the&nbsp;table,&nbsp;keeping&nbsp;only&nbsp;bacteria&nbsp;with&nbsp;at&nbsp;least&nbsp;minpresence&nbsp;non-nan&nbsp;values<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+minpresence:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minimal&nbsp;number&nbsp;of&nbsp;non-nan&nbsp;samples&nbsp;(keep&nbsp;only&nbsp;if&nbsp;&gt;=)<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment</tt></dd></dl>
+ <dl><dt><a name="-filterorigreads"><strong>filterorigreads</strong></a>(expdat, minreads, inplace=False)</dt><dd><tt>filter&nbsp;away&nbsp;all&nbsp;samples&nbsp;that&nbsp;contained&nbsp;originally&nbsp;(before&nbsp;normalization)&nbsp;less&nbsp;than&nbsp;minreads<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+minreads&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimum&nbsp;number&nbsp;of&nbsp;reads&nbsp;of&nbsp;the&nbsp;sample&nbsp;in&nbsp;the&nbsp;biom&nbsp;table&nbsp;to&nbsp;filter&nbsp;if&nbsp;less&nbsp;(usually&nbsp;int)<br>
+inplace&nbsp;:&nbsp;Bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;replace&nbsp;current&nbsp;experiment,&nbsp;False&nbsp;(default)&nbsp;to&nbsp;create&nbsp;a&nbsp;new&nbsp;one<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterpresence"><strong>filterpresence</strong></a>(expdat, frac)</dt><dd><tt>filter&nbsp;away&nbsp;bacteria&nbsp;present&nbsp;in&nbsp;less&nbsp;than&nbsp;frac&nbsp;of&nbsp;the&nbsp;samples<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+frac&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimal&nbsp;fraction&nbsp;of&nbsp;samples&nbsp;to&nbsp;appear&nbsp;in&nbsp;for&nbsp;a&nbsp;beacteria&nbsp;to&nbsp;be&nbsp;kept<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filtersamples"><strong>filtersamples</strong></a>(expdat, field, filtval, exact=True, exclude=False, numexpression=False, shownumoutput=True)</dt><dd><tt>filter&nbsp;samples&nbsp;in&nbsp;experiment&nbsp;according&nbsp;to&nbsp;value&nbsp;in&nbsp;field<br>
+input:<br>
+exp&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;filter&nbsp;by<br>
+filtval&nbsp;:&nbsp;string&nbsp;or&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;string&nbsp;to&nbsp;filter&nbsp;(if&nbsp;a&nbsp;list&nbsp;of&nbsp;strings,&nbsp;filter&nbsp;if&nbsp;any&nbsp;in&nbsp;the&nbsp;list)<br>
+exact&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;for&nbsp;exact&nbsp;match,&nbsp;False&nbsp;for&nbsp;substring<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;False&nbsp;to&nbsp;keep&nbsp;only&nbsp;matching&nbsp;samples,&nbsp;True&nbsp;to&nbsp;exclude&nbsp;matching&nbsp;samples<br>
+numexpression&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;if&nbsp;val&nbsp;is&nbsp;a&nbsp;python&nbsp;expression,&nbsp;False&nbsp;if&nbsp;just&nbsp;a&nbsp;value.&nbsp;For&nbsp;an&nbsp;expression&nbsp;assume&nbsp;value&nbsp;is&nbsp;the&nbsp;beggining&nbsp;of&nbsp;the&nbsp;line&nbsp;(i.e.&nbsp;'&lt;=5')<br>
+shownumoutput&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;show&nbsp;number&nbsp;of&nbsp;samples&nbsp;remaining,&nbsp;False&nbsp;to&nbsp;not&nbsp;show</tt></dd></dl>
+ <dl><dt><a name="-filtersamplesfromfile"><strong>filtersamplesfromfile</strong></a>(expdat, filename, field='#SampleID', exclude=False)</dt><dd><tt>filter&nbsp;samples&nbsp;based&nbsp;on&nbsp;a&nbsp;list&nbsp;in&nbsp;a&nbsp;file&nbsp;(one&nbsp;line&nbsp;per&nbsp;sample)<br>
+input:<br>
+expdat<br>
+filename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;text&nbsp;file&nbsp;(1&nbsp;line&nbsp;per&nbsp;sample)<br>
+field&nbsp;-&nbsp;field&nbsp;for&nbsp;the&nbsp;experiment&nbsp;that&nbsp;the&nbsp;file&nbsp;contains<br>
+exclude&nbsp;-&nbsp;true&nbsp;to&nbsp;throw&nbsp;away&nbsp;instead&nbsp;of&nbsp;keep<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterseqs"><strong>filterseqs</strong></a>(expdat, seqs, exclude=False, subseq=False, logit=True)</dt><dd><tt>filter&nbsp;sequences&nbsp;from&nbsp;the&nbsp;list&nbsp;seqs&nbsp;(keeping&nbsp;sequences&nbsp;appearing&nbsp;in&nbsp;the&nbsp;list)<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+seqs&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;(ACGT)&nbsp;sequences&nbsp;to&nbsp;keep<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;filter&nbsp;away&nbsp;instead&nbsp;of&nbsp;keep,&nbsp;False&nbsp;to&nbsp;keep<br>
+subseq&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;true,&nbsp;the&nbsp;sequences&nbsp;can&nbsp;be&nbsp;subsequence&nbsp;(slower).&nbsp;False&nbsp;-&nbsp;look&nbsp;only&nbsp;for&nbsp;exact&nbsp;match.<br>
+logit&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;add&nbsp;to&nbsp;command&nbsp;log,&nbsp;false&nbsp;to&nbsp;not&nbsp;log&nbsp;it&nbsp;(if&nbsp;called&nbsp;from&nbsp;other&nbsp;heatsequer&nbsp;function)<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filterseqsfromexp"><strong>filterseqsfromexp</strong></a>(expdat, filtexp, exclude=False, subseq=False, logit=True)</dt><dd><tt>filter&nbsp;sequences&nbsp;from&nbsp;expdat&nbsp;using&nbsp;the&nbsp;sequences&nbsp;in&nbsp;filtexp&nbsp;experiment&nbsp;(keeping&nbsp;sequences&nbsp;appearing&nbsp;in&nbsp;the&nbsp;other&nbsp;experiment)<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+filtexp&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;an&nbsp;experiment&nbsp;from&nbsp;which&nbsp;to&nbsp;decide&nbsp;which&nbsp;sequences&nbsp;to&nbsp;filter<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;filter&nbsp;away&nbsp;instead&nbsp;of&nbsp;keep,&nbsp;False&nbsp;to&nbsp;keep<br>
+subseq&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;true,&nbsp;the&nbsp;sequences&nbsp;can&nbsp;be&nbsp;subsequence&nbsp;(slower).&nbsp;False&nbsp;-&nbsp;look&nbsp;only&nbsp;for&nbsp;exact&nbsp;match.<br>
+logit&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;add&nbsp;to&nbsp;command&nbsp;log,&nbsp;false&nbsp;to&nbsp;not&nbsp;log&nbsp;it&nbsp;(if&nbsp;called&nbsp;from&nbsp;other&nbsp;heatsequer&nbsp;function)<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filtered&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-filtersimilarsamples"><strong>filtersimilarsamples</strong></a>(expdat, field, method='mean')</dt><dd><tt>join&nbsp;similar&nbsp;samples&nbsp;into&nbsp;one&nbsp;sample&nbsp;(i.e.&nbsp;to&nbsp;remove&nbsp;samples&nbsp;of&nbsp;same&nbsp;individual)<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;the&nbsp;field&nbsp;containing&nbsp;the&nbsp;values&nbsp;(for&nbsp;which&nbsp;similar&nbsp;values&nbsp;will&nbsp;be&nbsp;joined)<br>
+method&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;What&nbsp;to&nbsp;do&nbsp;with&nbsp;samples&nbsp;with&nbsp;similar&nbsp;value.&nbsp;options:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'mean'&nbsp;-&nbsp;replace&nbsp;with&nbsp;a&nbsp;sample&nbsp;containing&nbsp;the&nbsp;mean&nbsp;of&nbsp;the&nbsp;samples<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'median'-&nbsp;replace&nbsp;with&nbsp;a&nbsp;sample&nbsp;containing&nbsp;the&nbsp;median&nbsp;of&nbsp;the&nbsp;samples<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'random'&nbsp;-&nbsp;replace&nbsp;with&nbsp;a&nbsp;single&nbsp;random&nbsp;sample&nbsp;out&nbsp;of&nbsp;these&nbsp;samples<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'sum'&nbsp;-&nbsp;replace&nbsp;with&nbsp;sum&nbsp;of&nbsp;original&nbsp;reads&nbsp;in&nbsp;all&nbsp;samples,&nbsp;renormalized&nbsp;after&nbsp;to&nbsp;10k&nbsp;and&nbsp;orignumreads&nbsp;updated<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;like&nbsp;the&nbsp;input&nbsp;experiment&nbsp;but&nbsp;only&nbsp;one&nbsp;sample&nbsp;per&nbsp;unique&nbsp;value&nbsp;in&nbsp;field</tt></dd></dl>
+ <dl><dt><a name="-filtertaxonomy"><strong>filtertaxonomy</strong></a>(exp, tax, exact=False, exclude=False)</dt><dd><tt>filter&nbsp;bacteria&nbsp;matching&nbsp;a&nbsp;given&nbsp;taxonomy&nbsp;name<br>
+input:<br>
+exp&nbsp;:&nbsp;Experiment<br>
+tax&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;taxonomy&nbsp;name&nbsp;to&nbsp;filter&nbsp;by<br>
+exact&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;for&nbsp;exact&nbsp;matches&nbsp;to&nbsp;tax&nbsp;string,&nbsp;false&nbsp;for&nbsp;substring<br>
+exclude&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;throw&nbsp;away&nbsp;matching&nbsp;taxonomy,&nbsp;False&nbsp;to&nbsp;keep&nbsp;matching</tt></dd></dl>
+ <dl><dt><a name="-filterwave"><strong>filterwave</strong></a>(expdat, field=False, numeric=True, minfold=2, minlen=3, step=1, direction='up', posloc='start')</dt><dd><tt>filter&nbsp;bacteria,&nbsp;keeping&nbsp;only&nbsp;ones&nbsp;that&nbsp;show&nbsp;a&nbsp;consecutive&nbsp;region&nbsp;of&nbsp;samples&nbsp;with&nbsp;higher/lower&nbsp;mean&nbsp;than&nbsp;other&nbsp;samples<br>
+Done&nbsp;by&nbsp;scanning&nbsp;all&nbsp;windowlen/startpos&nbsp;options&nbsp;for&nbsp;each&nbsp;bacteria<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;field&nbsp;to&nbsp;sort&nbsp;by&nbsp;or&nbsp;False&nbsp;to&nbsp;skip&nbsp;sorting<br>
+numeric&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For&nbsp;the&nbsp;sorting&nbsp;according&nbsp;to&nbsp;field&nbsp;(does&nbsp;not&nbsp;matter&nbsp;if&nbsp;field&nbsp;is&nbsp;False)<br>
+minfold&nbsp;:&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;minimal&nbsp;fold&nbsp;change&nbsp;for&nbsp;the&nbsp;window&nbsp;compared&nbsp;to&nbsp;the&nbsp;rest&nbsp;in&nbsp;order&nbsp;to&nbsp;keep<br>
+step&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;skip&nbsp;between&nbsp;tested&nbsp;windows&nbsp;(to&nbsp;make&nbsp;it&nbsp;faster&nbsp;use&nbsp;a&nbsp;larger&nbsp;skip)<br>
+minlen&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;minimal&nbsp;window&nbsp;len&nbsp;for&nbsp;over/under&nbsp;expression&nbsp;testing<br>
+direction&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'both'&nbsp;-&nbsp;test&nbsp;both&nbsp;over&nbsp;and&nbsp;under&nbsp;expression&nbsp;in&nbsp;the&nbsp;window<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'up'&nbsp;-&nbsp;only&nbsp;overexpressed<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'down'&nbsp;-&nbsp;only&nbsp;underexpressed<br>
+posloc&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;position&nbsp;to&nbsp;measure&nbsp;the&nbsp;beginning&nbsp;('maxstart')&nbsp;or&nbsp;middle&nbsp;('maxmid')&nbsp;of&nbsp;maximal&nbsp;wave<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;'gstart'&nbsp;to&nbsp;use&nbsp;beginning&nbsp;of&nbsp;first&nbsp;window&nbsp;with&nbsp;&gt;=minfold&nbsp;change<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;filtered&nbsp;experiment,&nbsp;sorted&nbsp;according&nbsp;to&nbsp;window&nbsp;start&nbsp;samples&nbsp;position</tt></dd></dl>
+ <dl><dt><a name="-filterwinperid"><strong>filterwinperid</strong></a>(expdat, idfield, field, val1, val2, mineffect=1)</dt><dd><tt>do&nbsp;filterfieldwave&nbsp;on&nbsp;each&nbsp;individual&nbsp;(based&nbsp;on&nbsp;idfield)&nbsp;and&nbsp;join&nbsp;the&nbsp;resulting&nbsp;bacteria</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__warningregistry__</strong> = {'version': 200, ('invalid value encountered in greater_equal', &lt;class 'RuntimeWarning'&gt;, 35): True}</td></tr></table>
+</body></html>

@@ -464,3 +464,129 @@ def plottwoexperimentreads(exp1,exp2):
 		mv=max(mv,reads1)
 		mv=max(mv,reads2)
 	plt.plot([0,mv],[0,mv],'k')
+
+
+
+
+
+def barplotexp(exp,bseq='',sortby=False,numeric=False,showxall=False,uselog=True,showxlabel=True,subline='',lowcutoff=1,ptitle='',showline=True,linewidth=1):
+	"""
+	Plot an experiment
+	input:
+	exp - from load()
+	sortby - name of mapping file field to sort by or Flase to not sort
+	numeric - True if the field is numeric
+	minreads - minimum number of reads per bacteria in order to show it or 0 to show all
+	rangeall - True to show all frequencies in image scale, false to saturate at 10%
+	seqdb - the SRBactDB database (from bactdb.load)
+	cdb - the cool sequences database (from cooldb.load), or None (default) to use the heatsequer loaded cdb
+	showline - if True plot lines between category values
+	ontofig - name of ontology to plot for bactdb or false to no plot
+	usegui - True use a gui for otu summary, False just print
+	showxall - True to show all sample names when not sorting, False to show no more than 10
+	showcolorbar - True to plot the colorbar. False to not plot
+	ptitle - name of the figure or False to show processing history as name
+	lowcutoff - minimal value for read (for 0 log transform) - the minimal resolution - could be 10000*2/origreads
+	showxlabel : bool
+		True to show the x label (default), False to hide it
+	colormap : string or False
+		name of colormap or False (default) to use mpl default colormap
+	colorrange : [min,max] or False
+		[min,max] to set the colormap range, False to use data min,max (default) as specified in rangeall
+	subline : str
+		Name of category for subline plotting or '' (Default) for no sublines
+
+	output:
+	newexp - the plotted experiment (sorted and filtered)
+	ax - the plot axis
+	"""
+
+	hs.Debug(1,"BarPlot experiment %s" % exp.studyname)
+	hs.Debug(1,"Commands:")
+	for ccommand in exp.commands:
+		hs.Debug(1,"%s" % ccommand)
+	exp=hs.filterseqs(exp,bseq)
+	vals=[]
+	if sortby:
+		hs.Debug(1,"Sorting by field %s" % sortby)
+		for csamp in exp.samples:
+			vals.append(exp.smap[csamp][sortby])
+		if numeric:
+			hs.Debug(1,"(numeric sort)")
+			vals=hs.tofloat(vals)
+		svals,sidx=hs.isort(vals)
+		newexp=hs.reordersamples(exp,sidx)
+	else:
+		hs.Debug(1,"No sample sorting")
+		svals=hs.getfieldvals(exp,'#SampleID')
+		newexp=hs.copyexp(exp)
+
+	ldat=newexp.data
+	if uselog:
+		hs.Debug(1,"Using log, cutoff at %f" % lowcutoff)
+		ldat[np.where(ldat<lowcutoff)]=lowcutoff
+		ldat=np.log2(ldat)
+
+	plt.figure()
+	hs.Debug(1,"plotting bar plot")
+	bdat=np.sum(ldat,axis=0)/100
+	if subline:
+		lsvals=hs.getfieldvals(newexp,subline)
+		print(svals)
+		ulsvals=list(set(lsvals))
+		lsvals=np.array(lsvals)
+		print(svals)
+		for idx,cval in enumerate(ulsvals):
+			ppos=np.where(lsvals==cval)[0]
+			ccolor=getcolor(idx)
+			plt.bar(ppos,bdat[ppos],color=ccolor)
+		plt.legend(ulsvals,loc='best')
+	else:
+		plt.bar(np.arange(len(bdat)),bdat)
+	ax=plt.gca()
+	plt.ylabel('fraction of reads belonging to sequence')
+
+	if not ptitle:
+		hs.Debug(1,"Showing filters in title")
+		if (len(newexp.filters))>4:
+			cfilters=[newexp.filters[0],'...',newexp.filters[-2],newexp.filters[-1]]
+		else:
+			cfilters=newexp.filters
+		cfilters=hs.clipstrings(cfilters,30)
+		ptitle='\n'.join(cfilters)
+	plt.title(ptitle,fontsize=10)
+
+	if showline:
+		hs.Debug(1,"Showing lines")
+		labs=[]
+		labpos=[]
+		linepos=[]
+		minpos=0
+		svals.append('end')
+		for idx,cval in enumerate(svals[:-1]):
+			if cval==svals[idx+1]:
+				continue
+			labpos.append(minpos-0.5+float(idx+1-minpos)/2)
+			minpos=idx+1
+			linepos.append(idx)
+			labs.append(cval)
+		hs.Debug(1,"number of lines is %d" % len(linepos))
+		if showxlabel:
+			ax.set_xticks(labpos)
+			ax.set_xticklabels(labs,rotation=45,ha='right')
+		for cx in linepos:
+			plt.plot([cx,cx],[-0.5,np.max(bdat)],'k',linewidth=linewidth)
+	else:
+		hs.Debug(1,"Not showing lines")
+		if showxall or len(newexp.samples)<=10:
+			hs.Debug(1,"less than 10 samples, showing all sample names")
+			ax.set_xticklabels(svals,rotation=90)
+			ax.set_xticks(range(len(newexp.samples)))
+	plt.tight_layout()
+
+
+
+
+def getcolor(idx):
+	colors=['b','r','k','g','m','c','y']
+	return(colors[np.mod(idx,len(colors))])

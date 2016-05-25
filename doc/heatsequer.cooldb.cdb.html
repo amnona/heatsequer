@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.cooldb.cdb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.cooldb.html"><font color="#ffffff">cooldb</font></a>.cdb</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/cooldb/cdb.py">/Users/amnon/Python/git/heatsequer/heatsequer/cooldb/cdb.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;<a href="#cooldb">cooldb</a>&nbsp;manual&nbsp;curation&nbsp;database&nbsp;functions</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="biom.html">biom</a><br>
+<a href="csv.html">csv</a><br>
+</td><td width="25%" valign=top><a href="datetime.html">datetime</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="scipy.stats.html">scipy.stats</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="heatsequer.cooldb.cdb.html#cooldb">cooldb</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="cooldb">class <strong>cooldb</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="cooldb-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-exportfasta"><strong>exportfasta</strong></a>(db, filename)</dt><dd><tt>export&nbsp;the&nbsp;<a href="#cooldb">cooldb</a>&nbsp;to&nbsp;fasta&nbsp;format<br>
+used&nbsp;for&nbsp;conversion&nbsp;to&nbsp;greengenes<br>
+the&nbsp;header&nbsp;is&nbsp;the&nbsp;actual&nbsp;sequence!<br>
+input:<br>
+db&nbsp;-&nbsp;the&nbsp;<a href="#cooldb">cooldb</a><br>
+filename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;fasta&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-getcloseseqinfo"><strong>getcloseseqinfo</strong></a>(db, oseq, maxdist)</dt><dd><tt>get&nbsp;database&nbsp;info&nbsp;from&nbsp;all&nbsp;sequences&nbsp;in&nbsp;database&nbsp;close&nbsp;up&nbsp;to&nbsp;maxdist&nbsp;mismatches&nbsp;from&nbsp;oseq<br>
+input:<br>
+db&nbsp;-&nbsp;the&nbsp;initiated&nbsp;database&nbsp;file<br>
+oseq&nbsp;:&nbsp;sequence&nbsp;(ACGT&nbsp;string)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequence&nbsp;to&nbsp;find&nbsp;neoghbors&nbsp;of&nbsp;in&nbsp;the&nbsp;database<br>
+maxdist&nbsp;:&nbsp;integer<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;find&nbsp;only&nbsp;sequences&nbsp;with&nbsp;hamming&lt;=maxdist<br>
+output:<br>
+info&nbsp;:&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;database&nbsp;entries&nbsp;of&nbsp;all&nbsp;close&nbsp;sequences</tt></dd></dl>
+ <dl><dt><a name="-getggids"><strong>getggids</strong></a>(db, biomname)</dt><dd><tt>load&nbsp;the&nbsp;closed&nbsp;reference&nbsp;biom&nbsp;table&nbsp;for&nbsp;the&nbsp;sequences&nbsp;in&nbsp;exportfasta<br>
+and&nbsp;convert&nbsp;the&nbsp;database&nbsp;to&nbsp;greengenesIDs.<br>
+input:<br>
+db&nbsp;-&nbsp;the&nbsp;<a href="#cooldb">cooldb</a>&nbsp;used&nbsp;for&nbsp;the&nbsp;exportfasta<br>
+biomname&nbsp;-&nbsp;the&nbsp;biom&nbsp;table&nbsp;file&nbsp;obtained&nbsp;by&nbsp;running&nbsp;pick_closed_reference&nbsp;on&nbsp;the&nbsp;exportfasta&nbsp;file<br>
+&nbsp;<br>
+output:<br>
+db&nbsp;-&nbsp;the&nbsp;new&nbsp;<a href="#cooldb">cooldb</a>&nbsp;with&nbsp;the&nbsp;'biomggid'&nbsp;field&nbsp;added</tt></dd></dl>
+ <dl><dt><a name="-getseqinfo"><strong>getseqinfo</strong></a>(db, seq)</dt><dd><tt>get&nbsp;all&nbsp;known&nbsp;information&nbsp;for&nbsp;a&nbsp;given&nbsp;sequence&nbsp;(minimum&nbsp;length&nbsp;89bp)<br>
+input:<br>
+db&nbsp;-&nbsp;from&nbsp;<a href="#-loaddb">loaddb</a>()<br>
+seq&nbsp;-&nbsp;the&nbsp;sequence&nbsp;to&nbsp;search&nbsp;for<br>
+output:<br>
+info&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;known&nbsp;info&nbsp;about&nbsp;the&nbsp;sequence</tt></dd></dl>
+ <dl><dt><a name="-loaddb"><strong>loaddb</strong></a>(dbname='./db/coolseqs.txt')</dt></dl>
+ <dl><dt><a name="-preparealldbvals"><strong>preparealldbvals</strong></a>(db)</dt><dd><tt>calculate&nbsp;the&nbsp;amount&nbsp;of&nbsp;times&nbsp;each&nbsp;description&nbsp;appears<br>
+inputL<br>
+db<br>
+&nbsp;<br>
+output:<br>
+db&nbsp;-&nbsp;with&nbsp;the&nbsp;added&nbsp;db.numtimes&nbsp;dict&nbsp;for&nbsp;each&nbsp;description</tt></dd></dl>
+ <dl><dt><a name="-savecoolseqs"><strong>savecoolseqs</strong></a>(expdat, cdb, seqs, description)</dt><dd><tt>save&nbsp;sequences&nbsp;to&nbsp;the&nbsp;<a href="#cooldb">cooldb</a>&nbsp;database<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+seqs&nbsp;:&nbsp;list&nbsp;of&nbsp;sequence&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;sequence&nbsp;strings&nbsp;(ACGT)&nbsp;to&nbsp;save<br>
+description&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;description&nbsp;for&nbsp;these&nbsp;sequences&nbsp;to&nbsp;be&nbsp;put&nbsp;in&nbsp;coolseqs&nbsp;database</tt></dd></dl>
+ <dl><dt><a name="-savedb"><strong>savedb</strong></a>(db, filename)</dt><dd><tt>save&nbsp;the&nbsp;coolseqs&nbsp;database<br>
+for&nbsp;use&nbsp;after&nbsp;getggids&nbsp;to&nbsp;add&nbsp;the&nbsp;biomggid&nbsp;field&nbsp;to&nbsp;the&nbsp;database<br>
+input:<br>
+db&nbsp;-&nbsp;the&nbsp;coolseq&nbsp;database<br>
+filename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;file&nbsp;to&nbsp;write</tt></dd></dl>
+ <dl><dt><a name="-saveseq"><strong>saveseq</strong></a>(db, seq, taxonomy, filename, description, ggid=False, expdescription=False)</dt><dd><tt>"<br>
+Save&nbsp;a&nbsp;sequence&nbsp;into&nbsp;the&nbsp;database<br>
+input:<br>
+db&nbsp;-&nbsp;the&nbsp;initiated&nbsp;database&nbsp;file<br>
+seq&nbsp;-&nbsp;the&nbsp;sequence&nbsp;(ACGT)<br>
+ggid&nbsp;-&nbsp;the&nbsp;hashed&nbsp;id&nbsp;or&nbsp;False&nbsp;to&nbsp;calculate&nbsp;here<br>
+taxonomy&nbsp;-&nbsp;the&nbsp;taxonomy&nbsp;for&nbsp;the&nbsp;sequence<br>
+filename&nbsp;-&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;biom&nbsp;table&nbsp;file<br>
+expdescription&nbsp;-&nbsp;description&nbsp;of&nbsp;the&nbsp;experiment&nbsp;(similar&nbsp;to&nbsp;filename&nbsp;if&nbsp;False)<br>
+description&nbsp;-&nbsp;text&nbsp;about&nbsp;the&nbsp;bacteria<br>
+&nbsp;<br>
+output:<br>
+db&nbsp;-&nbsp;the&nbsp;modified&nbsp;database&nbsp;list&nbsp;(for&nbsp;immediate&nbsp;use&nbsp;-&nbsp;no&nbsp;need&nbsp;to&nbsp;reload)!</tt></dd></dl>
+ <dl><dt><a name="-testenrichment"><strong>testenrichment</strong></a>(db, allseqs=[], group=[], maxfval=0.1, freqs=[])</dt><dd><tt>test&nbsp;for&nbsp;database&nbsp;entries&nbsp;enriched&nbsp;in&nbsp;sequences&nbsp;from&nbsp;group&nbsp;compared&nbsp;to&nbsp;allseqs&nbsp;(all&nbsp;the&nbsp;sequences)&nbsp;or&nbsp;all&nbsp;the&nbsp;database<br>
+input:<br>
+db&nbsp;-&nbsp;the&nbsp;coolseq&nbsp;database<br>
+allseqs&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;the&nbsp;sequences&nbsp;or&nbsp;[]&nbsp;to&nbsp;compare&nbsp;to&nbsp;all&nbsp;the&nbsp;database<br>
+group&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;subgroup&nbsp;of&nbsp;sequences&nbsp;to&nbsp;test&nbsp;vs&nbsp;allseqs<br>
+maxfval&nbsp;-&nbsp;the&nbsp;maximal&nbsp;fdr&nbsp;value<br>
+freqs&nbsp;-&nbsp;the&nbsp;mean&nbsp;frequency&nbsp;of&nbsp;each&nbsp;sequence,&nbsp;or&nbsp;[]&nbsp;to&nbsp;not&nbsp;use&nbsp;frequency&nbsp;weighing<br>
+&nbsp;<br>
+output:<br>
+newplist&nbsp;-&nbsp;a&nbsp;sorted&nbsp;list&nbsp;of&nbsp;dict&nbsp;for&nbsp;annotaions&nbsp;which&nbsp;are&nbsp;below&nbsp;fdr&nbsp;('description','pval','observed','expected')</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__warningregistry__</strong> = {'version': 665, ("'U' mode is deprecated", &lt;class 'DeprecationWarning'&gt;, 45): True}</td></tr></table>
+</body></html>

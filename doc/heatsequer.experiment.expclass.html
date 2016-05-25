@@ -1,0 +1,260 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.experiment.expclass</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.experiment.html"><font color="#ffffff">experiment</font></a>.expclass</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/experiment/expclass.py">/Users/amnon/Python/git/heatsequer/heatsequer/experiment/expclass.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;experiment&nbsp;class</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="copy.html">copy</a><br>
+<a href="heatsequer.html">heatsequer</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="heatsequer.experiment.expclass.html#Experiment">Experiment</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Experiment">class <strong>Experiment</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>experiment&nbsp;class&nbsp;holds&nbsp;the&nbsp;read&nbsp;data&nbsp;and&nbsp;metadata&nbsp;about&nbsp;the&nbsp;experiment,&nbsp;as&nbsp;well<br>
+as&nbsp;the&nbsp;command&nbsp;history<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Experiment-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="Experiment-getexperimentid"><strong>getexperimentid</strong></a>(self)</dt><dd><tt>#&nbsp;get&nbsp;a&nbsp;unique&nbsp;identifier&nbsp;and&nbsp;increase&nbsp;by&nbsp;1</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__slotnames__</strong> = []</dl>
+
+<dl><dt><strong>experimentid</strong> = 79</dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-addcommand"><strong>addcommand</strong></a>(expdat, command, params={}, replaceparams={})</dt><dd><tt>append&nbsp;a&nbsp;command&nbsp;string&nbsp;to&nbsp;the&nbsp;experiment&nbsp;command&nbsp;list&nbsp;from&nbsp;the&nbsp;command&nbsp;and&nbsp;the&nbsp;unique&nbsp;experiment&nbsp;id<br>
+"expXXX=command"&nbsp;where&nbsp;XXX&nbsp;is&nbsp;the&nbsp;unique&nbsp;experiment&nbsp;id<br>
+if&nbsp;params&nbsp;is&nbsp;supplied,&nbsp;use&nbsp;them&nbsp;as&nbsp;the&nbsp;function&nbsp;parameters,&nbsp;otherwise&nbsp;just&nbsp;use&nbsp;command<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;for&nbsp;which&nbsp;to&nbsp;prepare&nbsp;the&nbsp;command<br>
+command&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;command<br>
+params&nbsp;:&nbsp;dict<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;empty,&nbsp;just&nbsp;append&nbsp;the&nbsp;command<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;dict,&nbsp;append&nbsp;command+"("+params+")"<br>
+replaceparams&nbsp;:&nbsp;dict<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;dict&nbsp;of&nbsp;parameters&nbsp;whos&nbsp;values&nbsp;need&nbsp;to&nbsp;be&nbsp;replaced&nbsp;by&nbsp;an&nbsp;experimentid.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;key&nbsp;is&nbsp;parameter,&nbsp;value&nbsp;is&nbsp;experiment,&nbsp;from&nbsp;where&nbsp;the&nbsp;experimentid&nbsp;will&nbsp;be&nbsp;taken</tt></dd></dl>
+ <dl><dt><a name="-addmapfield"><strong>addmapfield</strong></a>(expdat, fieldname, defaultval='NA', inplace=False)</dt><dd><tt>add&nbsp;a&nbsp;new&nbsp;field&nbsp;to&nbsp;the&nbsp;mapping&nbsp;file<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+fieldname&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;new&nbsp;field<br>
+defaultval&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;value&nbsp;for&nbsp;all&nbsp;samples<br>
+inplace&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;overwrite&nbsp;current&nbsp;experiment,&nbsp;False&nbsp;(default)&nbsp;to&nbsp;copy<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;the&nbsp;new&nbsp;field&nbsp;added</tt></dd></dl>
+ <dl><dt><a name="-addsubtrees"><strong>addsubtrees</strong></a>(expdat, tree, inplace=False)</dt><dd><tt>add&nbsp;otus&nbsp;for&nbsp;all&nbsp;subtrees&nbsp;with&nbsp;the&nbsp;frequency&nbsp;being&nbsp;the&nbsp;sum&nbsp;of&nbsp;all&nbsp;bacteria&nbsp;in&nbsp;the&nbsp;subtree<br>
+input:<br>
+expdat&nbsp;-&nbsp;the&nbsp;experiment<br>
+tree&nbsp;-&nbsp;the&nbsp;tree&nbsp;for&nbsp;the&nbsp;experiment<br>
+inplace&nbsp;-&nbsp;if&nbsp;true,&nbsp;replace&nbsp;current&nbsp;experiment<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;new&nbsp;experiment&nbsp;with&nbsp;twice-1&nbsp;number&nbsp;of&nbsp;otus</tt></dd></dl>
+ <dl><dt><a name="-changemapval"><strong>changemapval</strong></a>(expdat, newfield, newval, oldfield, vals, inplace=False)</dt><dd><tt>change&nbsp;values&nbsp;of&nbsp;a&nbsp;field&nbsp;in&nbsp;the&nbsp;mapping&nbsp;file&nbsp;according&nbsp;to&nbsp;another&nbsp;field<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+newfield&nbsp;:&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;change&nbsp;the&nbsp;values&nbsp;in&nbsp;(from&nbsp;addmapfield?)<br>
+newval&nbsp;:&nbsp;the&nbsp;new&nbsp;value&nbsp;to&nbsp;put<br>
+oldfield&nbsp;:&nbsp;the&nbsp;field&nbsp;with&nbsp;the&nbsp;values&nbsp;to&nbsp;test<br>
+vals&nbsp;:&nbsp;a&nbsp;list&nbsp;of&nbsp;values,&nbsp;so&nbsp;newfield&nbsp;is&nbsp;set&nbsp;to&nbsp;newval&nbsp;only&nbsp;if&nbsp;the&nbsp;the&nbsp;value&nbsp;of&nbsp;oldfield&nbsp;is&nbsp;in&nbsp;the&nbsp;list<br>
+inplace&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;overwrite&nbsp;current&nbsp;experiment,&nbsp;False&nbsp;(default)&nbsp;to&nbsp;copy</tt></dd></dl>
+ <dl><dt><a name="-clipseqs"><strong>clipseqs</strong></a>(expdat, startpos, addseq='TAC')</dt><dd><tt>clip&nbsp;the&nbsp;first&nbsp;nucleotides&nbsp;in&nbsp;all&nbsp;sequences&nbsp;in&nbsp;experiment<br>
+to&nbsp;fix&nbsp;offset&nbsp;in&nbsp;sequencing<br>
+input:<br>
+expdat<br>
+startpos&nbsp;-&nbsp;the&nbsp;position&nbsp;to&nbsp;start&nbsp;from&nbsp;(0&nbsp;indexed)&nbsp;or&nbsp;negative&nbsp;to&nbsp;add&nbsp;nucleotides<br>
+addseq&nbsp;-&nbsp;the&nbsp;sequence&nbsp;to&nbsp;add&nbsp;(just&nbsp;a&nbsp;guess)&nbsp;if&nbsp;startpos&nbsp;is&nbsp;negative<br>
+output:<br>
+newexp&nbsp;-&nbsp;new&nbsp;experiment&nbsp;with&nbsp;all&nbsp;sequences&nbsp;clipped&nbsp;and&nbsp;joined&nbsp;identical&nbsp;sequences</tt></dd></dl>
+ <dl><dt><a name="-convertdatefield"><strong>convertdatefield</strong></a>(expdat, field, newfield, timeformat='%m/%d/%y %H:%M')</dt><dd><tt>convert&nbsp;a&nbsp;field&nbsp;containing&nbsp;date/time&nbsp;to&nbsp;a&nbsp;numeric&nbsp;(seocds&nbsp;since&nbsp;epoch)&nbsp;field&nbsp;(create&nbsp;a&nbsp;new&nbsp;field&nbsp;for&nbsp;that)<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;to&nbsp;add&nbsp;the&nbsp;field&nbsp;to<br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;containing&nbsp;the&nbsp;date/time&nbsp;format<br>
+newfield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;new&nbsp;field&nbsp;(with&nbsp;seconds&nbsp;since&nbsp;epoch)<br>
+timeformat&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;format&nbsp;of&nbsp;the&nbsp;date/time&nbsp;field&nbsp;(based&nbsp;on&nbsp;time&nbsp;format)<br>
+output:<br>
+newexp&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;with&nbsp;the&nbsp;added&nbsp;time&nbsp;since&nbsp;epoch&nbsp;field</tt></dd></dl>
+ <dl><dt><a name="-copyexp"><strong>copyexp</strong></a>(expdat)</dt><dd><tt>copy&nbsp;an&nbsp;experiment&nbsp;(duplicating&nbsp;the&nbsp;important&nbsp;fields)<br>
+but&nbsp;give&nbsp;it&nbsp;a&nbsp;unique&nbsp;identifier<br>
+&nbsp;<br>
+Parameters<br>
+----------<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;experiment&nbsp;to&nbsp;copy<br>
+output:<br>
+newexp&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;deep&nbsp;copy&nbsp;of&nbsp;expdat</tt></dd></dl>
+ <dl><dt><a name="-fieldtobact"><strong>fieldtobact</strong></a>(expdat, field, bactname='', meanreads=1000, cutoff=0)</dt><dd><tt>convert&nbsp;values&nbsp;in&nbsp;a&nbsp;map&nbsp;file&nbsp;field&nbsp;to&nbsp;a&nbsp;new&nbsp;bacteria&nbsp;(to&nbsp;facilitate&nbsp;numeric&nbsp;analysis)<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;convert<br>
+bactname&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;new&nbsp;bacteria&nbsp;(empty&nbsp;to&nbsp;have&nbsp;similar&nbsp;to&nbsp;field&nbsp;name)<br>
+meanreads&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;mean&nbsp;number&nbsp;of&nbsp;reads&nbsp;for&nbsp;the&nbsp;new&nbsp;field&nbsp;bacteria<br>
+cutoff&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;minimal&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;per&nbsp;sample&nbsp;(otherwise&nbsp;replace&nbsp;with&nbsp;meanreads)<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;added&nbsp;bacteria&nbsp;with&nbsp;the&nbsp;field&nbsp;vals&nbsp;as&nbsp;reads</tt></dd></dl>
+ <dl><dt><a name="-findsamples"><strong>findsamples</strong></a>(expdat, field, value, exclude=False)</dt><dd><tt>return&nbsp;the&nbsp;positions&nbsp;of&nbsp;samples&nbsp;in&nbsp;expdat&nbsp;matching&nbsp;value&nbsp;in&nbsp;field<br>
+similar&nbsp;to&nbsp;filtersamples&nbsp;but&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;indices&nbsp;(for&nbsp;the&nbsp;data&nbsp;matrix)<br>
+input:<br>
+expdat<br>
+field&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;test<br>
+value&nbsp;-&nbsp;the&nbsp;value&nbsp;to&nbsp;look&nbsp;for&nbsp;(or&nbsp;a&nbsp;list&nbsp;of&nbsp;values)<br>
+exclude&nbsp;-&nbsp;True&nbsp;to&nbsp;get&nbsp;positions&nbsp;without&nbsp;that&nbsp;value,&nbsp;False&nbsp;to&nbsp;get&nbsp;positions&nbsp;of&nbsp;the&nbsp;value<br>
+&nbsp;<br>
+output:<br>
+pos&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;positions&nbsp;matching&nbsp;the&nbsp;field/val&nbsp;(for&nbsp;use&nbsp;as&nbsp;indices&nbsp;in&nbsp;expdat.data)</tt></dd></dl>
+ <dl><dt><a name="-findseqsinexp"><strong>findseqsinexp</strong></a>(expdat, seqs)</dt><dd><tt>find&nbsp;sequences&nbsp;from&nbsp;seqs&nbsp;in&nbsp;expdat&nbsp;sequences&nbsp;and&nbsp;return&nbsp;the&nbsp;indices<br>
+input:<br>
+expdat<br>
+seqs&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;sequences<br>
+&nbsp;<br>
+output:<br>
+res&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;indices&nbsp;where&nbsp;seqs&nbsp;are&nbsp;in&nbsp;expdat&nbsp;sequences</tt></dd></dl>
+ <dl><dt><a name="-get_data_path"><strong>get_data_path</strong></a>(fn, subfolder='data')</dt><dd><tt>Return&nbsp;path&nbsp;to&nbsp;filename&nbsp;``fn``&nbsp;in&nbsp;the&nbsp;data&nbsp;folder.<br>
+returns&nbsp;the&nbsp;joining&nbsp;of&nbsp;the&nbsp;heatsequerdir&nbsp;variable&nbsp;(set&nbsp;in&nbsp;__init__)&nbsp;and&nbsp;the&nbsp;subfolder&nbsp;and&nbsp;fn</tt></dd></dl>
+ <dl><dt><a name="-getfieldvals"><strong>getfieldvals</strong></a>(expdat, field, ounique=False)</dt><dd><tt>get&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;field&nbsp;values&nbsp;in&nbsp;all&nbsp;samples<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;to&nbsp;get&nbsp;the&nbsp;values&nbsp;from<br>
+ounique&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;get&nbsp;unique&nbsp;values,&nbsp;False&nbsp;to&nbsp;get&nbsp;all</tt></dd></dl>
+ <dl><dt><a name="-hashseq"><strong>hashseq</strong></a>(seq)</dt><dd><tt>calculate&nbsp;the&nbsp;hash&nbsp;value&nbsp;for&nbsp;a&nbsp;given&nbsp;sequence&nbsp;(for&nbsp;an&nbsp;almost&nbsp;unique&nbsp;sequence&nbsp;identifier)<br>
+used&nbsp;for&nbsp;the&nbsp;sid&nbsp;field&nbsp;in&nbsp;experiment<br>
+input:<br>
+seq&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequence&nbsp;to&nbsp;hash<br>
+&nbsp;<br>
+output:<br>
+hval&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;hash&nbsp;value&nbsp;for&nbsp;the&nbsp;sequence</tt></dd></dl>
+ <dl><dt><a name="-insertbacteria"><strong>insertbacteria</strong></a>(expdat, freqs=[], seq='unknown', tax='unknown', logit=True)</dt><dd><tt>insert&nbsp;a&nbsp;new&nbsp;bacteria&nbsp;to&nbsp;an&nbsp;experiment<br>
+&nbsp;<br>
+input:<br>
+expdat<br>
+freqs&nbsp;-&nbsp;the&nbsp;frequency&nbsp;of&nbsp;the&nbsp;bacteria&nbsp;in&nbsp;all&nbsp;samles&nbsp;of&nbsp;expdat&nbsp;or&nbsp;False&nbsp;to&nbsp;add&nbsp;zeros<br>
+seq&nbsp;-&nbsp;the&nbsp;sequence&nbsp;of&nbsp;the&nbsp;new&nbsp;bacteria<br>
+tax&nbsp;-&nbsp;taxonomy&nbsp;of&nbsp;the&nbsp;new&nbsp;bacteria<br>
+logit&nbsp;-&nbsp;True&nbsp;to&nbsp;add&nbsp;command&nbsp;log/filter,&nbsp;False&nbsp;to&nbsp;not&nbsp;add&nbsp;(if&nbsp;called&nbsp;from&nbsp;other&nbsp;function)<br>
+&nbsp;<br>
+output:<br>
+pos&nbsp;-&nbsp;position&nbsp;of&nbsp;the&nbsp;new&nbsp;bacteria</tt></dd></dl>
+ <dl><dt><a name="-joinexperiments"><strong>joinexperiments</strong></a>(exp1, exp2, missingval='NA', origfieldname='origexp')</dt><dd><tt>join&nbsp;2&nbsp;experiments&nbsp;into&nbsp;a&nbsp;new&nbsp;experiment.&nbsp;adding&nbsp;a&nbsp;new&nbsp;field&nbsp;origfieldname<br>
+input:<br>
+exp1,exp2&nbsp;-&nbsp;the&nbsp;experiments&nbsp;to&nbsp;join<br>
+missingval&nbsp;-&nbsp;string&nbsp;to&nbsp;put&nbsp;when&nbsp;field&nbsp;not&nbsp;in&nbsp;mapping&nbsp;file&nbsp;of&nbsp;one&nbsp;of&nbsp;the&nbsp;experiments<br>
+origfieldname&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;new&nbsp;field&nbsp;to&nbsp;add&nbsp;which&nbsp;contains&nbsp;the&nbsp;original&nbsp;experiment&nbsp;name</tt></dd></dl>
+ <dl><dt><a name="-joinfields"><strong>joinfields</strong></a>(expdat, field1, field2, newfield)</dt><dd><tt>join&nbsp;2&nbsp;fields&nbsp;to&nbsp;create&nbsp;a&nbsp;new&nbsp;field&nbsp;for&nbsp;each&nbsp;sample<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+field1,field2&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;2&nbsp;fields&nbsp;to&nbsp;join<br>
+newfield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;new&nbsp;field&nbsp;to&nbsp;add</tt></dd></dl>
+ <dl><dt><a name="-reorderbacteria"><strong>reorderbacteria</strong></a>(exp, order, inplace=False)</dt><dd><tt>reorder&nbsp;the&nbsp;bacteria&nbsp;in&nbsp;an&nbsp;experiment&nbsp;(can&nbsp;delete&nbsp;if&nbsp;bacteria&nbsp;not&nbsp;in&nbsp;new&nbsp;order)<br>
+input:<br>
+exp&nbsp;-&nbsp;the&nbsp;experiment<br>
+order&nbsp;-&nbsp;the&nbsp;new&nbsp;order<br>
+output:<br>
+newexp</tt></dd></dl>
+ <dl><dt><a name="-reordersamples"><strong>reordersamples</strong></a>(exp, newpos, inplace=False)</dt><dd><tt>reorder&nbsp;the&nbsp;samples&nbsp;of&nbsp;the&nbsp;experiment<br>
+input:<br>
+exp&nbsp;-&nbsp;the&nbsp;experiment<br>
+newpos&nbsp;-&nbsp;array&nbsp;-&nbsp;the&nbsp;new&nbsp;positions&nbsp;(can&nbsp;skip&nbsp;positions&nbsp;to&nbsp;delete&nbsp;them)<br>
+output:<br>
+newexp&nbsp;-&nbsp;the&nbsp;new&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-samplemeanpervalue"><strong>samplemeanpervalue</strong></a>(expdat, field)</dt><dd><tt>BETTER&nbsp;TO&nbsp;USE&nbsp;filtersimilarsamples!!!!<br>
+create&nbsp;a&nbsp;new&nbsp;experiment,&nbsp;with&nbsp;1&nbsp;sample&nbsp;per&nbsp;value&nbsp;in&nbsp;field,&nbsp;containing&nbsp;the&nbsp;mean&nbsp;of&nbsp;all&nbsp;samples&nbsp;with&nbsp;that&nbsp;value<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+field&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;field&nbsp;to&nbsp;use&nbsp;(i.e.&nbsp;'ENV_MATTER')<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;new&nbsp;experiment&nbsp;with&nbsp;1&nbsp;sample&nbsp;per&nbsp;unique&nbsp;value&nbsp;of&nbsp;field</tt></dd></dl>
+ <dl><dt><a name="-zerobacteria"><strong>zerobacteria</strong></a>(expdat, inplace=False)</dt><dd><tt>zero&nbsp;all&nbsp;the&nbsp;bacteria&nbsp;in&nbsp;an&nbsp;experiment&nbsp;(can&nbsp;then&nbsp;add&nbsp;insertbacteria)<br>
+input:<br>
+expdat&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+inplace&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;do&nbsp;inplace,&nbsp;False&nbsp;to&nbsp;make&nbsp;new&nbsp;copy<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;<a href="#Experiment">Experiment</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;all&nbsp;bacteria&nbsp;have&nbsp;been&nbsp;removed</tt></dd></dl>
+</td></tr></table>
+</body></html>

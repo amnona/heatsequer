@@ -1,0 +1,205 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.experiment.io</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.experiment.html"><font color="#ffffff">experiment</font></a>.io</strong></big></big> (version 0.9)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/experiment/io.py">/Users/amnon/Python/git/heatsequer/heatsequer/experiment/io.py</a></font></td></tr></table>
+    <p><tt>heatsequer&nbsp;experiment&nbsp;input/output&nbsp;functions</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="biom.html">biom</a><br>
+<a href="csv.html">csv</a><br>
+</td><td width="25%" valign=top><a href="hashlib.html">hashlib</a><br>
+<a href="heatsequer.html">heatsequer</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="os.html">os</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-createbiomtablefromexp"><strong>createbiomtablefromexp</strong></a>(expdat, addtax=True)</dt><dd><tt>Create&nbsp;a&nbsp;biom&nbsp;table&nbsp;from&nbsp;an&nbsp;experiment<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+addtax&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;add&nbsp;taxonomy&nbsp;metadata,&nbsp;False&nbsp;to&nbsp;not&nbsp;add<br>
+&nbsp;<br>
+output:<br>
+table&nbsp;-&nbsp;the&nbsp;biom&nbsp;table&nbsp;(with&nbsp;taxonomy)</tt></dd></dl>
+ <dl><dt><a name="-getfilemd5"><strong>getfilemd5</strong></a>(filename)</dt><dd><tt>get&nbsp;the&nbsp;md5&nbsp;of&nbsp;the&nbsp;text&nbsp;file&nbsp;filename<br>
+input:<br>
+filename&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;file&nbsp;to&nbsp;calculate&nbsp;md5&nbsp;on<br>
+&nbsp;<br>
+output:<br>
+flmd5:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;md5&nbsp;of&nbsp;the&nbsp;file&nbsp;filename</tt></dd></dl>
+ <dl><dt><a name="-gettaxfromtable"><strong>gettaxfromtable</strong></a>(table, seq, useseqname=False)</dt><dd><tt>get&nbsp;the&nbsp;taxonomy&nbsp;for&nbsp;a&nbsp;given&nbsp;sequence&nbsp;in&nbsp;the&nbsp;biom&nbsp;table<br>
+and&nbsp;convert&nbsp;it&nbsp;to&nbsp;a&nbsp;nicer&nbsp;string<br>
+if&nbsp;no&nbsp;taxonomy&nbsp;-&nbsp;use&nbsp;"unknown"<br>
+&nbsp;<br>
+input:<br>
+table&nbsp;:&nbsp;biom.table<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;biom&nbsp;table&nbsp;containing&nbsp;the&nbsp;sequence&nbsp;and&nbsp;(possibly)&nbsp;the&nbsp;taxonomy<br>
+seq&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sequence&nbsp;to&nbsp;get&nbsp;taxonomy&nbsp;for<br>
+useseqname&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;False&nbsp;(default)&nbsp;to&nbsp;use&nbsp;'unknwon'&nbsp;for&nbsp;sequences&nbsp;without&nbsp;taxonomy,&nbsp;True&nbsp;to&nbsp;use&nbsp;sequence&nbsp;as&nbsp;taxonomy&nbsp;for&nbsp;them<br>
+&nbsp;<br>
+output:<br>
+tax&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;nice&nbsp;taxonomy&nbsp;string</tt></dd></dl>
+ <dl><dt><a name="-load"><strong>load</strong></a>(tablename, mapname='map.txt', taxfile='', nameisseq=True, studyname=False, tabletype='biom', normalize=True, addsname='', keepzero=False, removefrom=False, removenum=1, mapsampletolowercase=False, sortit=True, useseqnamefortax=True)</dt><dd><tt>Load&nbsp;an&nbsp;experiment&nbsp;-&nbsp;a&nbsp;biom&nbsp;table&nbsp;and&nbsp;a&nbsp;mapping&nbsp;file<br>
+input:<br>
+tablename&nbsp;-&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;biom&nbsp;table&nbsp;file<br>
+mapname&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;mapping&nbsp;file<br>
+taxfile&nbsp;-&nbsp;empty&nbsp;('')&nbsp;to&nbsp;load&nbsp;taxonomy&nbsp;from&nbsp;biom&nbsp;table,&nbsp;non-empty&nbsp;to&nbsp;load<br>
+from&nbsp;rdp&nbsp;output&nbsp;file&nbsp;(web)<br>
+nameisseq&nbsp;-&nbsp;False&nbsp;to&nbsp;keep&nbsp;otu&nbsp;name&nbsp;as&nbsp;sid&nbsp;without&nbsp;hashing&nbsp;it,&nbsp;True&nbsp;to&nbsp;treat&nbsp;otuid&nbsp;as&nbsp;sequence<br>
+addsname&nbsp;-&nbsp;a&nbsp;string&nbsp;to&nbsp;add&nbsp;to&nbsp;each&nbsp;table&nbsp;sample&nbsp;name&nbsp;(or&nbsp;empty&nbsp;to&nbsp;not&nbsp;add)<br>
+studyname&nbsp;-&nbsp;Flase&nbsp;to&nbsp;assign&nbsp;from&nbsp;table&nbsp;file&nbsp;name,&nbsp;otherwise&nbsp;string&nbsp;to&nbsp;store&nbsp;as&nbsp;study&nbsp;name<br>
+tabletype:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'biom'&nbsp;-&nbsp;a&nbsp;biom&nbsp;table<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'meta'&nbsp;-&nbsp;a&nbsp;metabolomics&nbsp;table&nbsp;(row&nbsp;per&nbsp;sample,&nbsp;col&nbsp;per&nbsp;metabolite,&nbsp;can&nbsp;contain&nbsp;duplicate&nbsp;metaboliteids)<br>
+normalize&nbsp;-&nbsp;True&nbsp;to&nbsp;normalize&nbsp;to&nbsp;10k&nbsp;reads&nbsp;per&nbsp;sample,&nbsp;False&nbsp;to&nbsp;not&nbsp;normalize&nbsp;(change&nbsp;to&nbsp;mean&nbsp;10k&nbsp;reads/sample)<br>
+keepzero&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;keep&nbsp;samples&nbsp;with&nbsp;0&nbsp;reads,&nbsp;False&nbsp;to&nbsp;throw&nbsp;away<br>
+removefrom&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;non&nbsp;empty&nbsp;-&nbsp;cut&nbsp;table&nbsp;sample&nbsp;name&nbsp;after&nbsp;(and&nbsp;including)&nbsp;the&nbsp;first&nbsp;occurance&nbsp;of&nbsp;removefrom<br>
+mapsampletolowercase&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;convert&nbsp;the&nbsp;mapping&nbsp;file&nbsp;sample&nbsp;id&nbsp;to&nbsp;lower&nbsp;case&nbsp;(for&nbsp;EMP&nbsp;data).&nbsp;default=False<br>
+sortit&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;sort&nbsp;sequences&nbsp;by&nbsp;taxonomy,&nbsp;False&nbsp;to&nbsp;not&nbsp;sort<br>
+useseqnamefortax&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;use&nbsp;the&nbsp;sequence&nbsp;as&nbsp;taxonomy&nbsp;if&nbsp;no&nbsp;taxonomy&nbsp;supplied,&nbsp;False&nbsp;to&nbsp;use&nbsp;'unknown'<br>
+&nbsp;<br>
+output:<br>
+an&nbsp;experiment&nbsp;class&nbsp;for&nbsp;the&nbsp;current&nbsp;experiment</tt></dd></dl>
+ <dl><dt><a name="-loadexptree"><strong>loadexptree</strong></a>(expdat, treefilename)</dt><dd><tt>EXPERIMENTAL<br>
+load&nbsp;a&nbsp;tree&nbsp;file&nbsp;associated&nbsp;with&nbsp;an&nbsp;experiment<br>
+input:<br>
+expdat<br>
+treefilename&nbsp;-&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;newick&nbsp;tree&nbsp;file&nbsp;(from&nbsp;make_phylogeny.py).&nbsp;note&nbsp;that&nbsp;need&nbsp;to&nbsp;use&nbsp;the&nbsp;sequences&nbsp;as&nbsp;the&nbsp;fasta&nbsp;sequence&nbsp;ids&nbsp;(use&nbsp;-s&nbsp;in&nbsp;the&nbsp;CreateTable)<br>
+&nbsp;<br>
+output:<br>
+expdat&nbsp;-&nbsp;with&nbsp;a&nbsp;new&nbsp;field&nbsp;-&nbsp;tree</tt></dd></dl>
+ <dl><dt><a name="-loadmap"><strong>loadmap</strong></a>(mapfilename, sampidfield='#SampleID', mapsampletolowercase=False)</dt><dd><tt>load&nbsp;a&nbsp;tab&nbsp;separated&nbsp;mapping&nbsp;file&nbsp;and&nbsp;store&nbsp;the&nbsp;values&nbsp;and&nbsp;samples&nbsp;(from&nbsp;#SampleID&nbsp;field)<br>
+input:<br>
+mapfilename&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;mapping&nbsp;file<br>
+sampidfield&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;field&nbsp;containing&nbsp;the&nbsp;sample&nbsp;id&nbsp;(default&nbsp;is&nbsp;#SampleID)<br>
+&nbsp;<br>
+output:<br>
+mapsamples&nbsp;:&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;sampleids&nbsp;(in&nbsp;order)&nbsp;-&nbsp;the&nbsp;values&nbsp;in&nbsp;sampidfield<br>
+smap&nbsp;:&nbsp;dict&nbsp;of&nbsp;dict&nbsp;of&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;indexed&nbsp;by&nbsp;sampleid,&nbsp;then&nbsp;by&nbsp;field&nbsp;name&nbsp;(i.e.&nbsp;'ENV_MATTER'&nbsp;etc.),&nbsp;values&nbsp;are&nbsp;the&nbsp;actual&nbsp;value&nbsp;of&nbsp;the&nbsp;field&nbsp;for&nbsp;the&nbsp;sample<br>
+fields&nbsp;:&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;names&nbsp;of&nbsp;the&nbsp;mapping&nbsp;file&nbsp;fields&nbsp;(i.e&nbsp;'ENV_MATTER'&nbsp;etc)<br>
+mapmd5&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;md5&nbsp;of&nbsp;the&nbsp;map&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-loadmetabuckettable"><strong>loadmetabuckettable</strong></a>(filename)</dt><dd><tt>load&nbsp;a&nbsp;metabolomics&nbsp;csv&nbsp;bucket&nbsp;table&nbsp;and&nbsp;convert&nbsp;to&nbsp;a&nbsp;biom&nbsp;table&nbsp;in&nbsp;memory<br>
+input:<br>
+filename&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;csv&nbsp;bucket&nbsp;table&nbsp;file&nbsp;name<br>
+output:<br>
+table:&nbsp;biom.Table<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;biom&nbsp;table&nbsp;initialized&nbsp;by&nbsp;the&nbsp;bucket&nbsp;table</tt></dd></dl>
+ <dl><dt><a name="-loadrdptax"><strong>loadrdptax</strong></a>(expdat, rdpfilename, fastaname=False, threshold=60)</dt><dd><tt>load&nbsp;rdp&nbsp;taxonomy&nbsp;(the&nbsp;output&nbsp;of&nbsp;download&nbsp;allrank&nbsp;in&nbsp;the&nbsp;rdp&nbsp;classifier&nbsp;website)&nbsp;and&nbsp;add&nbsp;to&nbsp;biom&nbsp;table<br>
+input:<br>
+expdat&nbsp;-&nbsp;the&nbsp;biom&nbsp;table&nbsp;for&nbsp;which&nbsp;the&nbsp;taxonomy&nbsp;was&nbsp;assigned&nbsp;(sequenced&nbsp;were&nbsp;`d)<br>
+rdpfilename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;saved&nbsp;allrank&nbsp;rdp&nbsp;assignment<br>
+fastaname&nbsp;-&nbsp;name&nbsp;of&nbsp;fasta&nbsp;file&nbsp;used&nbsp;for&nbsp;rdp&nbsp;assignment&nbsp;(if&nbsp;it&nbsp;was&nbsp;not&nbsp;from&nbsp;saveseqsforrdp)&nbsp;or&nbsp;False&nbsp;if&nbsp;sequences&nbsp;are&nbsp;in&nbsp;the&nbsp;header&nbsp;of&nbsp;the&nbsp;fasta<br>
+threshold&nbsp;-&nbsp;the&nbsp;assignemt&nbsp;probability&nbsp;threshold&nbsp;under&nbsp;which&nbsp;to&nbsp;not&nbsp;include&nbsp;the&nbsp;assignment&nbsp;(for&nbsp;each&nbsp;level)</tt></dd></dl>
+ <dl><dt><a name="-reloadmap"><strong>reloadmap</strong></a>(expdat, mapfilename)</dt><dd><tt>reload&nbsp;the&nbsp;mapping&nbsp;file&nbsp;for&nbsp;a&nbsp;loaded&nbsp;experiment<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+mapfilename&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;the&nbsp;mapping&nbsp;file&nbsp;to&nbsp;reload<br>
+&nbsp;<br>
+output:<br>
+newexp&nbsp;:&nbsp;Experiment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;like&nbsp;expdat&nbsp;but&nbsp;with&nbsp;fields&nbsp;from&nbsp;new&nbsp;map&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-savecommands"><strong>savecommands</strong></a>(expdat, filename)</dt><dd><tt>save&nbsp;the&nbsp;commands&nbsp;used&nbsp;to&nbsp;generate&nbsp;an&nbsp;experiment&nbsp;to&nbsp;a&nbsp;python&nbsp;text&nbsp;file<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+filename&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;filename&nbsp;to&nbsp;save&nbsp;commands&nbsp;to</tt></dd></dl>
+ <dl><dt><a name="-saveexpseqs"><strong>saveexpseqs</strong></a>(expdat, filename)</dt><dd><tt>save&nbsp;all&nbsp;bacteria&nbsp;from&nbsp;an&nbsp;experiment&nbsp;as&nbsp;a&nbsp;fasta&nbsp;file<br>
+input:<br>
+expdat<br>
+filename&nbsp;-&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;fasta&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-saveillitable"><strong>saveillitable</strong></a>(expdat, filename)</dt><dd><tt>create&nbsp;a&nbsp;tsv&nbsp;table&nbsp;file&nbsp;for&nbsp;use&nbsp;with&nbsp;the&nbsp;illi&nbsp;visualization&nbsp;tool<br>
+input:<br>
+expdat<br>
+filename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;table&nbsp;file&nbsp;to&nbsp;create</tt></dd></dl>
+ <dl><dt><a name="-savemap"><strong>savemap</strong></a>(expdat, filename)</dt></dl>
+ <dl><dt><a name="-saveseqsfasta"><strong>saveseqsfasta</strong></a>(expdat, seqs, filename)</dt><dd><tt>save&nbsp;bacteria&nbsp;from&nbsp;list&nbsp;seqs&nbsp;to&nbsp;a&nbsp;fasta&nbsp;file<br>
+input:<br>
+expdat&nbsp;-&nbsp;(for&nbsp;taxonomy)&nbsp;or&nbsp;False<br>
+seqs&nbsp;-&nbsp;the&nbsp;sequences&nbsp;to&nbsp;save<br>
+filename&nbsp;-&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;fasta&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-saveseqsforrdp"><strong>saveseqsforrdp</strong></a>(expdat, outfilename)</dt><dd><tt>save&nbsp;sequences&nbsp;of&nbsp;an&nbsp;experiment&nbsp;into&nbsp;a&nbsp;fasta&nbsp;file<br>
+with&nbsp;the&nbsp;header&nbsp;identical&nbsp;to&nbsp;the&nbsp;sequence&nbsp;(for&nbsp;easy&nbsp;reloading&nbsp;of&nbsp;rdp&nbsp;taxonomy)<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+outfilename&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;fasta&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-saveseqstolinefile"><strong>saveseqstolinefile</strong></a>(seqs, filename)</dt><dd><tt>save&nbsp;experiment&nbsp;sequeces&nbsp;to&nbsp;a&nbsp;file&nbsp;with&nbsp;1&nbsp;sequence&nbsp;per&nbsp;line<br>
+input:<br>
+seqs&nbsp;:&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;sequences&nbsp;to&nbsp;save<br>
+filename&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;File&nbsp;to&nbsp;save&nbsp;to</tt></dd></dl>
+ <dl><dt><a name="-savetobiom"><strong>savetobiom</strong></a>(expdat, filename, format='hdf5', addtax=True, useorigreads=True, exporthistory=True, logtransform=False)</dt><dd><tt>Save&nbsp;an&nbsp;experiment&nbsp;to&nbsp;a&nbsp;biom&nbsp;table<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+filename&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;the&nbsp;file&nbsp;to&nbsp;save&nbsp;to<br>
+format&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Format&nbsp;of&nbsp;the&nbsp;file&nbsp;('hdf5','json','txt')<br>
+addtax&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;add&nbsp;taxonomy&nbsp;metadata,&nbsp;False&nbsp;to&nbsp;not&nbsp;add<br>
+useorigreads&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;use&nbsp;original&nbsp;number&nbsp;of&nbsp;reads,&nbsp;False&nbsp;to&nbsp;use&nbsp;normalized&nbsp;(sum=10k)<br>
+exporthistory&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;(default)&nbsp;to&nbsp;save&nbsp;also&nbsp;the&nbsp;history&nbsp;(to&nbsp;filename.commands.txt)<br>
+logtransform&nbsp;:&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;True&nbsp;to&nbsp;log&nbsp;transform&nbsp;the&nbsp;data,&nbsp;false&nbsp;(default)&nbsp;to&nbsp;save&nbsp;original&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-savetsvtable"><strong>savetsvtable</strong></a>(expdat, filename, logtransform=True)</dt><dd><tt>save&nbsp;an&nbsp;experiment&nbsp;as&nbsp;a&nbsp;tab&nbsp;separated&nbsp;table,&nbsp;with&nbsp;columns&nbsp;for&nbsp;samples&nbsp;and&nbsp;rows&nbsp;for&nbsp;bacteria<br>
+for&nbsp;jose&nbsp;clemente&nbsp;long&nbsp;babies&nbsp;paper<br>
+input:<br>
+expdat<br>
+filename&nbsp;-&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;tsv&nbsp;file<br>
+minreads&nbsp;-&nbsp;save&nbsp;only&nbsp;bacteria&nbsp;with&nbsp;&gt;=minreads&nbsp;reads<br>
+logtransform&nbsp;-&nbsp;True&nbsp;to&nbsp;save&nbsp;the&nbsp;log2&nbsp;of&nbsp;the&nbsp;reads,&nbsp;False&nbsp;to&nbsp;save&nbsp;the&nbsp;reads</tt></dd></dl>
+ <dl><dt><a name="-writetaxseq"><strong>writetaxseq</strong></a>(expdat, filename)</dt><dd><tt>write&nbsp;a&nbsp;tab&nbsp;delimited&nbsp;table&nbsp;of&nbsp;taxonomy&nbsp;and&nbsp;sequence<br>
+used&nbsp;for&nbsp;rapid&nbsp;response&nbsp;summary<br>
+&nbsp;<br>
+input:<br>
+expdat&nbsp;:&nbsp;Experiment<br>
+filename&nbsp;:&nbsp;name&nbsp;of&nbsp;the&nbsp;tsv&nbsp;output&nbsp;file</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__warningregistry__</strong> = {("'U' mode is deprecated", &lt;class 'DeprecationWarning'&gt;, 579): True, ("'U' mode is deprecated", &lt;class 'DeprecationWarning'&gt;, 731): True, ("unclosed file &lt;_io.TextIOWrapper name='/Users/am...orage/map.joined.txt' mode='rU' encoding='UTF-8'&gt;", &lt;class 'ResourceWarning'&gt;, 590): True, 'version': 1124}</td></tr></table>
+</body></html>

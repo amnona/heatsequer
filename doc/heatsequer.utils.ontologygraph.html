@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.utils.ontologygraph</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.utils.html"><font color="#ffffff">utils</font></a>.ontologygraph</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/utils/ontologygraph.py">/Users/amnon/Python/git/heatsequer/heatsequer/utils/ontologygraph.py</a></font></td></tr></table>
+    <p><tt>heatsequer<br>
+parse&nbsp;ontology&nbsp;as&nbsp;a&nbsp;networkx&nbsp;graph</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="networkx.html">networkx</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-getnodeparents"><strong>getnodeparents</strong></a>(g, node)</dt><dd><tt>get&nbsp;a&nbsp;list&nbsp;of&nbsp;all&nbsp;parents&nbsp;of&nbsp;a&nbsp;node<br>
+&nbsp;<br>
+input:<br>
+g&nbsp;:&nbsp;networkx&nbsp;DiGraph<br>
+node&nbsp;:&nbsp;node&nbsp;in&nbsp;the&nbsp;graph<br>
+&nbsp;<br>
+output:<br>
+parents&nbsp;:&nbsp;list&nbsp;of&nbsp;nodes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;list&nbsp;of&nbsp;parents&nbsp;of&nbsp;the&nbsp;node</tt></dd></dl>
+ <dl><dt><a name="-ontologysubtreeids"><strong>ontologysubtreeids</strong></a>(g, node)</dt><dd><tt>get&nbsp;the&nbsp;ids&nbsp;of&nbsp;a&nbsp;subtree&nbsp;of&nbsp;an&nbsp;ontology&nbsp;graph&nbsp;(from&nbsp;<a href="#-ontologytotree">ontologytotree</a>()&nbsp;)<br>
+&nbsp;<br>
+input:<br>
+g&nbsp;:&nbsp;networkx&nbsp;graph&nbsp;((from&nbsp;<a href="#-ontologytotree">ontologytotree</a>()&nbsp;)<br>
+node&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;subtree&nbsp;root<br>
+&nbsp;<br>
+output:<br>
+names&nbsp;:&nbsp;dict&nbsp;of&nbsp;ids<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;dict&nbsp;with&nbsp;ids&nbsp;as&nbsp;keys&nbsp;for&nbsp;the&nbsp;ontology&nbsp;(and&nbsp;True&nbsp;as&nbsp;value)</tt></dd></dl>
+ <dl><dt><a name="-ontologytotree"><strong>ontologytotree</strong></a>(filename)</dt><dd><tt>add&nbsp;ontology&nbsp;entries&nbsp;to&nbsp;a&nbsp;tree&nbsp;(based&nbsp;on&nbsp;'is_a'&nbsp;field)<br>
+&nbsp;<br>
+input:<br>
+filename&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;of&nbsp;the&nbsp;obo&nbsp;ontology&nbsp;file<br>
+&nbsp;<br>
+output:<br>
+g&nbsp;:&nbsp;networkx&nbsp;graph<br>
+names&nbsp;:&nbsp;list&nbsp;of&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;names&nbsp;of&nbsp;nodes&nbsp;of&nbsp;g</tt></dd></dl>
+ <dl><dt><a name="-ontotreetonames"><strong>ontotreetonames</strong></a>(g, termdict)</dt><dd><tt>convert&nbsp;an&nbsp;ontology&nbsp;tree&nbsp;with&nbsp;IDs&nbsp;as&nbsp;node&nbsp;ids&nbsp;to&nbsp;a&nbsp;tree&nbsp;with&nbsp;the&nbsp;name&nbsp;as&nbsp;the&nbsp;node&nbsp;ids<br>
+&nbsp;<br>
+input:<br>
+g&nbsp;:&nbsp;networkx&nbsp;DiGraph<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;<a href="#-ontologytotree">ontologytotree</a>()<br>
+termdict&nbsp;:&nbsp;dict&nbsp;of&nbsp;str:str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;dict&nbsp;mapping&nbsp;IDs&nbsp;to&nbsp;names&nbsp;(such&nbsp;as&nbsp;scdb.ontologyfromid)<br>
+&nbsp;<br>
+output:<br>
+ng&nbsp;:&nbsp;networkx&nbsp;DiGraph<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;names&nbsp;instead&nbsp;of&nbsp;ids&nbsp;of&nbsp;the&nbsp;nodes</tt></dd></dl>
+</td></tr></table>
+</body></html>

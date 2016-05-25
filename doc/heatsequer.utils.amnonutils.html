@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module heatsequer.utils.amnonutils</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="heatsequer.html"><font color="#ffffff">heatsequer</font></a>.<a href="heatsequer.utils.html"><font color="#ffffff">utils</font></a>.amnonutils</strong></big></big> (version 0.2)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/amnon/Python/git/heatsequer/heatsequer/utils/amnonutils.py">/Users/amnon/Python/git/heatsequer/heatsequer/utils/amnonutils.py</a></font></td></tr></table>
+    <p><tt>amnonscript<br>
+amnonutils.py<br>
+&nbsp;<br>
+heatsequer<br>
+various&nbsp;utility&nbsp;functions</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="inspect.html">inspect</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-ArrayToSeq"><strong>ArrayToSeq</strong></a>(seqa)</dt><dd><tt>convert&nbsp;a&nbsp;numpy&nbsp;array&nbsp;to&nbsp;sequence&nbsp;(upper&nbsp;case)</tt></dd></dl>
+ <dl><dt><a name="-Debug"><strong>Debug</strong></a>(dlevel, *args)</dt></dl>
+ <dl><dt><a name="-SeqToArray"><strong>SeqToArray</strong></a>(seq)</dt><dd><tt>convert&nbsp;a&nbsp;string&nbsp;sequence&nbsp;to&nbsp;a&nbsp;numpy&nbsp;array</tt></dd></dl>
+ <dl><dt><a name="-clipstrings"><strong>clipstrings</strong></a>(clist, maxlen, reverse=False)</dt><dd><tt>clip&nbsp;all&nbsp;strings&nbsp;in&nbsp;a&nbsp;list&nbsp;to&nbsp;maxlen<br>
+input:<br>
+clist&nbsp;-&nbsp;list&nbsp;of&nbsp;strings<br>
+maxlen&nbsp;-&nbsp;maximal&nbsp;length&nbsp;for&nbsp;each&nbsp;string<br>
+reverse&nbsp;-&nbsp;if&nbsp;true&nbsp;-&nbsp;clip&nbsp;from&nbsp;end&nbsp;(otherwise&nbsp;from&nbsp;beginning)</tt></dd></dl>
+ <dl><dt><a name="-common_start"><strong>common_start</strong></a>(sa, sb)</dt><dd><tt>returns&nbsp;the&nbsp;longest&nbsp;common&nbsp;substring&nbsp;from&nbsp;the&nbsp;beginning&nbsp;of&nbsp;sa&nbsp;and&nbsp;sb<br>
+from&nbsp;<a href="http://stackoverflow.com/questions/18715688/find-common-substring-between-two-strings">http://stackoverflow.com/questions/18715688/find-common-substring-between-two-strings</a></tt></dd></dl>
+ <dl><dt><a name="-complement"><strong>complement</strong></a>(seq)</dt></dl>
+ <dl><dt><a name="-delete"><strong>delete</strong></a>(clist, idx)</dt><dd><tt>delete&nbsp;elements&nbsp;from&nbsp;list</tt></dd></dl>
+ <dl><dt><a name="-dictupper"><strong>dictupper</strong></a>(dat)</dt><dd><tt>turn&nbsp;dict&nbsp;keys&nbsp;to&nbsp;upper&nbsp;case<br>
+input:<br>
+dat&nbsp;-&nbsp;a&nbsp;dict&nbsp;with&nbsp;string&nbsp;keys<br>
+output:<br>
+newdat&nbsp;-&nbsp;a&nbsp;dict&nbsp;with&nbsp;the&nbsp;upper&nbsp;case&nbsp;keys</tt></dd></dl>
+ <dl><dt><a name="-fdr"><strong>fdr</strong></a>(pvalues, correction_type='Benjamini-Hochberg')</dt><dd><tt>consistent&nbsp;with&nbsp;R&nbsp;-&nbsp;print&nbsp;correct_pvalues_for_multiple_testing([0.0,&nbsp;0.01,&nbsp;0.029,&nbsp;0.03,&nbsp;0.031,&nbsp;0.05,&nbsp;0.069,&nbsp;0.07,&nbsp;0.071,&nbsp;0.09,&nbsp;0.1])</tt></dd></dl>
+ <dl><dt><a name="-fdr2"><strong>fdr2</strong></a>(p)</dt><dd><tt>Benjamini-Hochberg&nbsp;p-value&nbsp;correction&nbsp;for&nbsp;multiple&nbsp;hypothesis&nbsp;testing.</tt></dd></dl>
+ <dl><dt><a name="-findn"><strong>findn</strong></a>(text, substr, num)</dt><dd><tt>find&nbsp;num-th&nbsp;occurance&nbsp;of&nbsp;substr&nbsp;in&nbsp;text<br>
+input:<br>
+text&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;string&nbsp;to&nbsp;search&nbsp;in<br>
+substr&nbsp;:&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;substring&nbsp;to&nbsp;search&nbsp;for&nbsp;in&nbsp;text<br>
+num&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;occurance&nbsp;number&nbsp;(1&nbsp;is&nbsp;the&nbsp;first&nbsp;occurance,&nbsp;etc)<br>
+&nbsp;<br>
+output:<br>
+index&nbsp;:&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;position&nbsp;of&nbsp;the&nbsp;start&nbsp;of&nbsp;the&nbsp;num-th&nbsp;substring&nbsp;in&nbsp;text,&nbsp;or&nbsp;-1&nbsp;if&nbsp;not&nbsp;present</tt></dd></dl>
+ <dl><dt><a name="-get_current_data_path"><strong>get_current_data_path</strong></a>(fn, subfolder='data')</dt><dd><tt>Return&nbsp;path&nbsp;to&nbsp;filename&nbsp;``fn``&nbsp;in&nbsp;the&nbsp;data&nbsp;folder.<br>
+During&nbsp;testing&nbsp;it&nbsp;is&nbsp;often&nbsp;necessary&nbsp;to&nbsp;load&nbsp;data&nbsp;files.&nbsp;This<br>
+function&nbsp;returns&nbsp;the&nbsp;full&nbsp;path&nbsp;to&nbsp;files&nbsp;in&nbsp;the&nbsp;``data``&nbsp;subfolder<br>
+by&nbsp;default.<br>
+Parameters<br>
+----------<br>
+fn&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;File&nbsp;name.<br>
+subfolder&nbsp;:&nbsp;str,&nbsp;defaults&nbsp;to&nbsp;``data``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name&nbsp;of&nbsp;the&nbsp;subfolder&nbsp;that&nbsp;contains&nbsp;the&nbsp;data.<br>
+Returns<br>
+-------<br>
+str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Inferred&nbsp;absolute&nbsp;path&nbsp;to&nbsp;the&nbsp;test&nbsp;data&nbsp;for&nbsp;the&nbsp;module&nbsp;where<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``get_data_path(fn)``&nbsp;is&nbsp;called.<br>
+Notes<br>
+-----<br>
+The&nbsp;requested&nbsp;path&nbsp;may&nbsp;not&nbsp;point&nbsp;to&nbsp;an&nbsp;existing&nbsp;file,&nbsp;as&nbsp;its<br>
+existence&nbsp;is&nbsp;not&nbsp;checked.<br>
+&nbsp;<br>
+Taken&nbsp;from&nbsp;scikit-bio&nbsp;(Thanks!)</tt></dd></dl>
+ <dl><dt><a name="-getnicetax"><strong>getnicetax</strong></a>(name, separator=';')</dt><dd><tt>get&nbsp;the&nbsp;last&nbsp;non&nbsp;empty&nbsp;string&nbsp;(separated&nbsp;by&nbsp;separator)<br>
+used&nbsp;to&nbsp;get&nbsp;a&nbsp;nice&nbsp;taxonomy&nbsp;name&nbsp;from&nbsp;a&nbsp;taxonomy&nbsp;string<br>
+&nbsp;<br>
+input:<br>
+name&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;taxonomy&nbsp;string<br>
+separator:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;separator&nbsp;between&nbsp;taxonomic&nbsp;levels&nbsp;(i.e.&nbsp;';')<br>
+&nbsp;<br>
+output:<br>
+nicename&nbsp;:&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;only&nbsp;the&nbsp;last&nbsp;non&nbsp;empty&nbsp;part&nbsp;of&nbsp;name</tt></dd></dl>
+ <dl><dt><a name="-getsizeof"><strong>getsizeof</strong></a>(...)</dt><dd><tt><a href="#-getsizeof">getsizeof</a>(object,&nbsp;default)&nbsp;-&gt;&nbsp;int<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;size&nbsp;of&nbsp;object&nbsp;in&nbsp;bytes.</tt></dd></dl>
+ <dl><dt><a name="-isort"><strong>isort</strong></a>(clist, reverse=False)</dt><dd><tt>matlab&nbsp;style&nbsp;sort<br>
+returns&nbsp;both&nbsp;sorted&nbsp;list&nbsp;and&nbsp;the&nbsp;indices&nbsp;of&nbsp;the&nbsp;sort<br>
+input:<br>
+clist:&nbsp;a&nbsp;list&nbsp;to&nbsp;sort<br>
+reverse&nbsp;-&nbsp;true&nbsp;to&nbsp;reverse&nbsp;the&nbsp;sort&nbsp;direction<br>
+output:<br>
+(svals,sidx)<br>
+svals&nbsp;-&nbsp;the&nbsp;sorted&nbsp;values<br>
+sidx&nbsp;-&nbsp;the&nbsp;sorted&nbsp;indices</tt></dd></dl>
+ <dl><dt><a name="-iterfastaseqs"><strong>iterfastaseqs</strong></a>(filename)</dt><dd><tt>iterate&nbsp;a&nbsp;fasta&nbsp;file&nbsp;and&nbsp;return&nbsp;header,sequence<br>
+input:<br>
+filename&nbsp;-&nbsp;the&nbsp;fasta&nbsp;file&nbsp;name<br>
+&nbsp;<br>
+output:<br>
+seq&nbsp;-&nbsp;the&nbsp;sequence<br>
+header&nbsp;-&nbsp;the&nbsp;header</tt></dd></dl>
+ <dl><dt><a name="-listdel"><strong>listdel</strong></a>(dat, todel)</dt><dd><tt>delete&nbsp;elements&nbsp;with&nbsp;indices&nbsp;from&nbsp;list&nbsp;todel&nbsp;in&nbsp;the&nbsp;list&nbsp;dat<br>
+input:<br>
+dat&nbsp;-&nbsp;the&nbsp;list&nbsp;to&nbsp;remove&nbsp;elements&nbsp;from<br>
+todel&nbsp;-&nbsp;indices&nbsp;of&nbsp;the&nbsp;items&nbsp;to&nbsp;remove<br>
+&nbsp;<br>
+output:<br>
+dat&nbsp;-&nbsp;the&nbsp;new&nbsp;deleted&nbsp;list</tt></dd></dl>
+ <dl><dt><a name="-listtodict"><strong>listtodict</strong></a>(dat)</dt><dd><tt>convert&nbsp;a&nbsp;list&nbsp;into&nbsp;a&nbsp;dict&nbsp;with&nbsp;keys&nbsp;as&nbsp;elements,&nbsp;values&nbsp;the&nbsp;position&nbsp;in&nbsp;the&nbsp;list<br>
+input:<br>
+dat&nbsp;-&nbsp;the&nbsp;list<br>
+&nbsp;<br>
+output:<br>
+thedict</tt></dd></dl>
+ <dl><dt><a name="-listupper"><strong>listupper</strong></a>(dat)</dt><dd><tt>turn&nbsp;a&nbsp;list&nbsp;of&nbsp;strings&nbsp;to&nbsp;upper&nbsp;case<br>
+input:<br>
+dat&nbsp;:&nbsp;list&nbsp;of&nbsp;strings<br>
+output:<br>
+newdat&nbsp;:&nbsp;list&nbsp;of&nbsp;strings<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;in&nbsp;uppercase</tt></dd></dl>
+ <dl><dt><a name="-mlhash"><strong>mlhash</strong></a>(cstr, emod=0)</dt><dd><tt>do&nbsp;a&nbsp;hash&nbsp;function&nbsp;on&nbsp;the&nbsp;string&nbsp;cstr<br>
+based&nbsp;on&nbsp;the&nbsp;matlab&nbsp;hash&nbsp;function&nbsp;string2hash<br>
+input:<br>
+cstr&nbsp;-&nbsp;the&nbsp;string&nbsp;to&nbsp;hash<br>
+emod&nbsp;-&nbsp;if&nbsp;0,&nbsp;don't&nbsp;do&nbsp;modulu,&nbsp;otherwise&nbsp;do&nbsp;modulo</tt></dd></dl>
+ <dl><dt><a name="-nicenum"><strong>nicenum</strong></a>(num)</dt><dd><tt>get&nbsp;a&nbsp;nice&nbsp;string&nbsp;representation&nbsp;of&nbsp;the&nbsp;numnber<br>
+(turn&nbsp;to&nbsp;K/M&nbsp;if&nbsp;big,&nbsp;m/u&nbsp;if&nbsp;small,&nbsp;trim&nbsp;numbers&nbsp;after&nbsp;decimal&nbsp;point)<br>
+input:<br>
+num&nbsp;-&nbsp;the&nbsp;number<br>
+output:<br>
+numstr&nbsp;-&nbsp;the&nbsp;nice&nbsp;string&nbsp;of&nbsp;the&nbsp;number</tt></dd></dl>
+ <dl><dt><a name="-readfastaseqs"><strong>readfastaseqs</strong></a>(filename)</dt><dd><tt>read&nbsp;a&nbsp;fasta&nbsp;file&nbsp;and&nbsp;return&nbsp;a&nbsp;list&nbsp;of&nbsp;sequences<br>
+input:<br>
+filename&nbsp;-&nbsp;the&nbsp;fasta&nbsp;file&nbsp;name<br>
+&nbsp;<br>
+output:<br>
+seqs&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;sequences<br>
+headers&nbsp;-&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;headers</tt></dd></dl>
+ <dl><dt><a name="-reorder"><strong>reorder</strong></a>(clist, idx)</dt><dd><tt>"<br>
+reorder&nbsp;a&nbsp;list&nbsp;according&nbsp;to&nbsp;idx</tt></dd></dl>
+ <dl><dt><a name="-revcomp"><strong>revcomp</strong></a>(seq)</dt></dl>
+ <dl><dt><a name="-reverse"><strong>reverse</strong></a>(seq)</dt></dl>
+ <dl><dt><a name="-savelisttofile"><strong>savelisttofile</strong></a>(dat, filename, delimiter='\t')</dt><dd><tt>save&nbsp;a&nbsp;list&nbsp;to&nbsp;a&nbsp;(tab&nbsp;delimited)&nbsp;file<br>
+inputL<br>
+dat&nbsp;-&nbsp;the&nbsp;list&nbsp;to&nbsp;save<br>
+filename&nbsp;-&nbsp;the&nbsp;filename&nbsp;to&nbsp;save&nbsp;to<br>
+delimiter&nbsp;-&nbsp;the&nbsp;delimiter&nbsp;to&nbsp;use</tt></dd></dl>
+ <dl><dt><a name="-tofloat"><strong>tofloat</strong></a>(clist)</dt><dd><tt>convert&nbsp;a&nbsp;list&nbsp;of&nbsp;strings&nbsp;to&nbsp;a&nbsp;list&nbsp;of&nbsp;floats<br>
+input:<br>
+clist&nbsp;-&nbsp;list&nbsp;of&nbsp;strings<br>
+output:<br>
+res&nbsp;-&nbsp;list&nbsp;of&nbsp;floats</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>DebugLevel</strong> = 5<br>
+<strong>__warningregistry__</strong> = {('using a non-integer number instead of an integer will result in an error in the future', &lt;class 'DeprecationWarning'&gt;, 295): True, 'version': 383}<br>
+<strong>stderr</strong> = &lt;_io.TextIOWrapper name='&lt;stderr&gt;' mode='w' encoding='UTF-8'&gt;</td></tr></table>
+</body></html>
