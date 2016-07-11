@@ -744,7 +744,18 @@ class AppWindow(QtGui.QMainWindow):
 					sortfield=False
 				else:
 					sortfield=str(dwin.cField.currentText())
-				hs.plotexp(cexp,sortby=sortfield,numeric=numeric,showline=showline,minreads=minreads,usegui=True,cdb=self.cooldb,seqdb=self.bactdb)
+				cscalebar=dwin.cScaleBar.checkState()
+				if cscalebar==0:
+					showcolorbar=False
+				else:
+					showcolorbar=True
+				crangeall=dwin.cRangeAll.checkState()
+				if crangeall==0:
+					rangeall=False
+				else:
+					rangeall=True
+
+				hs.plotexp(cexp,sortby=sortfield,numeric=numeric,showline=showline,minreads=minreads,usegui=True,cdb=self.cooldb,seqdb=self.bactdb,rangeall=rangeall,showcolorbar=showcolorbar)
 
 
 	def filterfasta(self):
