@@ -590,3 +590,88 @@ def barplotexp(exp,bseq='',sortby=False,numeric=False,showxall=False,uselog=True
 def getcolor(idx):
 	colors=['b','r','k','g','m','c','y']
 	return(colors[np.mod(idx,len(colors))])
+
+
+
+def compare2exp(exp1,exp2):
+	"""
+	compare 2 experiments to see differences in bacteria
+
+	input:
+	exp1,exp2 : Experiment
+		the experiments to compare
+
+	output:
+	newexp : Experiment
+		with the difference in each otu freq (exp1-exp2)
+	"""
+	u1=hs.filterseqs(exp1,exp2.seqs,exclude=True)
+	u2=hs.filterseqs(exp2,exp1.seqs,exclude=True)
+
+	com=hs.filterseqs(exp1,exp2.seqs)
+	e1=hs.filterseqs(exp1,com.seqs)
+	e2=hs.filterseqs(exp2,com.seqs)
+
+	print("unique 1 - %d, unique 2 - %d" % (len(u1.seqs),len(u2.seqs)))
+
+	e1=hs.sortsamples(e1,'#SampleID')
+	e2=hs.sortsamples(e2,'#SampleID')
+
+	newexp=hs.copyexp(e1)
+	newexp.data=e1.data-e2.data
+
+	newexp=hs.filterminreads(newexp,0.00001,useabs=True)
+
+	newexp=hs.sortbyfreq(newexp,logscale=False,useabs=True)
+	hs.plotexp(newexp,'',uselog=False,rangeall=True,showcolorbar=True,minreads=0,showline=False)
+	return newexp
+
+
+def animatetimeseries(expdat,compfield,subfield,fieldname,numeric=True,seqs=[]):
+	"""
+	Do a bar plot animation
+	for Rob change your microbes presentation on Turnbaugh diet dataset
+	"""
+	# import matplotlib.animation as manimation
+	# FFMpegWriter = manimation.writers['ffmpeg']
+	# metadata = dict(title='Movie Test', artist='Matplotlib',comment='Movie support!')
+	# writer = FFMpegWriter(fps=3, metadata=metadata)
+
+	if len(seqs)==0:
+		seqs=expdat.seqs
+	expdat=hs.sortsamples(expdat,subfield)
+	sfvals=hs.getfieldvals(expdat,subfield,ounique=True)
+	fvals=hs.getfieldvals(expdat,fieldname,ounique=True)
+	compvals=hs.getfieldvals(expdat,compfield,ounique=True)
+	if numeric:
+		tvals=hs.tofloat(fvals)
+	else:
+		tvals=fvals
+	svals,sidx=hs.isort(tvals)
+	fvals=hs.reorder(fvals,sidx)
+	fig=plt.figure()
+	# with writer.saving(fig, "~/writer_test.mp4", 100):
+	for cseq in seqs:
+		for cval in fvals:
+			outdat=np.zeros([len(compvals),len(sfvals)])
+			fig=plt.figure()
+			plt.clf()
+			print(cval)
+			cexp=hs.filtersamples(expdat,fieldname,cval)
+			if len(cexp.samples)==0:
+				continue
+			print(len(cexp.samples))
+			for idx,ccompval in enumerate(compvals):
+				print(ccompval)
+				ccexp=hs.filtersamples(cexp,compfield,ccompval)
+				print(len(ccexp.samples))
+				for idx2,csf in enumerate(sfvals):
+					cccexp=hs.filtersamples(ccexp,subfield,csf)
+					if len(cccexp.samples)==0:
+						continue
+					outdat[idx,idx2]=np.mean(cccexp.data[cccexp.seqdict[cseq]])
+			plt.bar(np.arange(len(sfvals)),outdat[0,:],width=0.4)
+			plt.bar(np.arange(len(sfvals))+0.5,outdat[1,:],width=0.4,color='r')
+			plt.ylim([0,1000])
+			plt.title(cval)
+			# writer.grab_frame()

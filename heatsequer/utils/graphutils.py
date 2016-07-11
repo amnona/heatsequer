@@ -40,7 +40,6 @@ def simplifygraph(g,keepnodes=''):
 		g.remove_node(cnode)
 		g.add_edge(pred[0],suc[0])
 		deletenodes.append(cnode)
-		print('deleted')
 
 	nodelist=g.nodes()
 	hs.Debug(6,'deleted %d nodes. nodes in graph %d' % (len(deletenodes),len(g.nodes())))

@@ -17,7 +17,7 @@ import numpy as np
 from pdb import set_trace as XXX
 
 
-def filterminreads(exp,minreads,logit=True):
+def filterminreads(exp,minreads,logit=True,useabs=False):
 	"""
 	filter away all bacteria that contain less than minreads in all samples together (out of 10k/samples)
 	input:
@@ -31,7 +31,10 @@ def filterminreads(exp,minreads,logit=True):
 	"""
 	params=locals()
 
-	numreads=np.sum(exp.data,axis=1)
+	if useabs:
+		numreads=np.sum(np.abs(exp.data),axis=1)
+	else:
+		numreads=np.sum(exp.data,axis=1)
 	keep=np.where(numreads>=minreads)
 	newexp=hs.reorderbacteria(exp,keep[0])
 	if logit:
@@ -59,6 +62,29 @@ def filterpresence(expdat,frac):
 	keep=np.where(fracreads>=frac)
 	newexp=hs.reorderbacteria(expdat,keep[0])
 	newexp.filters.append('filter presence %f' % frac)
+	hs.addcommand(newexp,"filterpresence",params=params,replaceparams={'expdat':expdat})
+	hs.Debug(6,'%d Bacteria left' % len(newexp.sids))
+	return newexp
+
+
+def filterminsamples(expdat,minsamples):
+	"""
+	filter away bacteria present in less than frac of the samples
+	input:
+	expdat : Experiment
+	minsamples : int
+		the minimal number of samples where the bacteria appears
+
+	output:
+	newexp : Experiment
+		the filtered experiment
+	"""
+	params=locals()
+
+	numsamples=np.sum(expdat.data>0,axis=1)
+	keep=np.where(numsamples>=minsamples)
+	newexp=hs.reorderbacteria(expdat,keep[0])
+	newexp.filters.append('filter min samples %d' % minsamples)
 	hs.addcommand(newexp,"filterpresence",params=params,replaceparams={'expdat':expdat})
 	hs.Debug(6,'%d Bacteria left' % len(newexp.sids))
 	return newexp
@@ -134,6 +160,7 @@ def filtersamples(expdat,field,filtval,exact=True,exclude=False,numexpression=Fa
 		filtval=[filtval]
 
 	keep=[]
+	filt=''
 	for cidx,csamp in enumerate(expdat.samples):
 		keepit=False
 		for filt in filtval:
@@ -540,6 +567,7 @@ def filtersimilarsamples(expdat,field,method='mean'):
 		'median'- replace with a sample containing the median of the samples
 		'random' - replace with a single random sample out of these samples
 		'sum' - replace with sum of original reads in all samples, renormalized after to 10k and orignumreads updated
+		'fracpres' - replace with fraction of samples where the bacteria is present
 	output:
 	newexp : Experiment
 		like the input experiment but only one sample per unique value in field
@@ -577,6 +605,10 @@ def filtersimilarsamples(expdat,field,method='mean'):
 			cval=np.sum(newexp.data[:,cpos],axis=1)
 			newexp.data[:,cpos[0]]=cval
 			newexp.origreads[cpos[0]]=np.sum(hs.reorder(expdat.origreads,cpos))
+			keep.append(cpos[0])
+		elif method=='fracpres':
+			cval=np.sum(expdat.data[:,cpos]>0,axis=1)
+			newexp.data[:,cpos[0]]=cval/len(cpos)
 			keep.append(cpos[0])
 		else:
 			hs.Debug(9,'method %s not supported' % method)

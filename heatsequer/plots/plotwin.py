@@ -235,6 +235,9 @@ def onplotkeyclick(event):
 	cylim=cax.get_ylim()
 	cxlim=cax.get_xlim()
 	cexp=cax.expdat
+	if event.key=='C':
+		plt.figure()
+		plt.plot([0,1],[0,1],'k')
 	if event.key=='q':
 		cax.set_ylim(cylim[0], cylim[0]+(cylim[1]-cylim[0])/2)
 		plt.tight_layout()
@@ -366,7 +369,7 @@ def getlabelnames(cexp,showdb=True,showcontam=True):
 	pass
 
 
-def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
+def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250,nicenames=True):
 	"""
 	show the y-lables (taxonomies) for the plot window
 
@@ -382,6 +385,8 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 		True (default) to show suspected contamination bacteria in red, False to not color separately
 	maxtax : int
 		Maximal number of taxonomies to show (to prevent slow repsonse when looking at big experiment) or 0 to show all
+	nicenames :  bool
+		True to show genus+species names, False to show last 25 chars
 	"""
 
 	cylim=cax.get_ylim()
@@ -396,7 +401,11 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 
 	contamlist=[]
 	pathogenlist=[]
-	labs=hs.clipstrings(cexp.tax,25,reverse=True)
+	if nicenames:
+		labs=hs.getnicetaxnames(cexp.tax)
+	else:
+		labs=hs.clipstrings(cexp.tax,25,reverse=True)
+
 	if showdb or showcontam:
 		if cexp.cdb:
 			for idx,cseq in enumerate(cexp.seqs):
@@ -414,10 +423,10 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250):
 	cax.set_yticklabels(labs)
 	if showcontam:
 		for idx,clab in enumerate(cax.get_yticklabels()):
-			if idx in contamlist:
-				clab.set_color("red")
 			if idx in pathogenlist:
 				clab.set_color("blue")
+			if idx in contamlist:
+				clab.set_color("red")
 	cax.set_ylim(cylim[0], cylim[1])
 	cax.set_xlim(cxlim[0], cxlim[1])
 	plt.tight_layout()
@@ -572,3 +581,38 @@ def addplotmetadata(expdat,field,value=False,inverse=False,color='g',ax=False,be
 		if plotit:
 			hs.Debug(1,'Plot line %d',idx)
 			plt.plot([idx+offset,idx+offset],[-0.5,len(expdat.sids)-0.5],color)
+
+
+def getnicetaxnames(tax,separator=';',level=5,maxnum=2):
+	"""
+	get a nice string of the taxonomy names (genus+species if available)
+	input:
+	tax : list of str
+		the full taxonomy names (separated by separator)
+	separator : str
+		the separator between the levels (default is ';')
+	level : int
+		the default taxonomic level to show (0=bacteria, 5=genus)
+
+	output:
+	nicetax : list of str
+		the nice names taxonomy (genus+species if there, if no genus - highest level available)
+	"""
+
+	hs.Debug(1,'getting nice names for %d taxonomies' % len(tax))
+	nicetax=[]
+	for ctax in tax:
+		cntax='NA'
+		stax=ctax.split(separator)
+		# remove the trailing empty taxonomies
+		while stax[-1]=='':
+			del stax[-1]
+
+		if len(stax)<=level:
+			cntax=stax[-1]
+		else:
+			endpos=min(level+maxnum,len(stax))
+			cntax=separator.join(stax[level:endpos])
+		nicetax.append(cntax)
+	hs.Debug(1,'created %d nice names' % len(nicetax))
+	return nicetax

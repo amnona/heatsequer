@@ -178,6 +178,32 @@
     <string>MetaData</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="cScaleBar">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>160</y>
+     <width>89</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Scale bar</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="cRangeAll">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>180</y>
+     <width>89</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Range all</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

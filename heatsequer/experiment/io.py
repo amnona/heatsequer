@@ -12,6 +12,7 @@ __version__ = "0.9"
 import heatsequer as hs
 
 import numpy as np
+import scipy.sparse
 import csv
 import biom
 import os
@@ -19,7 +20,7 @@ from pdb import set_trace as XXX
 import hashlib
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True,useseqnamefortax=True):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True,useseqnamefortax=True,rawreads=False,usesparse=False):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -44,6 +45,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		True (default) to sort sequences by taxonomy, False to not sort
 	useseqnamefortax : bool
 		True (default) to use the sequence as taxonomy if no taxonomy supplied, False to use 'unknown'
+	rawreads : bool
+		True in combination with normalize=False - do not modify read count to mean 10k
+	usesparse : book
+		True to use sparse matrix representation, False to use non-sparse (default)
 
 	output:
 	an experiment class for the current experiment
@@ -176,7 +181,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 
 	exp=hs.Experiment()
 	exp.datatype=tabletype
-	exp.data=table.matrix_data.todense().A
+	if usesparse:
+		exp.data=scipy.sparse.dok_matrix(table.matrix_data)
+	else:
+		exp.data=table.matrix_data.todense().A
 	# check if need to add the 0 read samples to the data
 	if len(addlist)>0:
 		tablesamples=list(tablesamples)
@@ -218,7 +226,8 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	if normalize:
 		exp.data=10000*exp.data/colsum
 	else:
-		exp.data=10000*exp.data/np.mean(colsum)
+		if not rawreads:
+			exp.data=10000*exp.data/np.mean(colsum)
 
 	exp.uniqueid=exp.getexperimentid()
 	if sortit:

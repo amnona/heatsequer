@@ -340,10 +340,19 @@ def joinexperiments(exp1,exp2,missingval='NA',origfieldname='origexp'):
 				newexp.smap[csamp][cfield]=missingval
 
 	for csamp in exp1.samples:
-		newexp.smap[csamp][origfieldname]=exp1.studyname
+		if origfieldname in exp1.fields:
+			cname=exp1.smap[csamp][origfieldname]
+		else:
+			cname=exp1.studyname
+		newexp.smap[csamp][origfieldname]=cname
 	for csamp in exp2.samples:
-		newexp.smap[csamp][origfieldname]=exp2.studyname
-	newexp.fields.append(origfieldname)
+		if origfieldname in exp2.fields:
+			cname=exp2.smap[csamp][origfieldname]
+		else:
+			cname=exp2.studyname
+		newexp.smap[csamp][origfieldname]=cname
+	if origfieldname not in newexp.fields:
+		newexp.fields.append(origfieldname)
 
 	newexp.filters.append('joined with %s' % exp2.studyname)
 	hs.addcommand(newexp,"joinexperiments",params=params,replaceparams={'exp1':exp1,'exp2':exp2})
@@ -600,8 +609,15 @@ def convertdatefield(expdat,field,newfield,timeformat='%m/%d/%y %H:%M'):
 
 	newexp=hs.copyexp(expdat)
 	newexp.fields.append(newfield)
+	numfailed=0
 	for csamp in newexp.samples:
-		newexp.smap[csamp][newfield]=time.mktime(time.strptime(newexp.smap[csamp][field],timeformat))
+		try:
+			ctime=time.mktime(time.strptime(newexp.smap[csamp][field],timeformat))
+		except:
+			ctime=0
+			numfailed+=1
+		newexp.smap[csamp][newfield]=str(ctime)
+	hs.Debug(6,'%d conversions failed' % numfailed)
 	newexp.filters.append('add time field %s (based on field %s)' % (newfield,field))
 	hs.addcommand(newexp,"convertdatefield",params=params,replaceparams={'expdat':expdat})
 	return(newexp)
