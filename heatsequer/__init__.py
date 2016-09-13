@@ -19,6 +19,9 @@ import heatsequer.supercooldb
 
 heatsequerdir=os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 
+# start the logger (into log.hs.log)
+start_log()
+
 # load the cooldb
 cdb=False
 try:

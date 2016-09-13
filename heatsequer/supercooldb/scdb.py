@@ -91,7 +91,7 @@ def addontology(scdb,ontology,ontoprefix='',namelist={}):
 	return scdb
 
 
-def loaddbonto(db,ontofile='db/ontology.pickle',ontofromidfile='db/ontologyfromid.pickle'):
+def loaddbonto(db,ontofile='/Users/amnon/Python/git/heatsequer/db/ontology.pickle',ontofromidfile='/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle'):
 	"""
 	load the pickled ontologies to the scdb structure
 	input:

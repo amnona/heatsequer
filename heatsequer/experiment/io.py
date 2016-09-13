@@ -18,7 +18,7 @@ import biom
 import os
 from pdb import set_trace as XXX
 import hashlib
-
+import re
 
 def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True,useseqnamefortax=True,rawreads=False,usesparse=False):
 	"""
@@ -58,10 +58,10 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 
 	# load the table
 	if tabletype=='biom':
-		hs.Debug(6,'Loading biom table')
+		hs.Debug(6,'Loading biom table %s' % tablename)
 		table=biom.load_table(tablename)
 	elif tabletype=='meta':
-		hs.Debug(6,'Loading metabolite table')
+		hs.Debug(6,'Loading metabolite table %s' % tablename)
 		table=loadmetabuckettable(tablename)
 	else:
 		hs.Debug(9,'Table type %s not supported' % tabletype)
@@ -128,6 +128,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	# remove table samples not in mapping file
 	tablesamples = table.ids(axis='sample')
 	hs.Debug(6,'number of samples in table is %d' % len(tablesamples))
+	hs.Debug(3,'testing for samples not in mapping file')
 	removelist=[]
 	for cid in tablesamples:
 		if cid not in mapsamples:
@@ -141,6 +142,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	hs.Debug(6,'deleted. number of samples in table is now %d' % len(tablesamples))
 
 	# remove samples not in table from mapping file
+	hs.Debug(3,'removing samples not in table')
 	removemap=[]
 	addlist=[]
 	for idx,cmap in enumerate(mapsamples):
@@ -175,6 +177,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		# get the taxonomy string
 		ctax=gettaxfromtable(table,cid,useseqname=useseqnamefortax)
 		tax.append(ctax)
+	hs.Debug(3,'experiment has %d sequences' % len(tax))
 
 	if not studyname:
 		studyname=os.path.basename(tablename)
@@ -182,7 +185,9 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	exp=hs.Experiment()
 	exp.datatype=tabletype
 	if usesparse:
-		exp.data=scipy.sparse.dok_matrix(table.matrix_data)
+		exp.data=scipy.sparse.csr_matrix(table.matrix_data)
+		exp.sparse=True
+		hs.Debug(3,'Sparse matrix initialized')
 	else:
 		exp.data=table.matrix_data.todense().A
 	# check if need to add the 0 read samples to the data
@@ -205,29 +210,38 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	exp.fields = fields
 	exp.datamd5 = datamd5
 	exp.mapmd5 = mapmd5
-	colsum=np.sum(exp.data,axis=0,keepdims=False)
-	exp.origreads=list(colsum)
+
 	# add the original number of reads as a field to the experiment
+	hs.Debug(3,'Adding origReads')
+	colsum=hs.sum(exp.data,axis=0)
+	hs.Debug(3,'converting origReads to list')
+	exp.origreads=list(colsum)
+	hs.Debug(3,'appending the origReads values')
 	exp.fields.append('origReads')
 	for idx,csamp in enumerate(exp.samples):
 		exp.smap[csamp]['origReads']=str(exp.origreads[idx])
 
 	# normalize samples to 10k reads per samples
-	colsum=np.sum(exp.data,axis=0,keepdims=True)
+	hs.Debug(3,'Removing 0 read samples')
+	colsum=hs.sum(exp.data,axis=0)
 	okreads=np.where(colsum>0)
-	if np.size(colsum)-np.size(okreads[1])>0:
-		print("Samples with 0 reads: %d" % (np.size(colsum)-np.size(okreads[1])))
+	if np.size(colsum)-np.size(okreads[0])>0:
+		hs.Debug(6,"Samples with 0 reads: %d" % (np.size(colsum)-np.size(okreads[0])))
 		if not keepzero:
-			exp=hs.reordersamples(exp,okreads[1])
-		colsum=np.sum(exp.data,axis=0,keepdims=True)
+			exp=hs.reordersamples(exp,okreads[0])
+		colsum=hs.sum(exp.data,axis=0)
 	if tabletype=='meta':
 		normalize=False
 
 	if normalize:
-		exp.data=10000*exp.data/colsum
+		hs.Debug(3,'Normalizing')
+		exp.data=10000*hs.divvec(exp.data,colsum)
 	else:
 		if not rawreads:
+			hs.Debug(3,'Normalizing (constant) to mean 10000')
 			exp.data=10000*exp.data/np.mean(colsum)
+		else:
+			hs.Debug(3,'Keeping raw reads. No normalization')
 
 	exp.uniqueid=exp.getexperimentid()
 	if sortit:
@@ -433,15 +447,22 @@ def savemap(expdat,filename):
 	for cfield in expdat.fields:
 		if cfield=='#SampleID':
 			continue
+		if len(cfield)==0:
+			cfield='NA'
+		cfield=cfield.replace('\t','_')
 		mf.write('\t%s' % cfield)
 	mf.write('\n')
 	for csamp in expdat.samples:
+		if len(csamp)==0:
+			continue
 		mf.write('%s' % csamp)
 		for cfield in expdat.fields:
 			if cfield=='#SampleID':
 				continue
 			mf.write('\t')
-			mf.write(str(expdat.smap[csamp][cfield]))
+			cfval=expdat.smap[csamp][cfield]
+			cfval=cfval.replace('\t','_')
+			mf.write(str(cfval))
 		mf.write('\n')
 	mf.close()
 

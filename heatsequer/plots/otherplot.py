@@ -318,7 +318,7 @@ def plottimeseries(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 	toaxis.title('lala')
 
 
-def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
+def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True,showscatter=True,showlegend=True,colordict=None,showtitle=True,scaleto=None,ylabel='perceent of reads'):
 	"""
 	plot a line plot for a timeseries with a different line for each individual
 	with mean of points in same timepoint and scatter
@@ -334,27 +334,46 @@ def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 		False (default) to draw in a new figure
 	numeric : bool
 		True (default) if timefield is numeric
+	showscatter : bool
+		True (default) to plot the scatter, False to plot just the mean
+	showlegend : bool
+		True (default) to show the legend, False to not show
+	colordict : None or dict of {label:color}
+		if None, use default colors, if not - use color specified for each label
+	showtitle : bool
+		True (default) to show figure title, False to hide
+	scaleto : int or None
+		None (default) to keep the values, otherwise int to multiply each number by int
+	ylabel : str or None
+		y axis label or None to not show y label
 	"""
 
 	coloridx=0
-	colors=['b','r','k','g','c','m','y']
+	colors=['o-b','o-r','o-k','o--g','o--c','o--m','o:y']
 	if not toaxis:
 		plt.figure()
 		toaxis=plt.gca()
 
-	newexp=hs.sortsamples(expdat,timefield,numeric=numeric)
+	oldexp=hs.sortsamples(expdat,timefield,numeric=numeric)
 	times=hs.getfieldvals(expdat,timefield)
 	utimes=list(set(times))
 	if numeric:
-		utimes=hs.tofloat(utimes)
-	utimes=np.sort(utimes)
-	ids=hs.getfieldvals(newexp,idfield)
-	for cid in list(set(ids)):
-		print(coloridx)
-		ccolor=colors[coloridx]
-		coloridx+=1
-		if coloridx>=len(colors):
-			coloridx=0
+		sv,si=hs.isort(hs.tofloat(utimes))
+		utimes=hs.reorder(utimes,si)
+	else:
+		utimes=np.sort(utimes)
+	ids=hs.getfieldvals(oldexp,idfield)
+	allids=list(set(ids))
+	allids.sort()
+	for cid in allids:
+		newexp=hs.filtersamples(oldexp,idfield,cid)
+		if colordict is None:
+			ccolor=colors[coloridx]
+			coloridx+=1
+			if coloridx>=len(colors):
+				coloridx=0
+		else:
+			ccolor=colordict[cid]
 		x=[]
 		y=[]
 		xp=[]
@@ -366,17 +385,27 @@ def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 			cx=[]
 			cy=[]
 			for cpoint in tpoints:
-				cx.append(ctime)
-				cy.append(newexp.data[newexp.seqdict[seq],cpoint])
+				cx.append(float(ctime))
+				currenty=newexp.data[newexp.seqdict[seq],cpoint]/100
+				if scaleto is not None:
+					currenty=currenty*scaleto
+				cy.append(currenty)
 			xp+=cx
 			yp+=cy
 			x.append(np.mean(cx))
 			y.append(np.mean(cy))
-		toaxis.plot(x,y,'-',color=ccolor)
-		toaxis.plot(xp,yp,'o',color=ccolor)
-
-	toaxis.legend(list(set(ids)))
-	toaxis.title('lala')
+		toaxis.plot(x,y,ccolor)
+		if showscatter:
+			toaxis.plot(xp,yp,'o',color=ccolor)
+	if showlegend:
+		toaxis.legend(allids,loc='best')
+	if showtitle:
+		plt.title(expdat.tax[expdat.seqdict[seq]])
+	else:
+		print(expdat.tax[expdat.seqdict[seq]])
+	plt.xlabel(timefield)
+	if ylabel is not None:
+		plt.ylabel(ylabel)
 
 
 def plotgroupbar(expdat,field,seqs=[],type='meanse',uvals=[]):
@@ -593,18 +622,23 @@ def getcolor(idx):
 
 
 
-def compare2exp(exp1,exp2):
+def compare2exp(exp1,exp2,unnormalize=True):
 	"""
 	compare 2 experiments to see differences in bacteria
 
 	input:
 	exp1,exp2 : Experiment
 		the experiments to compare
+	unnormalize : bool
+		True (default) to revert to raw reads, False to use normalized reads instead (i.e. sum 10k)
 
 	output:
 	newexp : Experiment
 		with the difference in each otu freq (exp1-exp2)
 	"""
+	if unnormalize:
+		exp1=hs.toorigreads(exp1)
+		exp2=hs.toorigreads(exp2)
 	u1=hs.filterseqs(exp1,exp2.seqs,exclude=True)
 	u2=hs.filterseqs(exp2,exp1.seqs,exclude=True)
 
@@ -675,3 +709,61 @@ def animatetimeseries(expdat,compfield,subfield,fieldname,numeric=True,seqs=[]):
 			plt.ylim([0,1000])
 			plt.title(cval)
 			# writer.grab_frame()
+
+
+def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,showlegend=True):
+	"""
+	plot a taxonomy bar plot of each sample at the taxonomic level taxlevel.
+	input:
+	expdat : Experiment
+	taxlevel : int
+		the taxonomic level (1=kingdom, 2=phylum etc.)
+	maxnum : int
+		the maximum number of unique taxonomy to show (others are grouped into 'Other')
+	normalize : bool
+		True (default) to show normalized data, False to use original reads
+	sortfield : str
+		Name of field to sort and show values in x axis, or None (default) to show sample names
+	showlegend : bool
+		True (default) to show the legend, False to hide it
+	"""
+
+	# collapse the taxonomy
+	colors=['b','r','w','g','m','c','y','k']
+	if not normalize:
+		expdat=hs.toorigreads(expdat)
+	expdat=hs.collapsetaxonomy(expdat,taxlevel)
+	expdat=hs.sortbyfreq(expdat,reverse=True)
+
+	if sortfield is not None:
+		expdat=hs.sortsamples(expdat,sortfield)
+
+	# clip at maxnum unique labels
+	if len(expdat.seqs)>maxnum:
+		expdat.data[maxnum-1,:]=np.sum(expdat.data[maxnum-1:,:],axis=0)
+		expdat.tax[maxnum-1]='Other'
+		expdat=hs.reorderbacteria(expdat,np.arange(maxnum))
+
+	fig, ax = plt.subplots()
+	csum=np.zeros(len(expdat.samples))
+	xpos=np.arange(len(expdat.samples))
+	for idx,cseq in enumerate(expdat.seqs):
+		cdat=expdat.data[idx,:]
+		clabel=expdat.tax[idx].split(';')
+		clabel=clabel[-1]
+		plt.bar(xpos,cdat,bottom=csum,color=colors[np.mod(idx,len(colors))],label=clabel)
+		csum+=cdat
+
+	# # add some text for labels, title and axes ticks
+	ax.set_xlabel('number of reads')
+	if showlegend:
+		# need to reverse the legend (first is at the bottom)
+		handles, labels = ax.get_legend_handles_labels()
+		plt.legend(handles[::-1], labels[::-1], loc='upper left')
+	ax.set_xticks(xpos)
+	if sortfield is not None:
+		xlab=hs.getfieldvals(expdat,sortfield)
+	else:
+		xlab=expdat.samples
+	ax.set_xticklabels(xlab,rotation=90)
+	plt.tight_layout()

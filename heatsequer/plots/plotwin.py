@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline=''):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline='',showhline=True):
 	"""
 	Plot an experiment
 	input:
@@ -48,6 +48,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		[min,max] to set the colormap range, False to use data min,max (default) as specified in rangeall
 	subline : str
 		Name of category for subline plotting or '' (Default) for no sublines
+	showhline : bool
+		True (default) to plot the horizontal lines listed in exp.hlines. False to not plot them
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)
@@ -58,6 +60,11 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	hs.Debug(1,"Commands:")
 	for ccommand in exp.commands:
 		hs.Debug(1,"%s" % ccommand)
+
+	if exp.sparse:
+		hs.Debug(9,'Sparse matrix - converting to dense')
+		exp=hs.copyexp(exp,todense=True)
+
 	vals=[]
 	if cdb is None:
 		cdb=hs.cdb
@@ -216,6 +223,10 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		hs.Debug(1,"Experiment has metadata attached for plotting (%d points)" % len(newexp.plotmetadata))
 		for cmet in newexp.plotmetadata:
 			addplotmetadata(newexp,field=cmet[0],value=cmet[1],color=cmet[2],inverse=cmet[3],beforesample=cmet[4])
+	if showhline:
+		if newexp.hlines:
+			for cpos in newexp.hlines:
+				plt.plot([0,np.shape(newexp.data)[1]],[cpos-0.5,cpos-0.5],'g')
 	plt.show()
 
 #	if usegui:

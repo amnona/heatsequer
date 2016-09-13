@@ -133,13 +133,17 @@ def toorigreads(expdat,inplace=False):
 	else:
 		newexp=hs.copyexp(expdat)
 
-	for idx,csamp in enumerate(newexp.samples):
-		totreads=np.sum(newexp.data[:,idx])
-		origreads=newexp.origreads[idx]
-		if totreads==0:
-			continue
-		ratio=float(origreads)/totreads
-		newexp.data[:,idx]=newexp.data[:,idx]*ratio
+	colsum=hs.sum(newexp.data,axis=0)
+	# for idx,csamp in enumerate(newexp.samples):
+	# 	totreads=colsum[idx]
+	# 	origreads=newexp.origreads[idx]
+	# 	if totreads==0:
+	# 		continue
+	# 	ratio=float(origreads)/totreads
+	# 	newexp.data[:,idx]=newexp.data[:,idx]*ratio
+	newexp.data=hs.divvec(newexp.data,colsum/np.array(expdat.origreads))
+	newexp.data=newexp.data.astype(int)
+
 	newexp.filters.append("changed reads to origread value")
 	hs.addcommand(newexp,"toorigreads",params=params,replaceparams={'expdat':expdat})
 	return newexp

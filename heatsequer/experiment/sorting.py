@@ -15,8 +15,6 @@ import numpy as np
 import copy
 from sklearn.preprocessing import scale
 from scipy import cluster,spatial,stats
-from scipy import spatial
-
 
 
 def sortbacteria(exp,inplace=False,logit=True):
@@ -37,6 +35,7 @@ def sortbacteria(exp,inplace=False,logit=True):
 	"""
 	params=locals()
 
+	hs.Debug(1,'Sorting %d bacteria by taxonomy' % len(exp.seqs))
 	tax=exp.tax
 	svals,sidx=hs.isort(tax)
 	newexp=hs.reorderbacteria(exp,sidx,inplace=inplace)
@@ -62,6 +61,8 @@ def clusterbacteria(exp,minreads=0,uselog=True):
 	"""
 	params=locals()
 
+	if exp.sparse:
+		exp=hs.copyexp(exp,todense=True)
 	newexp=hs.filterminreads(exp,minreads,logit=False)
 	# normalize each row (bacteria) to sum 1
 	dat=copy.copy(newexp.data)
@@ -93,6 +94,8 @@ def clustersamples(exp,minreads=0):
 	"""
 	params=locals()
 
+	if exp.sparse:
+		exp=hs.copyexp(exp,todense=True)
 	newexp=hs.filterorigreads(exp,minreads)
 	# normalize each row (bacteria) to sum 1
 	dat=copy.copy(newexp.data)
@@ -137,7 +140,7 @@ def sortsamples(exp,field,numeric=False,logit=True):
 	return newexp
 
 
-def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale=True,useabs=False):
+def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale=True,useabs=False,reverse=False):
 	"""
 	sort bacteria in experiment according to frequency
 	sorting is performed based on a subset of samples (field/val/exact) and then
@@ -156,6 +159,8 @@ def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale
 		True (default) to use log2 transform for frequencies before mean and sorting, False to use original values
 	useabs : bool
 		True to sort by absolute value of freq, False (default) to sort by freq
+	reverse: bool
+		False (default) to have high freq. bacteria last, True to have high freq bacteria first
 
 	output:
 	newexp : Experiment
@@ -171,10 +176,13 @@ def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale
 		texp.data[texp.data<2]=2
 		texp.data=np.log2(texp.data)
 	if useabs:
-		meanvals=np.mean(np.abs(texp.data),axis=1)
+		meanvals=hs.mean(np.abs(texp.data),axis=1)
 	else:
-		meanvals=np.mean(texp.data,axis=1)
+		meanvals=hs.mean(texp.data,axis=1)
 	svals,sidx=hs.isort(meanvals)
+
+	if reverse:
+		sidx=sidx[::-1]
 
 	newexp=hs.reorderbacteria(expdat,sidx)
 	newexp.filters.append("sort by freq field=%s value=%s" % (field,value))
@@ -371,4 +379,95 @@ def sortbysign(expdat,field=False,value='',exclude=False,exact=True,maxfval=0.2)
 	newexp=hs.reorderbacteria(newexp,si)
 	newexp.filters.append("sort by sign field %s max-f-val %f" % (field,maxfval))
 	hs.addcommand(newexp,"sortbysign",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+def sortbyseqsfirst(expdat,seqs,addline=True):
+	"""
+	sort bacteria in expdat by first putting the bacteria from seqs (according to the order there)
+	and then all the other expdat bacteria
+
+	input:
+	expdat : Experiment
+		The experiment to sort the bacteria in
+	seqs : list of squences ('ACGT')
+		the bacteria to order first
+	addline : bool
+		True (default) to add a horizontal line to the plot info. False to not add
+
+	output:
+	newexp : Experiment
+		similar to expdat but bacteria in seqs appearing first
+	"""
+	params=locals()
+
+	newseqs=copy.copy(seqs)
+	for cseq in expdat.seqs:
+		if cseq not in seqs:
+			newseqs.append(cseq)
+	newexp=hs.filterseqs(expdat,newseqs)
+	if addline:
+		newexp.hlines.append(len(seqs))
+	newexp.filters.append("sort by sequence list first based on %d sequences" % len(seqs))
+	hs.addcommand(newexp,"sortbyseqsfirst",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+def reversebacteria(expdat):
+	"""
+	reverse the order of bacteria in the experiment
+
+	input:
+	expdat : Experiment
+		the experiment to reorder
+
+	ourput:
+	newexp : Experiment
+		with bacteria order reversed (last bacteria first)
+	"""
+	params=locals()
+
+	newexp=hs.reorderbacteria(expdat,np.arange(len(expdat.seqs)-1,-1,-1))
+	newpos=[]
+	for linepos in newexp.hlines:
+		newpos.append(len(expdat.seqs)-linepos)
+	newexp.hlines=newpos
+
+	newexp.filters.append("reverse bacteria order")
+	hs.addcommand(newexp,"reversebacteria",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+def sortbyexp(expdat,sortexp):
+	"""
+	sort the bacteria in expdat by first putting the bacteria in sortexp (in the order there) and then the other bacteria in expdat
+
+	input:
+	expdat : Experiment
+		the experiment to sort
+	sortexp : Experiment
+		the experiment used to sort the bacteria first
+
+	output:
+	newexp : experiment
+		sorted with sortexp bacteria first, then the others
+	"""
+	params=locals()
+
+	hs.Debug(2,'sort by exp')
+	numfromseqs=0
+	seqs=[]
+	for cseq in sortexp.seqs:
+		if cseq in expdat.seqdict:
+			seqs.append(cseq)
+			numfromseqs+=1
+	for cseq in expdat.seqs:
+		if cseq not in sortexp.seqdict:
+			seqs.append(cseq)
+
+	newexp=hs.filterseqs(expdat,seqs)
+	newexp.hlines.append(len(sortexp.seqs))
+	hs.Debug(6,'found %d out of %d sequences and put them first' % (numfromseqs,len(sortexp.seqs)))
+	newexp.filters.append("sort bacteria using experiment %s" % sortexp.studyname)
+	hs.addcommand(newexp,"sortbyexp",params=params,replaceparams={'expdat':expdat,'sortexp':sortexp})
 	return newexp

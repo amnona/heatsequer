@@ -139,7 +139,6 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 	uvals : list
 		group names in the matrix (ordered)
 	"""
-
 	vals=hs.getfieldvals(expdat,field)
 	if not uvals:
 		uvals=list(set(vals))
@@ -156,17 +155,19 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 			adist=[]
 			for p1 in pos1:
 				if expdat.samples[p1] not in dsamp:
+					print('missing %s' % expdat.samples[p1])
 					continue
 				for p2 in pos2:
 					if expdat.samples[p2] not in dsamp:
+						print('missing2 %s' % expdat.samples[p1])
 						continue
 					if p1==p2:
 						continue
-					adist.append(distmat[dsamp[expdat.samples[p1]],dsamp[expdat.samples[p2]]])
+					cdist=distmat[dsamp[expdat.samples[p1]],dsamp[expdat.samples[p2]]]
+					adist.append(cdist)
 			distdict[(cg1,cg2)]=adist
-			gdist[idx1,idx2]=np.mean(adist)
+			gdist[idx1,idx2]=np.nanmean(adist)
 	if plotit:
-		plt.figure()
 		if plottype=='heatmap':
 			plotdistheatmap(gdist,uvals)
 			plt.title(expdat.studyname+' '+field)
@@ -210,6 +211,7 @@ def plotdistheatmap(gdist,uvals,neworder=False):
 	ax.set_yticklabels(uvals)
 	plt.tight_layout()
 	plt.draw()
+	plt.colorbar()
 
 
 def plotdistbar(gdist,uvals,crow=0,neworder=False):
