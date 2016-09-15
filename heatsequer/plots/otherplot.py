@@ -767,3 +767,40 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 		xlab=expdat.samples
 	ax.set_xticklabels(xlab,rotation=90)
 	plt.tight_layout()
+
+
+def plotdendrogram(expdat,field=None):
+	"""
+	plot an experiment with dendrogram for the sequences (based on sequence similarity)
+	input:
+	expdat : Experiment
+		the experiment to plot the dendrogram for
+	field : str
+		the field to sort by for plotting
+
+	output:
+	newexp : Experiment
+		sorted by the sequence similarity clustering
+	"""
+	import scipy.spatial.distance
+	import scipy.cluster.hierarchy
+
+	# calculate the sequence distance matrix
+	dm=np.zeros([len(expdat.seqs),len(expdat.seqs)])
+	for idx1,seq1 in enumerate(expdat.seqs):
+		for idx2,seq2 in enumerate(expdat.seqs):
+			cdist=sum(c1!=c2 for c1,c2 in zip(seq1,seq2))
+			dm[idx1,idx2]=cdist
+	sdm=scipy.spatial.distance.squareform(dm)
+
+	fig=plt.figure()
+	[ax1_x, ax1_y, ax1_w, ax1_h] = [0.05,0.1,0.2,0.8]
+	[axm_x, axm_y, axm_w, axm_h] = [0.25,0.1,0.7,0.8]
+	ax1 = fig.add_axes([ax1_x, ax1_y, ax1_w, ax1_h], frame_on=True)
+	linkmat = scipy.cluster.hierarchy.linkage(sdm, method='single')
+	dend = scipy.cluster.hierarchy.dendrogram(linkmat,orientation='left')
+	idx=dend['leaves']
+	newexp=hs.reorderbacteria(expdat,idx)
+	axm = fig.add_axes([axm_x, axm_y, axm_w, axm_h], frame_on=True)
+	hs.plotexp(newexp,'origexp',field,newfig=False)
+	return newexp

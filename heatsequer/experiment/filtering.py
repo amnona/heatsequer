@@ -489,7 +489,7 @@ def filterbacteriafromfile(expdat,filename,exclude=False,subseq=False):
 	seqs=[]
 	for cline in fl:
 		seqs.append(cline.strip())
-	newexp=hs.filterseqs(expdat,seqs,exclude=exclude,subseq=False)
+	newexp=hs.filterseqs(expdat,seqs,exclude=exclude,subseq=subseq)
 	filt='Filter sequences from file '+filename
 	if exclude:
 		filt+=' (Exclude)'

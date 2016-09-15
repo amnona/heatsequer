@@ -20,6 +20,7 @@ from pdb import set_trace as XXX
 import hashlib
 import re
 
+
 def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True,useseqnamefortax=True,rawreads=False,usesparse=False):
 	"""
 	Load an experiment - a biom table and a mapping file

@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline='',showhline=True):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline='',showhline=True,newfig=True):
 	"""
 	Plot an experiment
 	input:
@@ -50,6 +50,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		Name of category for subline plotting or '' (Default) for no sublines
 	showhline : bool
 		True (default) to plot the horizontal lines listed in exp.hlines. False to not plot them
+	newfig : bool
+		True (default) to open figure in new window, False to use current
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)
@@ -109,7 +111,10 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	mpl.rc('keymap',back='c, backspace')
 	mpl.rc('keymap',forward='v')
 	mpl.rc('keymap',all_axes='A')
-	f=plt.figure()
+	if newfig:
+		f=plt.figure(tight_layout=True)
+	else:
+		f=plt.gcf()
 	# set the colormap to default if not supplied
 	if not colormap:
 		colormap=plt.rcParams['image.cmap']
@@ -174,7 +179,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			hs.Debug(1,"less than 10 samples, showing all sample names")
 			ax.set_xticklabels(svals,rotation=90)
 			ax.set_xticks(range(len(newexp.samples)))
-	plt.tight_layout()
+	# f.tight_layout()
 	ax.set_ylim(-0.5,np.size(ldat,0)+0.5)
 
 	if showcolorbar:
