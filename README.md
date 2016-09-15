@@ -40,8 +40,6 @@ Install additional required packages:
 pip install biom-format
 
 pip install h5py
-
-pip install scikit-bio
 ```
 
 Download the heatsequer files from github (https://github.com/amnona/heatsequer):
@@ -49,7 +47,7 @@ Download the heatsequer files from github (https://github.com/amnona/heatsequer)
 cd to where you want the new heatsequer directory to be created
 
 ```
-git clone git@github.com:amnona/heatsequer.git
+git clone https://github.com:amnona/heatsequer.git
 ```
 
 To run the program:
