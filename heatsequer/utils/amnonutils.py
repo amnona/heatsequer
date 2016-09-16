@@ -19,7 +19,7 @@ import time
 __version__ = "0.2"
 
 
-def start_log(level=logging.DEBUG, filename='/Users/amnon/Python/git/heatsequer/log.hs.log'):
+def start_log(level=logging.DEBUG, filename='log.hs.log'):
 	"""start the logger for the run
 
 	Parameters
