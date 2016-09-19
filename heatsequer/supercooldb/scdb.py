@@ -24,6 +24,7 @@ from collections import defaultdict
 from pdb import set_trace as XXX
 import datetime
 import pickle
+import requests
 
 
 class scdbstruct:
@@ -38,6 +39,8 @@ class scdbstruct:
 		self.ontodict={}
 		# the names of the ontology files used:
 		self.ontologyfiles=['/Users/amnon/Databases/ontologies/doid.obo','/Users/amnon/Databases/ontologies/envo.obo','/Users/amnon/Databases/ontologies/uberon.obo','/Users/amnon/Databases/ontologies/efo.obo','/Users/amnon/Databases/ontologies/po.obo','/Users/amnon/Databases/ontologies/gaz.obo']
+		# the database server url
+		dburl='localhost:5000'
 
 
 def addontology(scdb,ontology,ontoprefix='',namelist={}):
