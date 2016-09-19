@@ -21,7 +21,7 @@ import hashlib
 import re
 
 
-def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True,useseqnamefortax=True,rawreads=False,usesparse=False):
+def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=False,tabletype='biom',normalize=True,addsname='',addmname='',keepzero=False,removefrom=False,removenum=1,mapsampletolowercase=False,sortit=True,useseqnamefortax=True,rawreads=False,usesparse=False):
 	"""
 	Load an experiment - a biom table and a mapping file
 	input:
@@ -31,6 +31,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	from rdp output file (web)
 	nameisseq - False to keep otu name as sid without hashing it, True to treat otuid as sequence
 	addsname - a string to add to each table sample name (or empty to not add)
+	addsmame - a string to add to each mapping file sample name (or empty to not add)
 	studyname - Flase to assign from table file name, otherwise string to store as study name
 	tabletype:
 		'biom' - a biom table
@@ -115,7 +116,7 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 	mapmd5=''
 	if mapname:
 		# if mapping file supplied, load it
-		mapsamples,smap,fields,mapmd5=loadmap(mapname,mapsampletolowercase=mapsampletolowercase)
+		mapsamples,smap,fields,mapmd5=loadmap(mapname,mapsampletolowercase=mapsampletolowercase,addmname=addmname)
 	else:
 		# no mapping file, so just create the #SampleID field
 		hs.Debug(6,'No mapping file supplied - using just sample names')
@@ -583,7 +584,7 @@ def saveseqstolinefile(seqs,filename):
 	fl.close()
 
 
-def loadmap(mapfilename,sampidfield='#SampleID',mapsampletolowercase=False):
+def loadmap(mapfilename,sampidfield='#SampleID',mapsampletolowercase=False,addmname=''):
 	"""
 	load a tab separated mapping file and store the values and samples (from #SampleID field)
 	input:
@@ -591,6 +592,7 @@ def loadmap(mapfilename,sampidfield='#SampleID',mapsampletolowercase=False):
 		name of the mapping file
 	sampidfield : string
 		name of the field containing the sample id (default is #SampleID)
+	addmname - a string to add to each mapping file sample name (or empty to not add)
 
 	output:
 	mapsamples : list of strings
@@ -611,6 +613,8 @@ def loadmap(mapfilename,sampidfield='#SampleID',mapsampletolowercase=False):
 	reader = csv.DictReader(mapf, delimiter='\t')
 	fields = reader.fieldnames
 	for cline in reader:
+		if addmname:
+			cline[sampidfield]=cline[sampidfield]+addmname
 		cid = cline[sampidfield]
 		if mapsampletolowercase:
 			cid=cid.lower()

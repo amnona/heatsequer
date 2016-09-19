@@ -221,8 +221,8 @@ class PlotGUIWindow(QtGui.QDialog):
 		selseqs=[]
 		for cid in self.selection:
 			selseqs.append(self.cexp.seqs[cid])
-		# bmd=hs.cooldb.testenrichment(self.cexp.cdb,self.cexp.seqs,selseqs)
-		bmd=hs.annotationenrichment(self.cexp,selseqs)
+		bmd=hs.cooldb.testenrichment(self.cexp.cdb,self.cexp.seqs,selseqs)
+		# bmd=hs.annotationenrichment(self.cexp,selseqs)
 		hs.Debug(6,'found %d items' % len(bmd))
 		if len(bmd)>0:
 			slistwin = SListWindow(listname='Enrichment')
