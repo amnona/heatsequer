@@ -47,7 +47,7 @@ Download the heatsequer files from github (https://github.com/amnona/heatsequer)
 cd to where you want the new heatsequer directory to be created
 
 ```
-git clone https://github.com:amnona/heatsequer.git
+git clone https://github.com/amnona/heatsequer.git
 ```
 
 To run the program:
