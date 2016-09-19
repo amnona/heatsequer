@@ -38,8 +38,6 @@ Install additional required packages:
 
 ```
 pip install biom-format
-
-pip install h5py
 ```
 
 Download the heatsequer files from github (https://github.com/amnona/heatsequer):
