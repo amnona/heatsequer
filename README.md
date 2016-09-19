@@ -17,7 +17,7 @@ Create a virtual environment for heatsequer:
 in the command prompt, run:
 
 ```
-conda create --name heatsequer scipy numpy networkx pyqt=4.11.4 scikit-learn matplotlib hdf5 h5py
+conda create --name heatsequer scipy numpy networkx pyqt=4.11.4 scikit-learn matplotlib hdf5 h5py python=3
 ```
 
 Activate the environment:
