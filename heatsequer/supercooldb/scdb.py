@@ -40,7 +40,9 @@ class scdbstruct:
 		# the names of the ontology files used:
 		self.ontologyfiles=['/Users/amnon/Databases/ontologies/doid.obo','/Users/amnon/Databases/ontologies/envo.obo','/Users/amnon/Databases/ontologies/uberon.obo','/Users/amnon/Databases/ontologies/efo.obo','/Users/amnon/Databases/ontologies/po.obo','/Users/amnon/Databases/ontologies/gaz.obo']
 		# the database server url
-		dburl='localhost:5000'
+		# self.dburl='http://localhost:5000'
+#		self.dburl='http://amnonim.webfactional.com/scdb:29708'
+		self.dburl='http://amnonim.webfactional.com/scdb'
 
 
 def addontology(scdb,ontology,ontoprefix='',namelist={}):
@@ -296,6 +298,8 @@ def getseq(db,seq,primerid=1,insert=False):
 		the SeqID from the Sequences table for the sequence
 	"""
 	seq=seq.upper()
+	rdata={}
+	rdata['sequence']=seq
 	db.cur.execute("SELECT SeqID FROM Sequences WHERE Sequence = ?",[seq])
 	res=db.cur.fetchone()
 	if res:
@@ -312,100 +316,6 @@ def getseq(db,seq,primerid=1,insert=False):
 			seqid=0
 	return(seqid)
 
-
-
-def adddata(db,data,studyid=[]):
-	"""
-	add new data entries (for a new study)
-	input:
-	db : scdbstruct
-		from dbstart()
-	data : list of tuples (Type:Value)
-		a list of tuples of (Type,Value) to add to Data table (i.e. ("PUBMEDID","322455") etc)
-	studyid : list of int
-		the ids in which this study appears (from finddataid)
-
-	output:
-	suid : int
-		the value of DataID for the new study (from Data table)
-	"""
-	# we need to get a new identifier for all entries in the study
-	# there should be a more elegant way to do it
-	Debug(2,"adddata for %d enteries" % len(data))
-	if len(studyid)==0:
-		db.cur.execute("INSERT INTO Data (DataID,Type,Value) VALUES (?,?,?)",(0,"tmp","tmp"))
-		suid=db.cur.lastrowid
-		db.cur.execute("DELETE FROM Data WHERE DataUniqueID=?",[suid])
-		Debug(2,"New adddata DataID: %d" % suid)
-	else:
-		suid=studyid[0]
-		Debug(2,'adding new data to existing study id %d' % suid)
-	for (k,v) in data:
-		db.cur.execute("INSERT INTO Data (DataID,Type,Value) VALUES (?,?,?)",(suid,k,v))
-	db.con.commit()
-	Debug(2,"Data added")
-	return suid
-
-
-def addcuration(db,data,sequences,curtype,curations,submittername='NA',description='',method='',primerid=1,submitteragent='HeatSequer'):
-	"""
-	Add a new manual curation to the database
-	input:
-	db : scdbstruct
-		from dbstart()
-	data : int or dict of (Type:Value)
-		if int - the value of DataID from Data table, otherwise a list of (Type,Value) tuples to add to Data table
-	sequences : list of ACGT
-		the sequences to curate
-	curtype : str
-		the curation type (COMMON,DIFFEXP,CONTAM,HIGHFREQ,PATHOGEN)
-	curations : list of Type,Value
-		The curations to add to the CurationList table (Type,Value)
-	submittername : str
-		Name of the submitter (first,last) or NA
-	description : str
-		text description of the curation entry (i.e. "lower in whole wheat pita bread")
-	method : str
-		text description of how the curation was detected - only if needed
-	primerid : int
-		the PrimerID from Primers table of the sequences (usually 1 - the V4 515F,806R)
-	submitteragent : str
-		the program submitting the curation
-
-	output:
-	curationid : int
-		the CurationID (in Curations table) of the new curation, or 0 if not added
-	data : int
-		the DataID from Data table
-	"""
-	Debug(2,"addcuration - %d sequences" % len(sequences))
-	if len(sequences)==0:
-		Debug(6,"No sequences to annotate!")
-		return 0,0
-	if len(curations)==0:
-		Debug(6,"No currations to add. still adding...")
-	if not type(data) is int:
-		Debug(6,"looking for studyid %s in data" % data)
-		data=adddata(db,data)
-
-	# add the curation
-	cdatetime=datetime.datetime.now().replace(microsecond=0).isoformat()
-	db.cur.execute("INSERT INTO Curations (Date,submittername,DataID,Description,Method,submitteragent,curtype) VALUES (?,?,?,?,?,?,?)",(cdatetime,submittername,data,description,method,submitteragent,curtype))
-	curationid=db.cur.lastrowid
-	# and add the curationlist entries
-	Debug(1,"Adding %d curations" % len(curations))
-	for (k,v) in curations:
-		db.cur.execute("INSERT INTO CurationList (CurationID,Type,Value) VALUES (?,?,?)",(curationid,k,v))
-
-	# add seqcuration entry for each sequence (create the sequence if doesn't exist)
-	Debug(1,"Adding %d sequences to SeqCuration table" % len(sequences))
-	for cseq in sequences:
-		cseqid=getseq(db,cseq,primerid=primerid,insert=True)
-		db.cur.execute("INSERT INTO SeqCurations (SeqID,CurationID) VALUES (?,?)",(cseqid,curationid))
-
-	db.con.commit()
-	Debug(1,"Finished adding")
-	return curationid,data
 
 
 def delcuration(db,curid):
@@ -429,83 +339,6 @@ def delcuration(db,curid):
 	return True
 
 
-def finddataid(db,datamd5='',mapmd5=''):
-	"""
-	find the data id for the data/map md5 (which are calculated on load)
-	note the md5s don't change following filtering/normalization/etc... - only the original data
-	input:
-	scdb : from startdb()
-	datamd5 : str
-		from Experiment.datamd5
-	mapmd5 : str
-		from Experiment.mapmd5
-
-	output:
-	outlist:
-		a list of ints of matching dataID indices (or empty if no match)
-	"""
-	Debug(1,'finddataid for data %s map %s' % (datamd5,mapmd5))
-	outlist=[]
-	if datamd5:
-		db.cur.execute("SELECT DataID FROM Data WHERE Value = ?",[datamd5])
-		allvals=db.cur.fetchall()
-		for cres in allvals:
-			outlist.append(cres[0])
-	if mapmd5:
-		db.cur.execute("SELECT DataID FROM Data WHERE Value = ?",[mapmd5])
-		allvals=db.cur.fetchall()
-		for cres in allvals:
-			outlist.append(cres[0])
-	outlist=list(set(outlist))
-	Debug(2,"found %d matches to data" % len(outlist))
-	return outlist
-
-
-def getdatainfo(db,dataid):
-	"""
-	get the information about a given study dataid
-	input:
-	db : from dbstart()
-	dataid : int
-		The dataid on the study (DataID field)
-
-	output:
-	info : list of (str,str,str)
-		list of tuples for each entry in the study:
-		type,value,descstring about dataid
-		empty if dataid not found
-	"""
-	info=[]
-	db.cur.execute("SELECT Type,Value FROM Data WHERE DataID = ?",[dataid])
-	allvals=db.cur.fetchall()
-	for cres in allvals:
-		info.append((cres[0],cres[1],'%s:%s' % (cres[0],cres[1])))
-	return info
-
-
-
-def getstudyannotations(db,studyid):
-	"""
-	get the list of annotations for study studyid
-
-	input:
-	db : from dbstart()
-	studyid : int
-		The dataid of the study
-
-	output:
-	info: list of str
-		the list of curations for this study (1 item per curation)
-	"""
-	info=[]
-	db.cur.execute("SELECT Date,SubmitterName,Description FROM Curations WHERE DataID = ?",[studyid])
-
-	allvals=db.cur.fetchall()
-	for cres in allvals:
-		info.append('%s:%s:%s' % (cres[0],cres[1],cres[2]))
-	return info
-
-
 def getseqcurationids(db,seqid):
 	"""
 	get the curation ids for the sequence with the id seqid
@@ -526,6 +359,294 @@ def getseqcurationids(db,seqid):
 		ids.append(cres[0])
 	Debug(2,'found %d curations' % len(ids))
 	return ids
+
+################################################################
+# new functions
+
+
+
+def addexpdata(db,data,studyid=None):
+	"""
+	add new data entries (for a new study)
+	input:
+	db : scdbstruct
+		from dbstart()
+	data : list of tuples (Type:Value)
+		a list of tuples of (Type,Value) to add to Data table (i.e. ("PUBMEDID","322455") etc)
+	studyid : list of int
+		the ids in which this study appears (from finddataid)
+
+	output:
+	suid : int
+		the value of DataID for the new study (from Data table)
+	"""
+	# we need to get a new identifier for all entries in the study
+	# there should be a more elegant way to do it
+	Debug(2,"addexpdata for %d enteries" % len(data))
+	if studyid is None:
+		# add new study
+		Debug(2,"addexpdata for a new study")
+	else:
+		Debug(2,'addexpdata for existing study %d' % studyid)
+	rdata={}
+	rdata['expId']=studyid
+	rdata['details']=data
+	res=requests.post(db.dburl+'/experiments/add_details',json=rdata)
+	if res.status_code==200:
+		newid=res.json()['expId']
+		Debug(2,'experiment added. id is %d' % newid)
+		return newid
+	else:
+		Debug(8,'error adding experiment. msg: %s' % res.content)
+		return None
+
+
+def addannotations(db,expid,sequences,annotationtype,annotations,submittername='NA',description='',method='',primerid=0,agenttype='HeatSequer',private='n'):
+	"""
+	Add a new manual curation to the database
+	input:
+	db : scdbstruct
+		from dbstart()
+	expid : int or dict of (Type:Value)
+		if int - the value of DataID from Data table, otherwise a list of (Type,Value) tuples to add to Data table
+	sequences : list of ACGT
+		the sequences to curate
+	annotationtype : str
+		the curation type (COMMON,DIFFEXP,CONTAM,HIGHFREQ,PATHOGEN)
+	annotations : list of Type,Value
+		The curations to add to the CurationList table (Type,Value)
+	submittername : str
+		Name of the submitter (first,last) or NA
+	description : str
+		text description of the curation entry (i.e. "lower in whole wheat pita bread")
+	method : str
+		text description of how the curation was detected - only if needed
+	primerid : int
+		the PrimerID from Primers table of the sequences (usually 1 - the V4 515F,806R)
+	agenttype : str
+		the program submitting the curation
+	private : str (optional)
+		'n' (default) or 'y'
+
+	output:
+	curationid : int
+		the CurationID (in Curations table) of the new curation, or 0 if not added
+	data : int
+		the DataID from Data table
+	"""
+	Debug(2,"addannotation - %d sequences" % len(sequences))
+	if len(sequences)==0:
+		Debug(6,"No sequences to annotate!")
+		return 0,0
+	if len(annotations)==0:
+		Debug(6,"No annotations to add. still adding...")
+	if not type(expid) is int:
+		Debug(6,"looking for studyid %s in data" % expid)
+		expid=addexpdata(db,expid)
+		if expid is None:
+			Debug(8,'problem adding new experiment data')
+			return 0,0
+
+	# add the curation
+	rdata={}
+	rdata['expId']=expid
+	rdata['sequences']=sequences
+	rdata['region']=primerid
+	rdata['annotationType']=annotationtype
+	rdata['method']=method
+	rdata['agentType']=agenttype
+	rdata['description']=description
+	rdata['private']=private
+	rdata['annotationList']=annotations
+
+	res=requests.post(db.dburl+'/annotations/add',json=rdata)
+	if res.status_code==200:
+		newid=res.json()['annotationId']
+		Debug(1,"Finished adding experiment id %d annotationid %d" % (expid,newid))
+		return res,newid
+	Debug(8,'problem adding annotations for experiment id %d' % expid)
+	Debug(8,res.content)
+	return 0,0
+
+
+def finddataid(db,datamd5='',mapmd5='',getall=False):
+	"""
+	find the data id for the data/map md5 (which are calculated on load)
+	note the md5s don't change following filtering/normalization/etc... - only the original data
+	input:
+	scdb : from startdb()
+	datamd5 : str
+		from Experiment.datamd5
+	mapmd5 : str
+		from Experiment.mapmd5
+	getall : bool (optional)
+		False (default) to get only 1st id, True to get a list of all
+
+	output:
+	expids: int (if getall=False - default) or list of int (if getall=True)
+		an id or a list of ids of matching dataID indices (or None if no match)
+	"""
+	Debug(1,'findexpid for datamd5 %s mapmd5 %s' % (datamd5,mapmd5))
+	details=[]
+	if datamd5:
+		details.append(['DataMD5',datamd5])
+	if mapmd5:
+		details.append(['MapMD5',mapmd5])
+	if len(details)==0:
+		Debug(6,'Error. MapMD5 and DataMD5 both missing from finddataid')
+		return None
+
+	rdata={}
+	rdata['details']=details
+	res=requests.get(db.dburl+'/experiments/get_id',json=rdata)
+	if res.status_code==200:
+		expids=res.json()['expId']
+		if not getall:
+			if len(expids)>1:
+				Debug(6,'Problem. Found %d matches for data' % len(expids))
+			Debug(2,'Found study id %d' % expids[0])
+			return expids[0]
+		Debug(2,"Found %d matches to data" % len(expids))
+		return expids
+	Debug(8,'Error getting expid from details')
+	return None
+
+
+def getexperimentinfo(db,expid):
+	"""
+	get the information about a given study dataid
+	input:
+	db : from dbstart()
+	dataid : int
+		The dataid on the study (DataID field)
+
+	output:
+	info : list of (str,str,str)
+		list of tuples for each entry in the study:
+		type,value,descstring about dataid
+		empty if dataid not found
+	"""
+	Debug(1,'get experiment details for expid %d' % expid)
+	rdata={}
+	rdata['expId']=expid
+	res=requests.get(db.dburl+'/experiments/get_details',json=rdata)
+	if res.status_code==200:
+		details=res.json()['details']
+		Debug(2,'Found %d details for experiment %d' % (len(details),expid))
+		return details
+	return []
+
+
+def getexpannotations(db,expid):
+	"""
+	get the list of annotations for study studyid
+
+	input:
+	db : from dbstart()
+	expid : int
+		The dataid of the study
+
+	output:
+	info: list of str
+		the list of curations for this study (1 item per curation)
+	"""
+	Debug(1,'get experiment annotations for expid %d' % expid)
+	rdata={}
+	rdata['expId']=expid
+	res=requests.get(db.dburl+'/experiments/get_annotations',json=rdata)
+	if res.status_code!=200:
+		Debug(6,'error getting annotations for experiment %d' % expid)
+		return []
+	annotations=res.json()['annotations']
+	Debug(2,'Found %d annotations for experiment %d' % (len(annotations),expid))
+	# make it into a nice list of str
+	info=[]
+	for cann in annotations:
+		cstr='date:%s description:%s user:%s private:%s' % (cann['date'],cann['description'],cann['userid'],cann['private'])
+		info.append(cstr)
+	return info
+
+
+def getseqannotations(db,sequence):
+	"""
+	Get the manual curations for a sequence
+
+	input:
+	db : from scdbstart()
+	sequence : str (ACGT)
+
+	output:
+		curs : list of list of (curation dict,list of [Type,Value] of curation details)
+	"""
+	Debug(1,'get sequence annotations for sequence %s' % sequence)
+	rdata={}
+	rdata['sequence']=sequence
+	print('***'+db.dburl+'/sequences/get_annotations')
+	res=requests.get(db.dburl+'/sequences/get_annotations',json=rdata)
+	if res.status_code!=200:
+		Debug(6,'error getting annotations for sequence %s' % sequence)
+		return []
+	print(res.json())
+	annotations=res.json()['annotations']
+	Debug(2,'Found %d annotations for sequence %s' % (len(annotations),sequence))
+	return annotations
+
+
+def getannotationstrings(db,sequence):
+	"""
+	get a nice string summary of a curation
+
+	input:
+	db : from scdbstart()
+	sequence : str (ACGT)
+
+	output:
+	shortdesc : list of str
+		a short summary of the curations (1 item per curation)
+	"""
+	shortdesc=[]
+	annotations=getseqannotations(db,sequence)
+	for cann in annotations:
+		cdesc=''
+		if cann['description']:
+			cdesc+=cann['description']+' ('
+		if cann['annotationtype']=='diffexp':
+			chigh=[]
+			clow=[]
+			call=[]
+			for cdet in cann['details']:
+				if cdet[0]=='all':
+					call.append(cdet[1])
+					continue
+				if cdet[0]=='low':
+					clow.append(cdet[1])
+					continue
+				if cdet[0]=='high':
+					chigh.append(cdet[1])
+					continue
+			cdesc+=' high in '
+			for cval in chigh:
+				cdesc+=cval+' '
+			cdesc+=' compared to '
+			for cval in clow:
+				cdesc+=cval+' '
+			cdesc+=' in '
+			for cval in call:
+				cdesc+=cval+' '
+		elif cann['annotationtype']=='isa':
+			cdesc+=' is a '
+			for cdet in cann['details']:
+				cdesc+='cdet,'
+		elif cann['annotationtype']=='contamination':
+			cdesc+='contamination'
+		else:
+			cdesc+=cann['annotationtype']+' '
+			for cdet in cann['details']:
+				cdesc=cdesc+' '+cdet[1]+','
+		shortdesc.append(cdesc)
+	return shortdesc
+
+###################################################
 
 
 def getseqcurations(db,sequence):

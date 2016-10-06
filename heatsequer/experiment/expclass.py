@@ -816,15 +816,81 @@ def addsample(expdat,sampleid,fieldvals={},missingval='NA',data=None):
 	expdat.smap[sampleid]={}
 	for cfield in expdat.fields:
 		if cfield in fieldvals:
-			smap[sampleid][cfield]=fieldvals[cfield]
+			expdat.smap[sampleid][cfield]=fieldvals[cfield]
 		else:
-			smap[sampleid][cfield]=missingval
+			expdat.smap[sampleid][cfield]=missingval
 	if data is None:
 		data=np.zeros(np.shape(expdat.data)[0])
 	expdat.origreads.append(np.sum(data))
 	data=np.reshape(data,[len(data),1])
 	expdat.data=np.hstack([expdat.data,data])
 	return expdat
+
+
+def taxtoseq(expdat,fixtax=False):
+	"""
+	put the taxonomy into the sequence field
+
+	input:
+	expdat : Experiment
+	fixtax: bool (optional)
+		False (default) to just copy, True to remove the k__ etc.
+
+	output:
+	newexp : Experiment
+		with seqs=taxonomies
+	"""
+	newexp=hs.copyexp(expdat)
+	newexp.seqs=newexp.tax
+	if fixtax:
+		newtax=[]
+		for ctax in newexp.tax:
+			cstr=''
+			cctax=ctax.split(';')
+			for clevel in range(7):
+				if len(cctax)>clevel:
+					cstr+=cctax[clevel][3:]
+				cstr+=';'
+			newtax.append(cstr)
+		newexp.seqs=newtax
+	newexp.seqdict={}
+	newseqs=[]
+	for idx,cseq in enumerate(newexp.seqs):
+		if cseq in newexp.seqdict:
+			hs.Debug(8,'found %s again' % cseq)
+			cseq=cseq+'-'+str(idx)
+		newseqs.append(cseq)
+		newexp.seqdict[cseq]=idx
+	newexp.seqs=newseqs
+	return(newexp)
+
+
+def renamesamples(expdat,addbefore):
+	"""
+	rename all the samples in expdat by adding addbefore before the name of each sample
+
+	input:
+	expdat : Experiment
+		the experiment to change the sample names in
+	addbefore : str
+		the string to add to each sampleid
+
+	output:
+	newexp : Experiment
+		with new sample names
+	"""
+	newexp=hs.copyexp(expdat)
+	newids=[]
+	newmap={}
+	for csamp in newexp.samples:
+		cnewid=addbefore+csamp
+		newids.append(cnewid)
+		newmap[cnewid]={}
+		for ckey,cval in newexp.smap[csamp].items():
+			newmap[cnewid][ckey]=cval
+	newexp.samples=newids
+	newexp.smap=newmap
+	return newexp
 
 
 def validateexp(expdat):

@@ -120,7 +120,10 @@ def alignseqs(seqs):
 	"""
 
 	oseq=seqs[0]
-	print("[%02d] %s" % (0,oseq))
+	res=[]
+	cline="[%02d] %s" % (0,oseq)
+	print(cline)
+	res.append(cline)
 	for idx,cseq in enumerate(seqs[1:]):
 		newstr=''
 		for idx2,cpos in enumerate(cseq):
@@ -128,5 +131,8 @@ def alignseqs(seqs):
 				newstr+='-'
 			else:
 				newstr+=cpos
-		print("[%02d] %s" % (idx,newstr))
+		cline="[%02d] %s" % (idx,newstr)
+		print(cline)
+		res.append(cline)
+	return res
 
