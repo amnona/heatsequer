@@ -360,8 +360,10 @@ class PlotGUIWindow(QtGui.QDialog):
 			ontologyfromid=hs.scdb.ontologyfromid
 			description=str(dbs.bdescription.text())
 			# TODO: need to get primer region!!!!
-			primerid=1
+			primerid='V4'
 			method=str(dbs.bmethod.text())
+			if method=='':
+				method='na'
 			submittername='Amnon Amir'
 			curations=[]
 			# if it is differential abundance
@@ -392,7 +394,7 @@ class PlotGUIWindow(QtGui.QDialog):
 			scdb=hs.scdb
 			cdata=hs.supercooldb.finddataid(scdb,datamd5=self.cexp.datamd5,mapmd5=self.cexp.mapmd5)
 			# if study not in database, ask to add some metadata for it
-			if len(cdata)==0:
+			if cdata is None:
 				okcontinue=False
 				while not okcontinue:
 					hs.Debug(6,'study data info not found based on datamd5, mapmd5. need to add one!!!')
@@ -400,19 +402,14 @@ class PlotGUIWindow(QtGui.QDialog):
 					if qres==QtGui.QMessageBox.Cancel:
 						return
 					if qres==QtGui.QMessageBox.No:
-						cdata=[ hs.supercooldb.adddata(scdb,( ('DataMD5',self.cexp.datamd5), ('MapMD5',self.cexp.mapmd5) ) ) ]
+						cdata=hs.supercooldb.addexpdata(scdb,( ('DataMD5',self.cexp.datamd5), ('MapMD5',self.cexp.mapmd5) ) )
 						okcontinue=True
 					if qres==QtGui.QMessageBox.Yes:
 						okcontinue=getstudydata(self.cexp)
 						cdata=hs.supercooldb.finddataid(scdb,datamd5=self.cexp.datamd5,mapmd5=self.cexp.mapmd5)
 						hs.Debug(1,'new cdata is %s' % cdata)
-			if len(cdata)>1:
-				hs.Debug(6,'more than 1 data entry based on datamd5, mapmd5. need to choose one!!!')
-				cdata=cdata[0]
-			else:
-				hs.Debug(6,'Data found. id is %s' % cdata[0])
-				cdata=cdata[0]
-			hs.supercooldb.addcuration(scdb,data=cdata,sequences=sequences,curtype=curtype,curations=curations,submittername=submittername,description=description,method=method,primerid=primerid)
+			hs.Debug(6,'Data found. id is %s' % cdata)
+			hs.supercooldb.addannotations(scdb,expid=cdata,sequences=sequences,annotationtype=curtype,annotations=curations,submittername=submittername,description=description,method=method,primerid=primerid)
 			# store the history
 			try:
 				hs.lastcurations.append(curations)
@@ -428,7 +425,7 @@ class DBStudyAnnotations(QtGui.QDialog):
 		scdb=hs.scdb
 		self.scdb=scdb
 		self.studyid=studyid
-		info=hs.supercooldb.getstudyannotations(scdb,studyid)
+		info=hs.supercooldb.getexpannotations(scdb,studyid)
 		for cinfo in info:
 			self.blist.addItem(cinfo)
 		self.bdetails.clicked.connect(self.details)
@@ -448,11 +445,11 @@ class DBStudyInfo(QtGui.QDialog):
 		self.scdb=scdb
 		self.dataid=0
 		dataid=hs.supercooldb.finddataid(scdb,datamd5=expdat.datamd5,mapmd5=expdat.mapmd5)
-		if len(dataid)>0:
-			info=hs.supercooldb.getdatainfo(scdb,dataid[0])
+		if dataid is not None:
+			info=hs.supercooldb.getexperimentinfo(scdb,dataid)
 			for cinfo in info:
-				qtlistadd(self.blist,cinfo[2],{'fromdb':True,'type':cinfo[0],'value':cinfo[1]},color='grey')
-			self.dataid=dataid[0]
+				qtlistadd(self.blist,cinfo[0]+':'+cinfo[1],{'fromdb':True,'type':cinfo[0],'value':cinfo[1]},color='grey')
+			self.dataid=dataid
 		else:
 			qtlistadd(self.blist,"DataMD5:%s" % expdat.datamd5,{'fromdb':False,'type':"DataMD5",'value':expdat.datamd5},color='black')
 			qtlistadd(self.blist,"MapMD5:%s" % expdat.mapmd5,{'fromdb':False,'type':"MapMD5",'value':expdat.mapmd5},color='black')
@@ -504,13 +501,13 @@ class DBStudyInfo(QtGui.QDialog):
 		"""
 		add the study info from the mapping file if available
 		"""
-		fieldlist=[('SRA_Study_s','SRA'),('project_name_s','Name'),('experiment_title','Name'),('experiment_design_description','Name'),('BioProject_s','SRA')]
+		fieldlist=[('SRA_Study_s','sra'),('project_name_s','name'),('experiment_title','name'),('experiment_design_description','name'),('BioProject_s','sra')]
 		cexp=self.cexp
 		for (cfield,infofield) in fieldlist:
 			if cfield in cexp.fields:
 				uvals=hs.getfieldvals(cexp,cfield,ounique=True)
 				if len(uvals)==1:
-					self.addentry(fromdb=False,ctype=infofield,value=uvals[0],color='black')
+					self.addentry(fromdb=False,ctype=infofield,value=uvals[0].lower(),color='black')
 
 
 class DBAnnotateSave(QtGui.QDialog):
@@ -835,7 +832,11 @@ def getstudydata(cexp):
 			return True
 		# look if study already in table
 		cid=hs.supercooldb.finddataid(dbsi.scdb,datamd5=cexp.datamd5,mapmd5=cexp.mapmd5)
-		dataid=hs.supercooldb.adddata(dbsi.scdb,newstudydata,studyid=cid)
+		if cid is None:
+			hs.Debug(6,'no studyid found for datamd5 %s, mapmd5 %s' % (cexp.datamd5,cexp.mapmd5))
+#			cdata=hs.supercooldb.addexpdata(scdb,( ('DataMD5',cexp.datamd5), ('MapMD5',cexp.mapmd5) ) )
+			hs.Debug(3,'Adding to new experiment')
+		dataid=hs.supercooldb.addexpdata(dbsi.scdb,newstudydata,studyid=cid)
 		hs.Debug(6,'Study data saved to id %d' % dataid)
 		if len(allstudydata)>2:
 			return True

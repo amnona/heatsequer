@@ -264,7 +264,7 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	return newexp
 
 
-def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='ranksum',justp=False):
+def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='ranksum',justp=False,fixzero=False):
 	"""
 	find bacteria significantly associated (correlated) with a mapping file sortable field
 	input:
@@ -280,6 +280,8 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 	justp : bool
 		False (default) to run normally, True to return all p-values without FDR
 		p-values will be stored in newexp.pvals
+	fixzero : bool (optional)
+		False (default) to use data normally, True (experimental) to replace 0s with the mean of the group
 	output:
 	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
 	"""
@@ -293,7 +295,13 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 	numsamps=len(cexp.samples)
 
 	dat=cexp.data
-	dat[dat<minthresh]=minthresh
+	if not fixzero:
+		dat[dat<minthresh]=minthresh
+	else:
+		for cidx in range(len(cexp.seqs)):
+			zeros=np.where(dat[cidx,:]<=minthresh)[0]
+			nonzeros=np.where(dat[cidx,:]>minthresh)[0]
+			dat[cidx,zeros]=np.mean(dat[cidx,nonzeros])
 	dat=np.log2(dat)
 	dat=dat-np.mean(dat,axis=1,keepdims=True)
 
@@ -2176,14 +2184,30 @@ def pfdr(data,labels,alpha=0.1,numperm=1000,befast=False):
 	# calculate the real data statistic
 	t=teststat(data,labels)
 
+	print('ok')
+
 	# now do random permutations
 	u=np.zeros([numbact,numperm])
+	print(t.dtype)
+	print(u.dtype)
 	for cperm in range(numperm):
 		rlabels=np.random.permutation(labels)
 		rt=teststat(data,rlabels)
 		u[:,cperm]=rt
 
 	print('calculating fdr')
+	# there is a problem with numpy where permutations that should have a similar mean
+	# get a slight difference, and that can destroy the rank
+	# see https://github.com/numpy/numpy/issues/8116
+	print('fixing floating point errors')
+	for crow in range(numbact):
+		closepos=np.isclose(t[crow],u[crow,:])
+		# numid=np.sum(t[crow]==u[crow,:])
+		# numclose=np.sum(closepos)
+		# if numclose!=numid:
+		# 	print('row: %d, identical: %d, close: %d' % (crow,numid,numclose))
+		u[crow,closepos]=t[crow]
+
 	print('rank transforming')
 	# rank transfrom the results
 	for crow in range(numbact):
@@ -2191,6 +2215,7 @@ def pfdr(data,labels,alpha=0.1,numperm=1000,befast=False):
 		cvec=stats.rankdata(cvec,method='min')
 		t[crow]=cvec[0]
 		u[crow,:]=cvec[1:]
+
 	# now calculate the fdr for each t value
 	print('fdring')
 	sortt=list(set(t))
@@ -2200,11 +2225,11 @@ def pfdr(data,labels,alpha=0.1,numperm=1000,befast=False):
 	print('ok')
 	foundit=False
 	for ct in sortt:
-# 		z= t>=ct
-# #		fracnull=(1+np.sum(u>=ct,axis=1))/(numperm+1)
-# 		fracnull=(z+np.sum(u>=ct,axis=1))/(numperm+1)
-# 		realnum=np.sum(z)
-# 		fdr=np.sum(fracnull)/realnum
+		# 		z= t>=ct
+		# #		fracnull=(1+np.sum(u>=ct,axis=1))/(numperm+1)
+		# 		fracnull=(z+np.sum(u>=ct,axis=1))/(numperm+1)
+		# 		realnum=np.sum(z)
+		# 		fdr=np.sum(fracnull)/realnum
 		realnum=np.sum(t>=ct)
 		fdr=(realnum+np.count_nonzero(u>=ct)) / (realnum*(numperm+1))
 		if befast:
@@ -2290,6 +2315,7 @@ def getpfdr(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1,
 	cexp=hs.joinexperiments(exp1,exp2)
 	len1=len(exp1.samples)
 	len2=len(exp2.samples)
+
 	dat=cexp.data
 	dat[dat<minthresh]=minthresh
 	dat=np.log2(dat)
@@ -2311,9 +2337,9 @@ def getpfdr(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1,
 
 	print(np.shape(cexp.data))
 	if usepfdr:
-		keep,odif=pfdr(cexp.data,labels,alpha=maxfval,numperm=numperm,befast=befast)
+		keep,odif=pfdr(dat,labels,alpha=maxfval,numperm=numperm,befast=befast)
 	else:
-		keep,odif=oldfdr(cexp.data,labels,alpha=maxfval,numperm=numperm)
+		keep,odif=oldfdr(dat,labels,alpha=maxfval,numperm=numperm)
 
 	keep=np.where(keep)
 	seqlist=[]
@@ -2335,3 +2361,20 @@ def getpfdr(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1,
 	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
 	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
 	return newexp
+
+
+
+def correlatemicromet(microexp,metexp,method='pearson'):
+	samples=list(set(microexp.samples).intersection(set(metexp.samples)))
+	exp1=hs.filtersamples(microexp,'#SampleID',samples)
+	exp2=hs.filtersamples(metexp,'#SampleID',samples)
+	res=np.zeros([len(exp1.seqs),len(exp2.seqs)])
+	for idx1 in range(len(exp1.seqs)):
+		for idx2 in range(len(exp2.seqs)):
+			cc=np.corrcoef(exp1.data[idx1,:],exp2.data[idx2,:])
+			res[idx1,idx2]=cc[0,1]
+	plt.figure()
+	plt.imshow(res,interpolation='nearest',aspect='auto',clim=[-1,1])
+	plt.colorbar()
+	return res
+

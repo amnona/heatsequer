@@ -769,7 +769,7 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 	plt.tight_layout()
 
 
-def plotdendrogram(expdat,field=None):
+def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True):
 	"""
 	plot an experiment with dendrogram for the sequences (based on sequence similarity)
 	input:
@@ -791,16 +791,156 @@ def plotdendrogram(expdat,field=None):
 		for idx2,seq2 in enumerate(expdat.seqs):
 			cdist=sum(c1!=c2 for c1,c2 in zip(seq1,seq2))
 			dm[idx1,idx2]=cdist
+	dm[dm>0]+=0.5
+	dm[dm>0]=np.log2(dm[dm>0])
 	sdm=scipy.spatial.distance.squareform(dm)
 
 	fig=plt.figure()
-	[ax1_x, ax1_y, ax1_w, ax1_h] = [0.05,0.1,0.2,0.8]
-	[axm_x, axm_y, axm_w, axm_h] = [0.25,0.1,0.7,0.8]
+	[ax1_x, ax1_y, ax1_w, ax1_h] = [0.75,0.1,0.2,0.8]
+	[axm_x, axm_y, axm_w, axm_h] = [ax1_x-xwidth,0.1,xwidth,0.8]
+	# [ax1_x, ax1_y, ax1_w, ax1_h] = [0.05,0.1,0.2,0.8]
+	# [axm_x, axm_y, axm_w, axm_h] = [0.25,0.1,0.7,0.8]
 	ax1 = fig.add_axes([ax1_x, ax1_y, ax1_w, ax1_h], frame_on=True)
 	linkmat = scipy.cluster.hierarchy.linkage(sdm, method='single')
-	dend = scipy.cluster.hierarchy.dendrogram(linkmat,orientation='left')
+	dend = scipy.cluster.hierarchy.dendrogram(linkmat,orientation='right',no_labels=True)
+	tickdist=np.array([1,2,3,5,8,15,30])
+	ticklabs=[]
+	for ctick in tickdist:
+		ticklabs.append(str(ctick))
+	plt.xticks(np.log2(tickdist+0.5),ticklabs)
 	idx=dend['leaves']
+	print(len(idx))
+	print(len(expdat.seqs))
 	newexp=hs.reorderbacteria(expdat,idx)
 	axm = fig.add_axes([axm_x, axm_y, axm_w, axm_h], frame_on=True)
-	hs.plotexp(newexp,'origexp',field,newfig=False)
+	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone)
 	return newexp
+
+
+
+def compare2repeats(exp1,exp2,samplefield='#SampleID',sampleid=None):
+	"""
+	compare 2 experiments which are technical repeats of the same samples
+
+	input:
+	exp1,exp2 : Experiment
+		the two experiments to compare. need to have same sampleids
+	samplefield : str
+		name of the field containing the sampleids for comparison (i.e. identical between the 2 experiments)
+	sampleid : str
+		the sample to test
+	"""
+	import scipy.stats
+
+	idx1=hs.findsamples(exp1,samplefield,sampleid)
+	if len(idx1)!=1:
+		hs.Debug(9,'Not only 1 value for %s in exp1!!' % sampleid)
+		return
+	idx2=hs.findsamples(exp2,samplefield,sampleid)
+	if len(idx2)!=1:
+		hs.Debug(9,'Not only 1 value for %s in exp2!!' % sampleid)
+		return
+	idx1=idx1[0]
+	idx2=idx2[0]
+	dat1=exp1.data[:,idx1]
+	dat2=exp2.data[:,idx2]
+
+	minvals=[]
+	maxvals=[]
+	allseqs=set(exp1.seqs).union(exp2.seqs)
+	print(len(allseqs))
+	for cseq in allseqs:
+		if cseq in exp1.seqdict:
+			val1=dat1[exp1.seqdict[cseq]]
+		else:
+			val1=0
+		if cseq in exp2.seqdict:
+			val2=dat2[exp2.seqdict[cseq]]
+		else:
+			val2=0
+		if val1==0 and val2==0:
+			continue
+		val1+=0.001
+		val2+=0.001
+		# minvals.append(np.min([val1,val2]))
+		# maxvals.append(np.max([val1,val2]))
+		minvals.append((val1+val2)/2)
+		maxvals.append(np.abs(val1-val2)/(val1+val2))
+	plt.figure()
+	# plt.plot([0,5000],[0,5000],'k')
+	plt.plot(minvals,maxvals,'.')
+	plt.xlabel('min value')
+	plt.ylabel('max value')
+
+	# bins=np.logspace(-2,3.5,num=25)
+	# binmedian,binedges,binnumber=scipy.stats.binned_statistic(minvals,maxvals,statistic='mean',bins=bins)
+	# plt.plot(binedges[:-1],binmedian,'r')
+	# plt.xscale('log')
+	# plt.yscale('log')
+	# plt.xlim([0.0001,1000])
+	# plt.ylim([0.0001,1000])
+	plt.xlim([-10,1000])
+	plt.ylim([-0.1,1.1])
+
+
+def plotstability(exp1,exp2,samplefield='#SampleID',sampleid=None,newfig=False,plotit=True,minpresratio=0.1,xpos=None):
+	"""
+	"""
+	if sampleid is not None:
+		idx1=hs.findsamples(exp1,samplefield,sampleid)
+		idx2=hs.findsamples(exp2,samplefield,sampleid)
+		if len(idx1)!=1:
+			hs.Debug(7,'sampleid %s has %d samples in exp1' % (sampleid,len(idx1)))
+			return [],[]
+		if len(idx2)!=1:
+			hs.Debug(7,'sampleid %s has %d samples in exp2' % (sampleid,len(idx1)))
+			return [],[]
+		# exp1=hs.filtersamples(exp1,samplefield,sampleid)
+		# exp2=hs.filtersamples(exp2,samplefield,sampleid)
+
+	allx=[]
+	ally=[]
+	if xpos is None:
+		xpos=np.arange(5000)
+	for minreads in xpos:
+		allx.append(minreads)
+		bact1=np.where(exp1.data[:,idx1]>=minreads)[0]
+		if len(bact1)==0:
+			ally.append(np.nan)
+			continue
+		numbact2=0.0
+		for cseq in bact1:
+			if exp1.seqs[cseq] in exp2.seqdict:
+				if exp2.data[exp2.seqdict[exp1.seqs[cseq]],idx2]>minpresratio*exp1.data[cseq,idx1]:
+					numbact2+=1
+		ratio=numbact2/len(bact1)
+		ally.append(ratio)
+	if newfig:
+		plt.figure()
+	if plotit:
+		plt.plot(allx,ally)
+		plt.xscale('log')
+		plt.xlim([0.1,10000])
+		plt.ylim([-0.1,1.1])
+	return allx,ally
+
+
+def plotstabilitysummary(exp1,exp2,samplefield='#SampleID',newfig=False,minpresratio=0.0,color='r'):
+	xpos=np.logspace(-1,3,100)
+	ally=np.zeros([0,len(xpos)])
+	for cid in hs.getfieldvals(exp1,samplefield):
+		cx,cy=hs.plotstability(exp1,exp2,samplefield,cid,newfig=False,plotit=False,xpos=xpos,minpresratio=minpresratio)
+		ally=np.vstack([ally,cy])
+	print(np.shape(ally))
+	if newfig:
+		plt.figure()
+	cmean=np.nanmean(ally,axis=0)
+	cstd=np.nanstd(ally,axis=0)/np.sqrt(np.sum(np.isfinite(ally),axis=0))
+	nxpos=xpos/10000
+	plt.fill_between(nxpos, cmean+cstd, cmean-cstd, alpha=0.25,color=color)
+	plt.plot(nxpos,cmean,color=color)
+	plt.xscale('log')
+	plt.xlim([1.0/100000,0.1])
+	plt.ylim([0,1.05])
+	plt.xlabel('minimal sequence frequency')
+	plt.ylabel('mean fraction of overlap between repeats')
