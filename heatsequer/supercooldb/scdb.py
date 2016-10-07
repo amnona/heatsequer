@@ -601,12 +601,20 @@ def getannotationstrings(db,sequence):
 	sequence : str (ACGT)
 
 	output:
-	shortdesc : list of str
-		a short summary of the curations (1 item per curation)
+	shortdesc : list of (dict,str) (annotationdetails,annotationsummary)
+		a list of:
+			annotationdetails : dict
+				'annotationid' : int, the annotation id in the database
+				'annotationtype : str
+			annotationsummary : str
+				a short summary of the annotation
 	"""
 	shortdesc=[]
 	annotations=getseqannotations(db,sequence)
 	for cann in annotations:
+		annotationdetails={}
+		annotationdetails['annotationid']=cann['annotationid']
+		annotationdetails['annotationtype']=cann['annotationtype']
 		cdesc=''
 		if cann['description']:
 			cdesc+=cann['description']+' ('
@@ -643,7 +651,7 @@ def getannotationstrings(db,sequence):
 			cdesc+=cann['annotationtype']+' '
 			for cdet in cann['details']:
 				cdesc=cdesc+' '+cdet[1]+','
-		shortdesc.append(cdesc)
+		shortdesc.append( (annotationdetails,cdesc) )
 	return shortdesc
 
 ###################################################

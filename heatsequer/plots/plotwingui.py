@@ -25,7 +25,7 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 from PyQt4 import QtGui, QtCore, uic
 from PyQt4.QtCore import Qt
 #from PyQt4 import QtGui
-from PyQt4.QtGui import QCompleter,QStringListModel,QMessageBox
+from PyQt4.QtGui import QCompleter,QStringListModel,QMessageBox,QListWidgetItem
 import pickle
 # for debugging - use XXX()
 from pdb import set_trace as XXX
@@ -100,10 +100,33 @@ class PlotGUIWindow(QtGui.QDialog):
 		if self.cexp.seqdb:
 			ontofields,ontonames=hs.bactdb.getontonames(self.cexp.seqdb)
 			for conto in ontofields:
-#			for conto in self.cexp.seqdb.OntoGraph.keys():
+				# for conto in self.cexp.seqdb.OntoGraph.keys():
 				self.cOntology.addItem(conto)
 		self.dc=None
 		self.createaddplot(useqt=True)
+		# right click menu
+		self.lCoolDB.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self.lCoolDB.connect(self.lCoolDB, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),self.listItemRightClicked)
+
+	def listItemRightClicked(self, QPos):
+		self.listMenu= QtGui.QMenu()
+		menuitem = self.listMenu.addAction("Delete annotation")
+		self.connect(menuitem, QtCore.SIGNAL("triggered()"), self.menuDeleteAnnotation)
+
+		parentPosition = self.lCoolDB.mapToGlobal(QtCore.QPoint(0, 0))
+		self.listMenu.move(parentPosition + QPos)
+		self.listMenu.show()
+
+	def menuDeleteAnnotation(self):
+		if len(self.lCoolDB.selectedItems())>1:
+			print('more than 1 item')
+		for citem in self.lCoolDB.selectedItems():
+			cdetails=citem.data(Qt.UserRole)
+			if cdetails is None:
+				print('no details')
+			else:
+				print('delete id %d?' % cdetails['annotationid'])
+
 
 	def createaddplot(self,useqt=True):
 		"""
@@ -309,9 +332,26 @@ class PlotGUIWindow(QtGui.QDialog):
 		"""
 		add to cdb list without clearing
 		"""
-
 		for cinfo in info:
-			self.lCoolDB.addItem(cinfo)
+			# test if the supercooldb annotation
+			if type(cinfo)==tuple:
+				details=cinfo[0]
+				newitem=QListWidgetItem(cinfo[1])
+				newitem.setData(Qt.UserRole,details)
+				if details['annotationtype']=='diffexp':
+					ccolor=QtGui.QColor(0,0,200)
+				elif details['annotationtype']=='contamination':
+					ccolor=QtGui.QColor(200,0,0)
+				elif details['annotationtype']=='common':
+					ccolor=QtGui.QColor(0,200,0)
+				elif details['annotationtype']=='highfreq':
+					ccolor=QtGui.QColor(0,200,0)
+				else:
+					ccolor=QtGui.QColor(0,0,0)
+				newitem.setTextColor(ccolor)
+				self.lCoolDB.addItem(newitem)
+			else:
+				self.lCoolDB.addItem(cinfo)
 
 	def selectbact(self,bactlist,flip=True):
 		"""

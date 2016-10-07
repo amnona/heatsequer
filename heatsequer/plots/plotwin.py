@@ -334,7 +334,7 @@ def onplotkeyclick(event):
 				cax.guiwin.addtocdblist(info)
 			else:
 				for cinfo in info:
-					print(cinfo)
+					print(cinfo[1])
 				sys.stdout.flush()
 	if event.key=='.':
 		# select prev bacteria
@@ -357,7 +357,7 @@ def onplotkeyclick(event):
 				cax.guiwin.addtocdblist(info)
 			else:
 				for cinfo in info:
-					print(cinfo)
+					print(cinfo[1])
 				sys.stdout.flush()
 
 	if event.key=='<':
@@ -578,7 +578,7 @@ def onplotmouseclick(event):
 			ax.guiwin.addtocdblist(info)
 		else:
 			for cinfo in info:
-				print(cinfo)
+				print(cinfo[1])
 			sys.stdout.flush()
 
 
