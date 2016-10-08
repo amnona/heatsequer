@@ -912,3 +912,10 @@ def validateexp(expdat):
 	# test the seqdict
 	# for idx,cseq in enumerate(expdat.seqs):
 	# 	if expdat.seqdict
+
+
+def getheatsequerdir():
+	"""
+	Get the root directory of heatsequer
+	"""
+	return hs.heatsequerdir

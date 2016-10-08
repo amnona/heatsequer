@@ -14,6 +14,7 @@ __version__ = "0.1"
 from ..utils.amnonutils import Debug,dictupper,listupper,delete
 from ..utils.oboparse import Parser
 from ..utils.ontologygraph import ontologysubtreeids,ontologytotree,getnodeparents,ontotreetonames
+from ..experiment.expclass import getheatsequerdir
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,6 +26,7 @@ from pdb import set_trace as XXX
 import datetime
 import pickle
 import requests
+import os
 
 
 class scdbstruct:
@@ -96,21 +98,26 @@ def addontology(scdb,ontology,ontoprefix='',namelist={}):
 	return scdb
 
 
-def loaddbonto(db,ontofile='/Users/amnon/Python/git/heatsequer/db/ontology.pickle',ontofromidfile='/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle'):
+def loaddbonto(db,ontofile=None,ontofromidfile=None):
 	"""
 	load the pickled ontologies to the scdb structure
 	input:
 	db : from scdbstart
 	ontofile : str
-		name of the ontologies term file (from saveontologies)
+		name of the ontologies term file (from saveontologies) or None for default location
 	ontofromidfile : str
-		name of the ontologies reverse dict file (from saveontologies)
+		name of the ontologies reverse dict file (from saveontologies) or None for default location
 
 	output:
 	db : scdbstruct
 		with the loaded ontologies fields
 	"""
+	if ontofile is None:
+		ontofile=os.path.join(getheatsequerdir(),'db/ontology.pickle')
+	if ontofromidfile is None:
+		ontofromidfile=os.path.join(getheatsequerdir(),'db/ontologyfromid.pickle')
 	Debug(6,'loading ontology pickles')
+	Debug(6,'Files %s and %s' % (ontofile,ontofromidfile))
 	db.ontology=pickle.load(open(ontofile,'rb'))
 	db.ontologyfromid=pickle.load(open(ontofromidfile,'rb'))
 	Debug(6,'ontologies loaded')
@@ -139,11 +146,16 @@ def loadontologies(scdb,pickleit=True,ontologies=[]):
 		saveontologies(scdb)
 
 
-def saveontologies(scdb,ontofile='/Users/amnon/Python/git/heatsequer/db/ontology.pickle',ontofromidfile='/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle'):
+def saveontologies(scdb,ontofile=None,ontofromidfile=None):
 	"""
 	save the ontologies to pickle files.
 	use after loadontologies()
 	"""
+	if ontofile is None:
+		ontofile=os.path.join(getheatsequerdir(),'db/ontology.pickle')
+	if ontofromidfile is None:
+		ontofromidfile=os.path.join(getheatsequerdir(),'db/ontologyfromid.pickle')
+
 	fl=open(ontofile,'wb')
 	pickle.dump(scdb.ontology,fl,protocol=2)
 	fl.close()
@@ -760,7 +772,7 @@ def select_column_and_value(cur, sql, parameters=()):
 	return {k[0]: v for k, v in list(zip(execute.description, fetch))}
 
 
-def createontologytree(db,ontologies=[],outname='db/ontologygraph.pickle'):
+def createontologytree(db,ontologies=[],outname=None):
 	"""
 	load the ontology tree graphs into the scdb and store them in a pickle dict
 
@@ -769,12 +781,15 @@ def createontologytree(db,ontologies=[],outname='db/ontologygraph.pickle'):
 	ontologies : list of str
 		list of obo ontologies to use or empty to use the default files (db.ontologyfiles)
 	outname : str
-		name of the output pickle file
+		name of the output pickle file or None for default location
 
 	output:
 	db - scdbstruct
 		with the ontodict field added
 	"""
+	if outname is None:
+		outname=os.path.join(getheatsequerdir(),'db/ontologygraph.pickle')
+
 	if not ontologies:
 		ontologies=db.ontologyfiles
 
@@ -796,19 +811,21 @@ def createontologytree(db,ontologies=[],outname='db/ontologygraph.pickle'):
 
 
 
-def loadontotrees(db,ontopickle='db/ontologygraph.pickle'):
+def loadontotrees(db,ontopickle=None):
 	"""
 	load the ontology dict pickle file
 
 	input:
 	db : from scdbstart()
 	ontopickle : str
-		the pickled ontology dict filename (from createontologytree())
+		the pickled ontology dict filename (from createontologytree()) or None for default location
 
 	output:
 	db : scdbstruct
 		with the ontology dict in ontodict
 	"""
+	if ontopickle is None:
+		ontopickle=os.path.join(getheatsequerdir(),'db/ontologygraph.pickle')
 	Debug(6,'loadding ontology trees')
 	fl=open(ontopickle,'rb')
 	db.ontodict=pickle.load(fl)

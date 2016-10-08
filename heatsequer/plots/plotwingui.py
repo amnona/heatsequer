@@ -736,7 +736,8 @@ class DBAnnotateSave(QtGui.QDialog):
 		"""
 		hs.Debug(1,'prefill info')
 		ontologyfromid=self.ontologyfromid
-		fl=open('/Users/amnon/Python/git/heatsequer/db/ncbitaxontofromid.pickle','rb')
+#		fl=open('/Users/amnon/Python/git/heatsequer/db/ncbitaxontofromid.pickle','rb')
+		fl=open(os.path.join(hs.heatsequerdir,'db/ncbitaxontofromid.pickle'),'rb')
 		ncbitax=pickle.load(fl)
 		fl.close()
 
