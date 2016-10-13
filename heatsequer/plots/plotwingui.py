@@ -84,6 +84,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		self.bEnrich.clicked.connect(self.enrich)
 		self.bExpInfo.clicked.connect(self.expinfo)
 		self.bSampleInfo.clicked.connect(self.sampleinfo)
+		self.lCoolDB.doubleClicked.connect(self.showannotation)
 		self.connect(self.cSampleField, QtCore.SIGNAL('activated(QString)'), self.samplefield)
 		self.FigureTab.connect(self.FigureTab, QtCore.SIGNAL("currentChanged(int)"),self.tabchange)
 		self.cSampleField.setCurrentIndex(0)
@@ -126,6 +127,14 @@ class PlotGUIWindow(QtGui.QDialog):
 				print('no details')
 			else:
 				print('delete id %d?' % cdetails['annotationid'])
+
+
+	def showannotation(self):
+		citem=self.lCoolDB.currentItem()
+		cdetails=citem.data(Qt.UserRole)
+		print('-----')
+		print(cdetails)
+		showannotationdata(cdetails)
 
 
 	def createaddplot(self,useqt=True):
@@ -882,3 +891,30 @@ def getstudydata(cexp):
 		if len(allstudydata)>2:
 			return True
 	return False
+
+
+
+def showannotationdata(annotationdetails):
+	"""
+	show the list of annotation details and the sequences associated with it
+
+	intput:
+	annotationdetails : dict
+		dict of various fields of the annotation (includeing annotationid)
+		from scdb.getannotationstrings()
+	cexp : experiment
+		the experiment (for rhe scdb pointer)
+	"""
+	info=[]
+	for k,v in annotationdetails.items():
+		if type(v)==list:
+			for cv in v:
+				info.append('%s:%s' % (k,cv))
+		else:
+			info.append('%s:%s' % (k,v))
+	# get the annotation sequences:
+	if 'annotationid' in annotationdetails:
+		seqs=hs.supercooldb.getannotationseqs(hs.scdb,annotationdetails['annotationid'])
+		info.append('sequences: %d' % len(seqs))
+	slistwin = SListWindow(info,'Annotation details')
+	slistwin.exec_()

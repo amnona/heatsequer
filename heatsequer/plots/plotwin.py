@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline='',showhline=True,newfig=True,fixfont=False,fontsize=None,nosort=False,zeroisnone=False,xlabelrotation=45):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline='',showhline=True,newfig=True,fixfont=False,fontsize=None,nosort=False,zeroisnone=False,xlabelrotation=45,showtaxnames=False):
 	"""
 	Plot an experiment
 	input:
@@ -63,6 +63,9 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		False (default) to plot zeros as 0, True to assign None (white color)
 	xlabelrotation : int (optional)
 		the rotation of the xtick labels
+	showtaxnames : book (optional)
+		False (default) to not show tax names (need to press 'h' to show)
+		True to show the taxonomy names
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)
@@ -256,6 +259,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			for cpos in newexp.hlines:
 				plt.plot([0,np.shape(newexp.data)[1]],[cpos-0.5,cpos-0.5],'g')
 	plt.show()
+	if showtaxnames:
+		showtaxonomies(newexp,ax,showdb=False,showcontam=False)
 
 #	if usegui:
 #		app.exec_()

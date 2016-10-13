@@ -2378,3 +2378,52 @@ def correlatemicromet(microexp,metexp,method='pearson'):
 	plt.colorbar()
 	return res
 
+
+
+def getclosesequences(exp,seqs):
+	"""
+	Get the closest sequence for each sequence in seqs (from experiment exp)
+	closeness is based on hamming distance.
+	a new experiment is created with each sequence from seqs followed by it's close neighbor
+
+	input:
+	exp : Experiment
+		the experiment from which to find the closest sequence (and the original sequences)
+	seqs : list of str (ACGT)
+		a list of sequences from exp for which to find the neighbor
+
+	output:
+	newexp: Experiment
+		a subset of exp, ordered by s from seqs, closest neighbor to s.
+	closeseqs: list of str (ACGT)
+		a list of closest sequence to each sequence is seqs
+	"""
+	closeseqs=[]
+	filterseqs=[]
+
+	# convert sequences to numpy arrays for fast comparisons
+	seqarray=[]
+	for cseq in exp.seqs:
+		seqarray.append(hs.SeqToArray(cseq))
+
+	for idx,cseq in enumerate(seqs):
+		cseqa=hs.SeqToArray(cseq)
+		minmm=2
+		simseq=None
+		for expidx,cexpseq in enumerate(seqarray):
+			nummm=np.count_nonzero(np.not_equal(cseqa,cexpseq))
+			if nummm==0:
+				continue
+			if nummm<minmm:
+				simseq=expidx
+				minmm=nummm
+		if simseq is None:
+			hs.Debug(7,'No similar sequence for sequence %s' % seqs[idx])
+			continue
+		closeseqs.append(exp.seqs[simseq])
+		filterseqs.append(cseq)
+		filterseqs.append(exp.seqs[simseq])
+	newexp=hs.filterseqs(exp,filterseqs)
+	for cseq in closeseqs:
+		newexp.tax[newexp.seqdict[cseq]]=newexp.tax[newexp.seqdict[cseq]].lower()
+	return newexp,closeseqs
