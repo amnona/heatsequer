@@ -769,7 +769,7 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 	plt.tight_layout()
 
 
-def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True):
+def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True,showtaxnames=True):
 	"""
 	plot an experiment with dendrogram for the sequences (based on sequence similarity)
 	input:
@@ -813,7 +813,7 @@ def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisno
 	print(len(expdat.seqs))
 	newexp=hs.reorderbacteria(expdat,idx)
 	axm = fig.add_axes([axm_x, axm_y, axm_w, axm_h], frame_on=True)
-	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone)
+	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone,showtaxnames=showtaxnames)
 	return newexp
 
 
@@ -925,7 +925,7 @@ def plotstability(exp1,exp2,samplefield='#SampleID',sampleid=None,newfig=False,p
 	return allx,ally
 
 
-def plotstabilitysummary(exp1,exp2,samplefield='#SampleID',newfig=False,minpresratio=0.0,color='r'):
+def plotstabilitysummary(exp1,exp2,samplefield='#SampleID',newfig=False,minpresratio=0.0,color='r',removesingletons=False):
 	xpos=np.logspace(-1,3,100)
 	ally=np.zeros([0,len(xpos)])
 	for cid in hs.getfieldvals(exp1,samplefield):

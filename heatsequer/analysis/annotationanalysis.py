@@ -55,8 +55,12 @@ def getexpannotations(expdat,usecooldb=True,usesupercooldb=True):
 		if usecooldb:
 			info.extend(hs.cooldb.getseqinfo(hs.cdb,cseq))
 		if usesupercooldb:
-#			info.extend(hs.supercooldb.getcurationstrings(hs.scdb,cseq))
-			info.extend(hs.supercooldb.getannotationstrings(hs.scdb,cseq))
+			# info.extend(hs.supercooldb.getcurationstrings(hs.scdb,cseq))
+			cinfo=hs.supercooldb.getannotationstrings(hs.scdb,cseq)
+			cinfolist=[]
+			for cinfoitem in cinfo:
+				cinfolist.append(cinfoitem[1])
+			info.extend(cinfolist)
 		if len(info)>0:
 			seqannotations[cseq].extend(info)
 			for cinfo in info:
