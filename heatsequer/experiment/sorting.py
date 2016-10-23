@@ -171,7 +171,7 @@ def sortbyfreq(expdat,field=False,value=False,exact=False,exclude=False,logscale
 	if field:
 		texp=hs.filtersamples(expdat,field,value,exact=exact,exclude=exclude)
 	else:
-		texp=copy.deepcopy(expdat)
+		texp=hs.copyexp(expdat)
 	if logscale:
 		texp.data[texp.data<2]=2
 		texp.data=np.log2(texp.data)
@@ -470,4 +470,28 @@ def sortbyexp(expdat,sortexp):
 	hs.Debug(6,'found %d out of %d sequences and put them first' % (numfromseqs,len(sortexp.seqs)))
 	newexp.filters.append("sort bacteria using experiment %s" % sortexp.studyname)
 	hs.addcommand(newexp,"sortbyexp",params=params,replaceparams={'expdat':expdat,'sortexp':sortexp})
+	return newexp
+
+
+
+def sortsamplesbybactfreq(expdat,seq):
+	"""
+	sort samples based on the frequency of sequence seq
+
+	input:
+	expdat : Experiment
+	seq : str (ACGT)
+
+	output:
+	newexp : Experiment
+		with samples sorted based on frequency of sequence seq (from low to high)
+	"""
+	params=locals()
+
+	seqdat=expdat.data[expdat.seqdict[seq],:]
+	si=np.argsort(seqdat)
+	newexp=hs.reordersamples(expdat,si)
+
+	newexp.filters.append("sort samples by bacteria frequency")
+	hs.addcommand(newexp,"sortsamplesbybactfreq",params=params,replaceparams={'expdat':expdat})
 	return newexp

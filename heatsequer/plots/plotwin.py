@@ -250,6 +250,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		ax.guiwin=False
 		hs.Debug(7,'Not using gui')
 
+	ax.plot_labelsize=fontsize
 	if newexp.plotmetadata:
 		hs.Debug(1,"Experiment has metadata attached for plotting (%d points)" % len(newexp.plotmetadata))
 		for cmet in newexp.plotmetadata:
@@ -388,7 +389,7 @@ def onplotkeyclick(event):
 		showtaxonomies(cexp,cax)
 	# for the deblur paper - need to do nicer!!!!!
 	if event.key=='j':
-		showtaxonomies(cexp,cax,showdb=False,showcontam=False)
+		showtaxonomies(cexp,cax,showdb=False,showcontam=False,labelsize=cax.plot_labelsize)
 	if event.key=='H':
 		showsampleids(cexp,cax)
 	# nice taxonomies (genus+species)
@@ -418,7 +419,7 @@ def getlabelnames(cexp,showdb=True,showcontam=True):
 	pass
 
 
-def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250,nicenames=True):
+def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250,nicenames=True,labelsize=8):
 	"""
 	show the y-lables (taxonomies) for the plot window
 
@@ -436,6 +437,8 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250,nic
 		Maximal number of taxonomies to show (to prevent slow repsonse when looking at big experiment) or 0 to show all
 	nicenames :  bool
 		True to show genus+species names, False to show last 25 chars
+	labelsize : int (optional)
+		The y axis font label size
 	"""
 
 	cylim=cax.get_ylim()
@@ -468,7 +471,7 @@ def showtaxonomies(cexp,cax,show=True,showdb=True,showcontam=True,maxtax=250,nic
 					if showdb:
 						labs[idx]+='*'
 	cax.set_yticks(np.array(range(len(cexp.seqs))))
-	cax.tick_params(axis='y', which='major', labelsize=8)
+	cax.tick_params(axis='y', which='major', labelsize=labelsize)
 	cax.set_yticklabels(labs)
 	if showcontam:
 		for idx,clab in enumerate(cax.get_yticklabels()):

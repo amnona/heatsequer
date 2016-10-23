@@ -245,6 +245,9 @@ def load(tablename, mapname='map.txt', taxfile='', nameisseq=True,studyname=Fals
 		else:
 			hs.Debug(3,'Keeping raw reads. No normalization')
 
+	# calculate the scaling factor
+	exp.scalingfactor=np.array(exp.origreads)/np.sum(exp.data,axis=0)
+
 	exp.uniqueid=exp.getexperimentid()
 	if sortit:
 		exp=hs.sortbacteria(exp,logit=False)

@@ -71,6 +71,10 @@ class Experiment:
 		# number of reads for each sample in the biom table
 		self.origreads=[]
 
+		# the original scaling factor used to convert the reads. how many original reads each normalized unit is equal to
+		# (i.e. if we load an experiment with 1k reads and normalize to 10k, scaling factor is 10)
+		self.scalingfactor=None
+
 		# the history of actions performed
 		self.filters=[]
 
@@ -116,6 +120,8 @@ class Experiment:
 		Experiment.experimentid+=1
 		return Experiment.experimentid
 
+	def plotexp(self,**kwargs):
+		hs.plotexp(self,**kwargs)
 
 
 def copyexp(expdat,todense=False):
@@ -152,6 +158,7 @@ def copyexp(expdat,todense=False):
 	newexp.mapfilename=copy.deepcopy(expdat.mapfilename)
 	newexp.studyname=copy.deepcopy(expdat.studyname)
 	newexp.origreads=copy.deepcopy(expdat.origreads)
+	newexp.scalingfactor=copy.deepcopy(expdat.scalingfactor)
 	newexp.filters=copy.deepcopy(expdat.filters)
 	newexp.commands=copy.deepcopy(expdat.commands)
 	newexp.plotmetadata=copy.deepcopy(expdat.plotmetadata)
@@ -237,6 +244,8 @@ def reordersamples(exp,newpos,inplace=False):
 	newexp.data=newexp.data[:,newpos]
 	newexp.samples=hs.reorder(newexp.samples,newpos)
 	newexp.origreads=hs.reorder(newexp.origreads,newpos)
+	if newexp.scalingfactor is not None:
+		newexp.scalingfactor=newexp.scalingfactor[newpos]
 	return newexp
 
 
@@ -312,15 +321,26 @@ def joinfields(expdat,field1,field2,newfield):
 	return expdat
 
 
-def joinexperiments(exp1,exp2,missingval='NA',origfieldname='origexp'):
+def joinexperiments(exp1,exp2,missingval='NA',origfieldname='origexp',addbefore=False):
 	"""
 	join 2 experiments into a new experiment. adding a new field origfieldname
 	input:
 	exp1,exp2 - the experiments to join
 	missingval - string to put when field not in mapping file of one of the experiments
 	origfieldname - name of the new field to add which contains the original experiment name
+	addbefore : bool (optional)
+		False (default) to add '-1'/'-2' after sampleid if similar ids in both experiments
+		True to add '-1'/'-2' after sampleid if similar ids in both experiments
 	"""
 	params=locals()
+
+	# test if same sampleid exists in both experiments. if so, add "-1" and "-2" to sampleid
+	samp1=set(exp1.samples)
+	samp2=set(exp2.samples)
+	if len(samp1.intersection(samp2))>0:
+		hs.Debug(6,'same sampleID - renaming samples')
+		exp1=hs.renamesamples(exp1,'-1',addbefore=addbefore)
+		exp2=hs.renamesamples(exp2,'-2',addbefore=addbefore)
 
 	# join the sequences of both experiments
 	# ASSUMING SAME SEQ LENGTH!!!!
@@ -356,6 +376,7 @@ def joinexperiments(exp1,exp2,missingval='NA',origfieldname='origexp'):
 	newexp.sids=newexp.seqs
 	newexp.samples = list(exp1.samples) + list(exp2.samples)
 	newexp.origreads=exp1.origreads+exp2.origreads
+	newexp.scalingfactor=np.hstack([exp1.scalingfactor,exp2.scalingfactor])
 	newexp.fields=list(set(exp1.fields+exp2.fields))
 
 	for cfield in newexp.fields:
@@ -489,7 +510,7 @@ def insertbacteria(expdat,freqs=[],seq="unknown",tax="unknown",logit=True):
 
 	input:
 	expdat
-	freqs - the frequency of the bacteria in all samles of expdat or False to add zeros
+	freqs - the frequency of the bacteria in all samles of expdat or [] to add zeros
 	seq - the sequence of the new bacteria
 	tax - taxonomy of the new bacteria
 	logit - True to add command log/filter, False to not add (if called from other function)
@@ -500,7 +521,7 @@ def insertbacteria(expdat,freqs=[],seq="unknown",tax="unknown",logit=True):
 	params=locals()
 
 	if len(freqs)==0:
-		freqs=np.zeros([1,len(expdat.seqs)])
+		freqs=np.zeros([1,len(expdat.samples)])
 
 	expdat.data=np.vstack((expdat.data,freqs))
 	expdat.tax.append(tax)
@@ -865,15 +886,18 @@ def taxtoseq(expdat,fixtax=False):
 	return(newexp)
 
 
-def renamesamples(expdat,addbefore):
+def renamesamples(expdat,addstr,addbefore=True):
 	"""
-	rename all the samples in expdat by adding addbefore before the name of each sample
+	rename all the samples in expdat by adding addbefore before or after the name of each sample
 
 	input:
 	expdat : Experiment
 		the experiment to change the sample names in
-	addbefore : str
+	addstr : str
 		the string to add to each sampleid
+	addbefore : bool (optional)
+		True (default) to add addstr before each sampleid
+		False to add addstr after each sampleid
 
 	output:
 	newexp : Experiment
@@ -883,7 +907,10 @@ def renamesamples(expdat,addbefore):
 	newids=[]
 	newmap={}
 	for csamp in newexp.samples:
-		cnewid=addbefore+csamp
+		if addbefore:
+			cnewid=addstr+csamp
+		else:
+			cnewid=csamp+addstr
 		newids.append(cnewid)
 		newmap[cnewid]={}
 		for ckey,cval in newexp.smap[csamp].items():
@@ -919,3 +946,108 @@ def getheatsequerdir():
 	Get the root directory of heatsequer
 	"""
 	return hs.heatsequerdir
+
+
+def trimfieldnames(expdat,field,newfield,trimlen=6):
+	"""
+	trim experiment per sample field values to trimlen
+
+	input:
+	expdat: Experiment
+	field : str
+		name of the field to trim the values in
+	newfield : str
+		name of the field where to keep the trimmed values
+	trimlen : int
+		>0 : trim keeping first trimlen chars
+		<0 : trim keeping last -trimlen chars
+	output:
+	newexo : Experiment
+		with trimmed field values
+	"""
+	params=locals()
+
+	for csamp in expdat.samples:
+		cstr=expdat.smap[csamp][field]
+		if trimlen>0:
+			cstr=cstr[:trimlen]
+		else:
+			cstr=cstr[trimlen:]
+		expdat.smap[csamp][newfield]=cstr
+	expdat.fields.append(newfield)
+
+	expdat.filters.append('Trim field names field %s trimlen %d' % (field,trimlen))
+	hs.addcommand(expdat,"trimfieldnames",params=params,replaceparams={'expdat':expdat})
+	return expdat
+
+
+def addfield(expdat,field,values):
+	"""
+	add a new field to the experiment and add the values to it
+	inplace
+
+	input:
+	expdat : experiment
+	field : str
+		name of the new field to add
+	values : list of str or str
+		the values to add. if str - put same value in all. if list - put in each sample the value
+
+	output:
+	expdat : experiment
+		with the new field added (NOTE: inplace)
+	"""
+
+	for idx,csamp in enumerate(expdat.samples):
+		if type(values)==str:
+			expdat.smap[csamp][field]=values
+		else:
+			expdat.smap[csamp][field]=values[idx]
+	expdat.fields.append(field)
+
+
+def filtermapfields(expdat,fields=['#SampleID'],keep=True,inplace=False):
+	"""
+	filter fields from the experiment mapping data
+
+	input:
+	expdat : Experiment
+	fields : list of str
+		the list of the fields to keep/remove
+	keep : bool (optional)
+		True (default) to keep only the fields specified
+		False to remove the fields specified
+	inplace : bool (optional)
+		False (default) to create new experiment
+		True to replace in current experiment
+
+	output:
+	newexp : Experiment
+		with only the fields requested
+	"""
+	params=locals()
+
+	newsmap={}
+	newfields=set(expdat.fields)
+	if keep:
+		newfields=newfields.intersection(set(fields))
+	else:
+		newfields=newfields.difference(set(fields))
+
+	newfields.add('#SampleID')
+
+	for csamp in expdat.samples:
+		newsmap[csamp]={}
+		for cfield in newfields:
+			newsmap[csamp][cfield]=expdat.smap[csamp][cfield]
+
+	if inplace:
+		newexp=expdat
+	else:
+		newexp=hs.copyexp(expdat)
+	newexp.fields=list(newfields)
+	newexp.smap=newsmap
+
+	expdat.filters.append('filter map fields %s (keep=%s)' % (fields,keep))
+	hs.addcommand(expdat,"filtermapfields",params=params,replaceparams={'expdat':expdat})
+	return newexp

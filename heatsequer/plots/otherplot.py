@@ -711,7 +711,7 @@ def animatetimeseries(expdat,compfield,subfield,fieldname,numeric=True,seqs=[]):
 			# writer.grab_frame()
 
 
-def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,showlegend=True):
+def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,showlegend=True,sumone=True,rotation=90,taxorder=None,showxlabels=True):
 	"""
 	plot a taxonomy bar plot of each sample at the taxonomic level taxlevel.
 	input:
@@ -722,27 +722,71 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 		the maximum number of unique taxonomy to show (others are grouped into 'Other')
 	normalize : bool
 		True (default) to show normalized data, False to use original reads
-	sortfield : str
+	sortfield : str or None or int
 		Name of field to sort and show values in x axis, or None (default) to show sample names
+		int - sort samples according to value in taxonomy group #sortfield
 	showlegend : bool
 		True (default) to show the legend, False to hide it
+	sumone : bool (optional)
+		True (default) to normalize each sample reads to 1, False to use normalized/non-normalized data (see normalize)
+	rotation : int
+		the rotation for the x labels
+	taxorder : list of str or None (optional)
+		None (default) to sort taxonomies by mean freq
+		list of str (taxonomy names) to plot based on this order, and all the non-matching will be defined as 'Other'
+	showxlabels : bool (optional)
+		True (default) to show x tick lables
+		False to not show them
+
+	output:
+		taxlist : list of str
+			list of the taxonomies plotted (reverse compared to plot - first on bottom...)
 	"""
 
 	# collapse the taxonomy
 	colors=['b','r','w','g','m','c','y','k']
 	if not normalize:
 		expdat=hs.toorigreads(expdat)
+
 	expdat=hs.collapsetaxonomy(expdat,taxlevel)
-	expdat=hs.sortbyfreq(expdat,reverse=True)
+
+	if sumone:
+		expdat=hs.normalizereads(expdat,100)
+
+	if taxorder is None:
+		# if no taxorder - sort by freq and clump lowest to 'Other'
+		expdat=hs.sortbyfreq(expdat,reverse=True)
+
+		# clip at maximum unique labels
+		if len(expdat.seqs)>maxnum:
+			expdat.data[maxnum-1,:]=np.sum(expdat.data[maxnum-1:,:],axis=0)
+			expdat.tax[maxnum-1]='Other'
+			expdat=hs.reorderbacteria(expdat,np.arange(maxnum))
+	else:
+		# taxorder supplied - use it
+		order=[]
+		for ctax in taxorder:
+			if ctax not in expdat.tax:
+				hs.insertbacteria(expdat,tax=ctax)
+			cpos=expdat.tax.index(ctax)
+			order.append(cpos)
+		if 'Other' in taxorder:
+			otherpos=taxorder.index('Other')
+			joinposlist=[]
+			for idx,ctax in enumerate(expdat.tax):
+				if ctax not in taxorder:
+					joinposlist.append(idx)
+			otherdat=np.sum(expdat.data[joinposlist,:],axis=0)
+			expdat=hs.reorderbacteria(expdat,order)
+			expdat.data[otherpos,:]=otherdat
+		else:
+			expdat=hs.reorderbacteria(expdat,order)
 
 	if sortfield is not None:
-		expdat=hs.sortsamples(expdat,sortfield)
-
-	# clip at maxnum unique labels
-	if len(expdat.seqs)>maxnum:
-		expdat.data[maxnum-1,:]=np.sum(expdat.data[maxnum-1:,:],axis=0)
-		expdat.tax[maxnum-1]='Other'
-		expdat=hs.reorderbacteria(expdat,np.arange(maxnum))
+		if type(sortfield)==str:
+			expdat=hs.sortsamples(expdat,sortfield)
+		else:
+			expdat=hs.sortsamplesbybactfreq(expdat,expdat.seqs[sortfield])
 
 	fig, ax = plt.subplots()
 	csum=np.zeros(len(expdat.samples))
@@ -755,21 +799,23 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 		csum+=cdat
 
 	# # add some text for labels, title and axes ticks
-	ax.set_xlabel('number of reads')
 	if showlegend:
 		# need to reverse the legend (first is at the bottom)
 		handles, labels = ax.get_legend_handles_labels()
 		plt.legend(handles[::-1], labels[::-1], loc='upper left')
-	ax.set_xticks(xpos)
-	if sortfield is not None:
-		xlab=hs.getfieldvals(expdat,sortfield)
-	else:
+	if showxlabels:
+		ax.set_xticks(xpos+0.4)
 		xlab=expdat.samples
-	ax.set_xticklabels(xlab,rotation=90)
+		if sortfield is not None:
+			if type(sortfield)==str:
+				xlab=hs.getfieldvals(expdat,sortfield)
+		ax.set_xticklabels(xlab,rotation=rotation)
+	plt.ylim([0,100])
 	plt.tight_layout()
+	return expdat.tax
 
 
-def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True,showtaxnames=True):
+def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True,showtaxnames=True,labelsize=8):
 	"""
 	plot an experiment with dendrogram for the sequences (based on sequence similarity)
 	input:
@@ -813,7 +859,7 @@ def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisno
 	print(len(expdat.seqs))
 	newexp=hs.reorderbacteria(expdat,idx)
 	axm = fig.add_axes([axm_x, axm_y, axm_w, axm_h], frame_on=True)
-	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone,showtaxnames=showtaxnames)
+	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone,showtaxnames=showtaxnames,fontsize=labelsize)
 	return newexp
 
 
