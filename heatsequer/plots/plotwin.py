@@ -17,7 +17,7 @@ import heatsequer as hs
 import sys
 import numpy as np
 import matplotlib as mpl
-#mpl.use('Qt4Agg')
+mpl.use('Qt5Agg')
 import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 
