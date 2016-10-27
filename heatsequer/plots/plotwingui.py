@@ -267,7 +267,7 @@ class PlotGUIWindow(QtWidgets.QDialog):
 					ccolor=QtGui.QColor(0,155,0)
 				item = QtWidgets.QListWidgetItem()
 				item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
-				item.setTextColor(ccolor)
+				item.setForeground(ccolor)
 				slistwin.lList.addItem(item)
 				print("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
 			slistwin.exec_()
@@ -358,7 +358,7 @@ class PlotGUIWindow(QtWidgets.QDialog):
 					ccolor=QtGui.QColor(0,200,0)
 				else:
 					ccolor=QtGui.QColor(0,0,0)
-				newitem.setTextColor(ccolor)
+				newitem.setForeground(ccolor)
 				self.lCoolDB.addItem(newitem)
 			else:
 				self.lCoolDB.addItem(cinfo)

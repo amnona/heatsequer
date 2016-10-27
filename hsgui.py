@@ -17,7 +17,7 @@ from PyQt5 import QtGui, uic, QtCore, QtWidgets
 #import cPickle as pickle
 import pickle
 import matplotlib
-matplotlib.use('Qt4Agg')
+matplotlib.use('Qt5Agg')
 import os.path
 import numpy as np
 
@@ -56,7 +56,7 @@ class MetaDataDetailsWindow(QtWidgets.QDialog):
 
 	def values(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue.setText(val)
 
@@ -79,7 +79,7 @@ class MetaDataWindow(QtWidgets.QDialog):
 		self.lMetaData.connect(self.lMetaData, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),self.listItemRightClicked)
 
 	def listItemRightClicked(self, QPos):
-		self.listMenu= QtGui.QMenu()
+		self.listMenu= QtWidgets.QMenu()
 		menuremove = self.listMenu.addAction("Remove Item")
 		self.connect(menuremove, QtCore.SIGNAL("triggered()"), self.menuRemove)
 		parentPosition = self.lMetaData.mapToGlobal(QtCore.QPoint(0, 0))
@@ -88,7 +88,7 @@ class MetaDataWindow(QtWidgets.QDialog):
 
 	def menuRemove(self):
 		if len(self.lMetaData.selectedItems())>1:
-			if QtGui.QMessageBox.warning(self,"Remove metadata?","Remove %d limes?" % len(self.lMetaData.selectedItems()),QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)==QtGui.QMessageBox.No:
+			if QtWidgets.QMessageBox.warning(self,"Remove metadata?","Remove %d limes?" % len(self.lMetaData.selectedItems()),QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)==QtWidgets.QMessageBox.No:
 				return
 		for currentItemName in self.lMetaData.selectedItems():
 			currentItemName=str(currentItemName.text())
@@ -159,7 +159,7 @@ class BiClusterWindow(QtWidgets.QDialog):
 					ccolor=QtGui.QColor(155,0,0)
 				else:
 					ccolor=QtGui.QColor(0,155,0)
-				item = QtGui.QListWidgetItem()
+				item = QtWidgets.QListWidgetItem()
 				item.setText("%s - %s (p:%f o:%d e:%f)" % (cmd['field'],cmd['val'],cmd['pval'],cmd['observed'],cmd['expected']))
 				item.setTextColor(ccolor)
 				self.lSamples.addItem(item)
@@ -172,7 +172,7 @@ class BiClusterWindow(QtWidgets.QDialog):
 						ccolor=QtGui.QColor(155,0,0)
 					else:
 						ccolor=QtGui.QColor(0,155,0)
-					item = QtGui.QListWidgetItem()
+					item = QtWidgets.QListWidgetItem()
 					item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
 					item.setTextColor(ccolor)
 					self.lBacteria.addItem(item)
@@ -224,7 +224,7 @@ class AdvPlotWindow(QtWidgets.QDialog):
 
 	def fieldvalues(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 
 	def usesort(self):
 		# unchecked
@@ -257,7 +257,7 @@ class SortSamplesWindow(QtWidgets.QDialog):
 
 	def fieldvalues(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 
 	def overwrite(self):
 		# unchecked
@@ -288,13 +288,13 @@ class DiffExpWindow(QtWidgets.QDialog):
 
 	def fieldvalues1(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue1.setText(val)
 
 	def fieldvalues2(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue2.setText(val)
 
@@ -320,7 +320,7 @@ class FilterSimilarSamplesWindow(QtWidgets.QDialog):
 
 	def fieldvalues1(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 
 
 class CorrelationWindow(QtWidgets.QDialog):
@@ -337,7 +337,7 @@ class CorrelationWindow(QtWidgets.QDialog):
 
 	def fieldvalues1(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 
 
 class ClassifyWindow(QtWidgets.QDialog):
@@ -359,13 +359,13 @@ class ClassifyWindow(QtWidgets.QDialog):
 
 	def fieldvalues1(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue1.setText(val)
 
 	def fieldvalues2(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue2.setText(val)
 
@@ -399,7 +399,7 @@ class FilterSamplesWindow(QtWidgets.QDialog):
 
 	def fieldvalues(self):
 		cfield=str(self.cField.currentText())
-		val,ok=QtGui.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Select field value','Field=%s' % cfield,list(set(hs.getfieldvals(self.cexp,cfield))))
 		if ok:
 			self.tValue.setText(val)
 
@@ -421,7 +421,8 @@ class FilterFastaWindow(QtWidgets.QDialog):
 		self.bBrowse.clicked.connect(self.browse)
 
 	def browse(self):
-		fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open fasta file',filter='*.fa;;*.fasta;;*.fna'))
+		fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open fasta file',filter='*.fa;;*.fasta;;*.fna')
+		fname=str(fname)
 		self.tFileName.setText(fname)
 
 
@@ -435,12 +436,14 @@ class LoadWindow(QtWidgets.QDialog):
 		self.bLoadCancel.clicked.connect(self.cancel)
 
 	def browsemap(self):
-		fname = str(QtWidgets.QFileDialog.getOpenFileName(self, 'Open map file',filter='*.txt'))
+		fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open map file',filter='*.txt')
+		fname=str(fname)
 		self.tLoadMap.setText(fname)
 
 
 	def browsetable(self):
-		fname = str(QtWidgets.QFileDialog.getOpenFileName(self, 'Open table file',''))
+		fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open table file','')
+		fname=str(fname)
 		self.tLoadTable.setText(fname)
 		pname=os.path.basename(fname)
 		self.tLoadName.setText(pname)
@@ -590,7 +593,7 @@ class AppWindow(QtWidgets.QMainWindow):
 
 	def menuRemove(self):
 		if len(self.bMainList.selectedItems())>1:
-			if QtGui.QMessageBox.warning(self,"Remove samples?","Remove %d samples?" % len(self.bMainList.selectedItems()),QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)==QtGui.QMessageBox.No:
+			if QtWidgets.QMessageBox.warning(self,"Remove samples?","Remove %d samples?" % len(self.bMainList.selectedItems()),QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)==QtWidgets.QMessageBox.No:
 				return
 		for currentItemName in self.bMainList.selectedItems():
 			currentItemName=str(currentItemName.text())
@@ -599,18 +602,20 @@ class AppWindow(QtWidgets.QMainWindow):
 
 	def menuSave(self):
 		cname=str(self.bMainList.currentItem().text())
-		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as pickle',''))
+		fname,_ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save experiment as pickle','')
+		fname=str(fname)
 		fl=open(fname,'w')
 		pickle.dump(self.explist[cname],fl,-1)
 		fl.close()
-		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as pickle' % cname)
+		QtWidgets.QMessageBox.information(self,'Analysis','experiment %s saved as pickle' % cname)
 #		picklewrapper.save('test',currentItemName)
 
 	def menuExport(self):
 		cname=str(self.bMainList.currentItem().text())
-		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as biom',''))
+		fname,_ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save experiment as biom','')
+		fname=str(fname)
 		hs.savetobiom(self.explist[cname],fname,'hdf5')
-		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as biom table and mapping file' % cname)
+		QtWidgets.QMessageBox.information(self,'Analysis','experiment %s saved as biom table and mapping file' % cname)
 #		cname=str(self.bMainList.currentItem().text())
 #		cm='global %s;%s=self.explist[cname]' % (cname,cname)
 #		exec(cm)
@@ -618,15 +623,17 @@ class AppWindow(QtWidgets.QMainWindow):
 
 	def menuExportNoRenorm(self):
 		cname=str(self.bMainList.currentItem().text())
-		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as biom',''))
+		fname,_ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save experiment as biom','')
+		fname=str(fname)
 		hs.savetobiom(self.explist[cname],fname,'hdf5',useorigreads=False)
-		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as non-orig-reads biom table and mapping file' % cname)
+		QtWidgets.QMessageBox.information(self,'Analysis','experiment %s saved as non-orig-reads biom table and mapping file' % cname)
 
 	def menuSaveCommands(self):
 		cname=str(self.bMainList.currentItem().text())
-		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment python commands','.py'))
+		fname,_ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save experiment python commands','.py')
+		fname=str(fname)
 		hs.savecommands(self.explist[cname],fname)
-		QtGui.QMessageBox.information(self,'Analysis','experiment %s commands saved to file:\n%s' % (cname,fname))
+		QtWidgets.QMessageBox.information(self,'Analysis','experiment %s commands saved to file:\n%s' % (cname,fname))
 
 	def addexp(self,expdat):
 		"""
@@ -710,7 +717,8 @@ class AppWindow(QtWidgets.QMainWindow):
 				pass
 
 	def pickleload(self):
-		fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open pickle file'))
+		fname,_ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open pickle file')
+		fname=str(fname)
 		if fname:
 			fl=open(fname,'r')
 			expdat=pickle.load(fl)
@@ -969,7 +977,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getInt(self,'Cluster Bacteria','Minimal number of reads per bacteria',10,0,10000)
+			val,ok=QtWidgets.QInputDialog.getInt(self,'Cluster Bacteria','Minimal number of reads per bacteria',10,0,10000)
 			if ok:
 				newexp=hs.clusterbacteria(cexp,minreads=val)
 				newexp.studyname=newexp.studyname+'_cb'
@@ -1021,7 +1029,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		if len(items)<2:
 			print("Need at least 2 experiments!")
 			return
-		newfieldname,ok=QtGui.QInputDialog.getText(self,'Join experiments','Name of study name field')
+		newfieldname,ok=QtWidgets.QInputDialog.getText(self,'Join experiments','Name of study name field')
 		if ok:
 			cname=str(items[0].text())
 			baseexp=self.explist[cname]
@@ -1044,7 +1052,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getInt(self,'Filter Original Reads','Minimal number of reads per sample',5000,0,100000)
+			val,ok=QtWidgets.QInputDialog.getInt(self,'Filter Original Reads','Minimal number of reads per sample',5000,0,100000)
 			if ok:
 				newexp=hs.filterorigreads(cexp,minreads=val)
 				newexp.studyname=newexp.studyname+'_for'
@@ -1059,7 +1067,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getInt(self,'Filter min reads','Minimal number of reads per bacteria',10,0,10000)
+			val,ok=QtWidgets.QInputDialog.getInt(self,'Filter min reads','Minimal number of reads per bacteria',10,0,10000)
 			if ok:
 				newexp=hs.filterminreads(cexp,minreads=val)
 				newexp.studyname=newexp.studyname+'_fmr'
@@ -1074,7 +1082,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getDouble(self,'Filter presence','Minimal fraction of samples per bacteria',value=0.5,min=0,max=1,decimals=2)
+			val,ok=QtWidgets.QInputDialog.getDouble(self,'Filter presence','Minimal fraction of samples per bacteria',value=0.5,min=0,max=1,decimals=2)
 			if ok:
 				newexp=hs.filterpresence(cexp,frac=val)
 				newexp.studyname=newexp.studyname+'_fp'
@@ -1089,7 +1097,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getDouble(self,'Filter Mean','Minimal mean fraction of reads per sample bacteria ',value=0.01,min=0,max=1,decimals=5)
+			val,ok=QtWidgets.QInputDialog.getDouble(self,'Filter Mean','Minimal mean fraction of reads per sample bacteria ',value=0.01,min=0,max=1,decimals=5)
 			if ok:
 				newexp=hs.filtermean(cexp,meanval=val)
 				newexp.studyname=newexp.studyname+'_fmean'
@@ -1104,7 +1112,7 @@ class AppWindow(QtWidgets.QMainWindow):
 			cname=str(citem.text())
 			cexp=self.explist[cname]
 			hs.analyzenumreads(cexp)
-			val,ok=QtGui.QInputDialog.getInt(self,'Subsample','Number of reads per sample',value=10000,min=0)
+			val,ok=QtWidgets.QInputDialog.getInt(self,'Subsample','Number of reads per sample',value=10000,min=0)
 			if ok:
 				newexp=hs.subsample(cexp,numreads=val)
 				newexp.studyname=newexp.studyname+'_sub'
@@ -1119,7 +1127,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getText(self,'Filter taxonomy','Taxonomy to filter')
+			val,ok=QtWidgets.QInputDialog.getText(self,'Filter taxonomy','Taxonomy to filter')
 			if ok:
 				newexp=hs.filtertaxonomy(cexp,tax=str(val),exact=False)
 				newexp.studyname=newexp.studyname+'_ftax'
@@ -1134,7 +1142,7 @@ class AppWindow(QtWidgets.QMainWindow):
 		for citem in items:
 			cname=str(citem.text())
 			cexp=self.explist[cname]
-			val,ok=QtGui.QInputDialog.getText(self,'Filter annotation','Annotation to filter')
+			val,ok=QtWidgets.QInputDialog.getText(self,'Filter annotation','Annotation to filter')
 			if ok:
 				newexp=hs.filterannotations(cexp,str(val),cdb=self.cooldb)
 				newexp.studyname=newexp.studyname+'_fan'

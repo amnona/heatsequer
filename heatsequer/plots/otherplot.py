@@ -739,8 +739,8 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 		False to not show them
 
 	output:
-		taxlist : list of str
-			list of the taxonomies plotted (reverse compared to plot - first on bottom...)
+		taxlist : Experiment
+			the experiment with the joined taxonomies (in taxlist.tax) and their frequencies (in taxlist.data)
 	"""
 
 	# collapse the taxonomy
@@ -812,7 +812,7 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 		ax.set_xticklabels(xlab,rotation=rotation)
 	plt.ylim([0,100])
 	plt.tight_layout()
-	return expdat.tax
+	return expdat
 
 
 def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True,showtaxnames=True,labelsize=8):
