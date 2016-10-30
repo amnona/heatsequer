@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 # Copyright (c) 2016--, heatsequer development team.
 #
-# Distributed under the terms of the Modified BSD License.
+# Distributed under the terms of the Modified GPLv3 License.
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ from setuptools import find_packages, setup
 
 classes = """
     Development Status :: 3 - Alpha
-    License :: OSI Approved :: BSD license
+    License :: OSI Approved :: GPLv3 license
     Topic :: Software Development :: Libraries
     Topic :: Scientific/Engineering
     Topic :: Scientific/Engineering :: Bio-Informatics
