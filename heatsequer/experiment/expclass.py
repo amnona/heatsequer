@@ -16,6 +16,7 @@ import copy
 import numpy as np
 from pdb import set_trace as XXX
 import time
+import collections
 
 
 class Experiment:
@@ -31,8 +32,11 @@ class Experiment:
 		# the data matrix (non sparse)
 		self.data=[]
 
+		# True is data is sparse, False is data is not sparse
+		self.sparse=False
+
 		# the sample dictionary (double hash - sampleid and then mapping file field)
-		self.smap=[]
+		self.smap={}
 
 		# name of all the fields in the mapping data
 		self.fields=[]
@@ -82,6 +86,9 @@ class Experiment:
 		# the list of annotations to add to plot (for addplotmetadata)
 		self.plotmetadata=[]
 
+		# list of positions for horizontal lines (for diffexp etc.)
+		self.hlines=[]
+
 		# the tree structure of the sequences (from loadexptree)
 		self.tree=False
 
@@ -96,6 +103,12 @@ class Experiment:
 		self.datamd5=''
 		self.mapmd5=''
 
+		# both can be set via hs.getexpannotations()
+		# the list of annotations per sequence (key)
+		self.seqannotations=None
+		# the list of sequences per annotation (key)
+		self.annotationseqs=None
+
 		hs.Debug(0,'New experiment initialized')
 
 	# get a unique identifier and increase by 1
@@ -105,7 +118,7 @@ class Experiment:
 
 
 
-def copyexp(expdat):
+def copyexp(expdat,todense=False):
 	"""
 	copy an experiment (duplicating the important fields)
 	but give it a unique identifier
@@ -114,13 +127,19 @@ def copyexp(expdat):
 	----------
 	expdat : Experiment
 		the experiment to copy
+	todense : bool (optional)
+		False (default) to not convert to dense, True to convert to dense
 	output:
 	newexp : Experiment
 		a deep copy of expdat
 	"""
 
 	newexp=copy.copy(expdat)
-	newexp.data=copy.deepcopy(expdat.data)
+	if todense:
+		newexp.data=expdat.data.todense()
+		newexp.sparse=False
+	else:
+		newexp.data=copy.deepcopy(expdat.data)
 	newexp.smap=copy.deepcopy(expdat.smap)
 	newexp.fields=copy.deepcopy(expdat.fields)
 	newexp.samples=copy.deepcopy(expdat.samples)
@@ -138,6 +157,9 @@ def copyexp(expdat):
 	newexp.plotmetadata=copy.deepcopy(expdat.plotmetadata)
 #	nmewexp.tree=copy.deepcopy(expdat.tree)
 	newexp.datatype=copy.deepcopy(expdat.datatype)
+	newexp.hlines=copy.deepcopy(expdat.hlines)
+	newexp.seqannotations=copy.deepcopy(expdat.seqannotations)
+	newexp.annotationseqs=copy.deepcopy(expdat.annotationseqs)
 
 	# get a unique identifier for this experiment
 	newexp.uniqueid=newexp.getexperimentid()
@@ -217,6 +239,7 @@ def reordersamples(exp,newpos,inplace=False):
 	newexp.origreads=hs.reorder(newexp.origreads,newpos)
 	return newexp
 
+
 def reorderbacteria(exp,order,inplace=False):
 	"""
 	reorder the bacteria in an experiment (can delete if bacteria not in new order)
@@ -238,6 +261,16 @@ def reorderbacteria(exp,order,inplace=False):
 		newexp.seqdict[cseq]=idx
 	newexp.tax=hs.reorder(newexp.tax,order)
 	newexp.sids=hs.reorder(newexp.sids,order)
+	# filter the annotations if needed
+	if exp.seqannotations is not None:
+		seqannotations={}
+		annotationseqs=collections.defaultdict(list)
+		for cseq in newexp.seqs:
+			seqannotations[cseq]=newexp.seqannotations[cseq]
+			for cinfo in seqannotations[cseq]:
+				annotationseqs[cinfo].append(cseq)
+		newexp.seqannotations=seqannotations
+		newexp.annotationseqs=annotationseqs
 	return newexp
 
 
@@ -556,37 +589,37 @@ def findseqsinexp(expdat,seqs):
 	return res
 
 
-def samplemeanpervalue(expdat,field):
-	"""
-	BETTER TO USE filtersimilarsamples!!!!
-	create a new experiment, with 1 sample per value in field, containing the mean of all samples with that value
+# def samplemeanpervalue(expdat,field):
+# 	"""
+# 	BETTER TO USE filtersimilarsamples!!!!
+# 	create a new experiment, with 1 sample per value in field, containing the mean of all samples with that value
 
-	input:
-	expdat : Experiment
-	field : string
-		the field to use (i.e. 'ENV_MATTER')
+# 	input:
+# 	expdat : Experiment
+# 	field : string
+# 		the field to use (i.e. 'ENV_MATTER')
 
-	output:
-	newexp : Experiment
-		The new experiment with 1 sample per unique value of field
-	"""
-	params=locals()
+# 	output:
+# 	newexp : Experiment
+# 		The new experiment with 1 sample per unique value of field
+# 	"""
+# 	params=locals()
 
-	uvals=hs.getfieldvals(expdat,field,ounique=True)
-	vals=hs.getfieldvals(expdat,field,ounique=False)
+# 	uvals=hs.getfieldvals(expdat,field,ounique=True)
+# 	vals=hs.getfieldvals(expdat,field,ounique=False)
 
-	vdict=hs.listtodict(vals)
-	nsamps=[]
-	for cval in uvals:
-		nsamps.append(vdict[cval][0])
-	newexp=hs.reordersamples(expdat,nsamps)
-	for idx,cval in enumerate(uvals):
-		cdat=expdat.data[:,vdict[cval]]
-		mv=np.mean(cdat,axis=1)
-		newexp.data[:,idx]=mv
-	newexp.filters.append('samplemeanpervalue for field %s' % field)
-	hs.addcommand(newexp,"samplemeanpervalue",params=params,replaceparams={'expdat':expdat})
-	return(newexp)
+# 	vdict=hs.listtodict(vals)
+# 	nsamps=[]
+# 	for cval in uvals:
+# 		nsamps.append(vdict[cval][0])
+# 	newexp=hs.reordersamples(expdat,nsamps)
+# 	for idx,cval in enumerate(uvals):
+# 		cdat=expdat.data[:,vdict[cval]]
+# 		mv=np.mean(cdat,axis=1)
+# 		newexp.data[:,idx]=mv
+# 	newexp.filters.append('samplemeanpervalue for field %s' % field)
+# 	hs.addcommand(newexp,"samplemeanpervalue",params=params,replaceparams={'expdat':expdat})
+# 	return(newexp)
 
 
 def convertdatefield(expdat,field,newfield,timeformat='%m/%d/%y %H:%M'):
@@ -633,7 +666,7 @@ def fieldtobact(expdat,field,bactname='',meanreads=1000,cutoff=0):
 	bactname : string
 		name of the new bacteria (empty to have similar to field name)
 	meanreads : int
-		the mean number of reads for the new field bacteria
+		the mean number of reads for the new field bacteria or None to not rescale
 	cutoff : int
 		the minimal value of the field per sample (otherwise replace with meanreads)
 
@@ -649,9 +682,10 @@ def fieldtobact(expdat,field,bactname='',meanreads=1000,cutoff=0):
 	vals=np.array(hs.tofloat(fv))
 	okpos=np.where(vals>=cutoff)[0]
 	badpos=np.where(vals<cutoff)[0]
-	scalefactor=np.mean(vals[okpos])
-	vals[okpos]=(vals[okpos]/scalefactor)*meanreads
-	vals[badpos]=meanreads
+	if meanreads is not None:
+		scalefactor=np.mean(vals[okpos])
+		vals[okpos]=(vals[okpos]/scalefactor)*meanreads
+		vals[badpos]=meanreads
 	newexp=hs.copyexp(expdat)
 	hs.insertbacteria(newexp,vals,bactname,bactname,logit=False)
 	newexp.filters.append('add bacteria from map field %s' % field)
@@ -724,3 +758,164 @@ def changemapval(expdat,newfield,newval,oldfield,vals,inplace=False):
 			newexp.smap[csamp][newfield]=newval
 
 	return newexp
+
+
+
+def getseqsamp(expdat,seq,samp,unnormalize=False):
+	"""
+	get the number of reads of a sequence/sample combination in the experiment
+
+	input:
+	expdat : ExpClass
+		the experiment
+	seq : str
+		the sequence to look for
+	samp : str
+		the sample name to look for
+	unnormalize : bool
+		False (default) to use normalized reads, True to un-normalize the result (to raw reads)
+
+	output:
+	reads : float
+		the number of reads of sequence seq in samples samp
+	"""
+	seqpos=expdat.seqdict[seq]
+	samppos=np.where(expdat.samples==samp)[0]
+	reads=expdat.data[seqpos,samppos]
+	if unnormalize:
+		reads=reads*expdat.origreads[samppos]/np.sum(expdat.data[:,samppos])
+	return reads
+
+
+def addsample(expdat,sampleid,fieldvals={},missingval='NA',data=None):
+	"""
+	add a sample to the experiment
+	input:
+	expdat : Experiment
+		the experiment to add the sample to
+	sampleid : str
+		name of the sample
+	fieldvals : dict of (str: str)
+		dict (field: value) of mapping file field values
+	missingval : str
+		value to add for missing mapping file values
+	data : None of nparray
+		the reads per bacteria, or None to skip
+
+	output:
+	expdat : experiment
+		with the added sample
+	"""
+	hs.Debug(1,'Add sample %s to experiment' % sampleid)
+	if sampleid in expdat.samples:
+		hs.Debug('Sample %s already in experiment! aborting' % sampleid)
+		return expdat
+	# add the sample
+	expdat.samples.append(sampleid)
+	# and the mapping file values
+	expdat.smap[sampleid]={}
+	for cfield in expdat.fields:
+		if cfield in fieldvals:
+			expdat.smap[sampleid][cfield]=fieldvals[cfield]
+		else:
+			expdat.smap[sampleid][cfield]=missingval
+	if data is None:
+		data=np.zeros(np.shape(expdat.data)[0])
+	expdat.origreads.append(np.sum(data))
+	data=np.reshape(data,[len(data),1])
+	expdat.data=np.hstack([expdat.data,data])
+	return expdat
+
+
+def taxtoseq(expdat,fixtax=False):
+	"""
+	put the taxonomy into the sequence field
+
+	input:
+	expdat : Experiment
+	fixtax: bool (optional)
+		False (default) to just copy, True to remove the k__ etc.
+
+	output:
+	newexp : Experiment
+		with seqs=taxonomies
+	"""
+	newexp=hs.copyexp(expdat)
+	newexp.seqs=newexp.tax
+	if fixtax:
+		newtax=[]
+		for ctax in newexp.tax:
+			cstr=''
+			cctax=ctax.split(';')
+			for clevel in range(7):
+				if len(cctax)>clevel:
+					cstr+=cctax[clevel][3:]
+				cstr+=';'
+			newtax.append(cstr)
+		newexp.seqs=newtax
+	newexp.seqdict={}
+	newseqs=[]
+	for idx,cseq in enumerate(newexp.seqs):
+		if cseq in newexp.seqdict:
+			hs.Debug(8,'found %s again' % cseq)
+			cseq=cseq+'-'+str(idx)
+		newseqs.append(cseq)
+		newexp.seqdict[cseq]=idx
+	newexp.seqs=newseqs
+	return(newexp)
+
+
+def renamesamples(expdat,addbefore):
+	"""
+	rename all the samples in expdat by adding addbefore before the name of each sample
+
+	input:
+	expdat : Experiment
+		the experiment to change the sample names in
+	addbefore : str
+		the string to add to each sampleid
+
+	output:
+	newexp : Experiment
+		with new sample names
+	"""
+	newexp=hs.copyexp(expdat)
+	newids=[]
+	newmap={}
+	for csamp in newexp.samples:
+		cnewid=addbefore+csamp
+		newids.append(cnewid)
+		newmap[cnewid]={}
+		for ckey,cval in newexp.smap[csamp].items():
+			newmap[cnewid][ckey]=cval
+	newexp.samples=newids
+	newexp.smap=newmap
+	return newexp
+
+
+def validateexp(expdat):
+	"""
+	test the validity of an experiment:
+	1. seqdict is correct
+	2. smap contains all the samples
+	3. smap fields are the same as fields
+	4. issparse is correct
+	5. taxonomy length is the same as the number of sequence
+	input:
+	expdat : Experiment
+
+	output:
+	isok : bool
+		True if experiment is validated, False if there is a problem
+	"""
+
+	# test the seqdict
+	# for idx,cseq in enumerate(expdat.seqs):
+	# 	if expdat.seqdict
+
+
+def getheatsequerdir():
+	"""
+	Get the root directory of heatsequer
+	"""
+	return hs.heatsequerdir

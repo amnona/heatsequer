@@ -164,7 +164,8 @@ class BiClusterWindow(QtGui.QDialog):
 				item.setTextColor(ccolor)
 				self.lSamples.addItem(item)
 			if self.cooldb:
-				bmd=hs.cooldb.testenrichment(self.cooldb,self.cexp.seqs,self.seqs)
+				bmd=hs.annotationenrichment(self.cexp,self.seqs)
+#				bmd=hs.cooldb.testenrichment(self.cooldb,self.cexp.seqs,self.seqs)
 				bmd=hs.sortenrichment(bmd)
 				for cbmd in bmd:
 					if cbmd['observed']<cbmd['expected']:
@@ -550,6 +551,8 @@ class AppWindow(QtGui.QMainWindow):
 		self.connect(menusave, QtCore.SIGNAL("triggered()"), self.menuSave)
 		menuexport = self.listMenu.addAction("Save (biom) Item")
 		self.connect(menuexport, QtCore.SIGNAL("triggered()"), self.menuExport)
+		menuexportnorenorm = self.listMenu.addAction("Save (biom relative abund) Item")
+		self.connect(menuexportnorenorm, QtCore.SIGNAL("triggered()"), self.menuExportNoRenorm)
 		menuinfo = self.listMenu.addAction("Info")
 		self.connect(menuinfo, QtCore.SIGNAL("triggered()"), self.expinfo)
 		parentPosition = self.bMainList.mapToGlobal(QtCore.QPoint(0, 0))
@@ -610,6 +613,12 @@ class AppWindow(QtGui.QMainWindow):
 #		cm='global %s;%s=self.explist[cname]' % (cname,cname)
 #		exec(cm)
 #		hs.Debug(7,'exported',cname)
+
+	def menuExportNoRenorm(self):
+		cname=str(self.bMainList.currentItem().text())
+		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save experiment as biom',''))
+		hs.savetobiom(self.explist[cname],fname,'hdf5',useorigreads=False)
+		QtGui.QMessageBox.information(self,'Analysis','experiment %s saved as non-orig-reads biom table and mapping file' % cname)
 
 	def menuSaveCommands(self):
 		cname=str(self.bMainList.currentItem().text())

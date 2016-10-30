@@ -18,7 +18,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
-def calcdist(sample1,sample2,distmetric='bc'):
+def calcdist(sample1,sample2,distmetric='bc',thresh=2):
 	"""
 	calculate the distance between 2 samples using a given distance metric
 	input:
@@ -29,6 +29,9 @@ def calcdist(sample1,sample2,distmetric='bc'):
 			'bc' - bray curtis
 			'bj' - binary jaccard
 			'fbj' - filtered binary jaccard (using a low read threshold)
+			'logratio' - sum abs log ratio between bacteria with a lower threshold
+	thresh : float (optional)
+		the cutoff to use for low reads for fbj and logratio metrics (default=2)
 	output:
 	dist : float
 		the distance between the 2 samples
@@ -38,21 +41,31 @@ def calcdist(sample1,sample2,distmetric='bc'):
 	elif distmetric=='bj':
 		dist=1-float(np.sum((sample1>0)*(sample2>0)))/np.sum((sample1+sample2)>0)
 	elif distmetric=='fbj':
-		thresh=1.9
 		dist=1-float(np.sum((sample1>thresh)*(sample2>0)+(sample2>thresh)*(sample1>0)))/np.sum((sample1>thresh)+(sample2>thresh))
+	elif distmetric=='logratio':
+		sample1=np.copy(sample1)
+		sample2=np.copy(sample2)
+		sample1[sample1<thresh]=thresh
+		sample2[sample2<thresh]=thresh
+		sample1=np.log2(sample1)
+		sample2=np.log2(sample2)
+		dist=float(np.sum(np.abs(sample1-sample2)))
 	else:
 		hs.Debug(10,'Distance meteric %s not supported' % distmetric)
 		raise
 	return dist
 
 
-def calcdistmat(expdat,distmetric='bc'):
+def calcdistmat(expdat,distmetric='bc',thresh=2):
 	"""
 	calculate the distance matrix between all samples of the experiment
 	input:
 	expdat : Experiment
 	distmetric : string
 		the name of the distance metric (see calcdist for options)
+	thresh : float (optional)
+		the cutoff to use for low reads for fbj and logratio metrics (default=2)
+
 	output:
 	dist : numpy 2d array
 		the pairwise distance matrix
@@ -65,7 +78,7 @@ def calcdistmat(expdat,distmetric='bc'):
 	dsamp={}
 	for cs1 in range(msize):
 		for cs2 in range(msize):
-			dist[cs1,cs2]=calcdist(expdat.data[:,cs1],expdat.data[:,cs2],distmetric)
+			dist[cs1,cs2]=calcdist(expdat.data[:,cs1],expdat.data[:,cs2],distmetric,thresh=thresh)
 	for idx,csamp in enumerate(expdat.samples):
 		dsamp[csamp]=idx
 	return dist,dsamp
@@ -139,7 +152,6 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 	uvals : list
 		group names in the matrix (ordered)
 	"""
-
 	vals=hs.getfieldvals(expdat,field)
 	if not uvals:
 		uvals=list(set(vals))
@@ -156,17 +168,19 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 			adist=[]
 			for p1 in pos1:
 				if expdat.samples[p1] not in dsamp:
+					print('missing %s' % expdat.samples[p1])
 					continue
 				for p2 in pos2:
 					if expdat.samples[p2] not in dsamp:
+						print('missing2 %s' % expdat.samples[p1])
 						continue
 					if p1==p2:
 						continue
-					adist.append(distmat[dsamp[expdat.samples[p1]],dsamp[expdat.samples[p2]]])
+					cdist=distmat[dsamp[expdat.samples[p1]],dsamp[expdat.samples[p2]]]
+					adist.append(cdist)
 			distdict[(cg1,cg2)]=adist
-			gdist[idx1,idx2]=np.mean(adist)
+			gdist[idx1,idx2]=np.nanmean(adist)
 	if plotit:
-		plt.figure()
 		if plottype=='heatmap':
 			plotdistheatmap(gdist,uvals)
 			plt.title(expdat.studyname+' '+field)
@@ -186,7 +200,7 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 	return gdist,uvals
 
 
-def plotdistheatmap(gdist,uvals,neworder=False):
+def plotdistheatmap(gdist,uvals,neworder=False,vmin=0,vmax=1):
 	"""
 	plot a distance heat map and add axis labels
 	input:
@@ -196,13 +210,15 @@ def plotdistheatmap(gdist,uvals,neworder=False):
 		the names of the categories (from getgroupdist)
 	neworder : list of integers of False
 		if not False, the order by which to sort the matrix and labels prior to plotting
+	vmin,vmax : int (optional)
+		the range for the heatmap
 	"""
 	if neworder:
 		gdist=gdist[neworder,:]
 		gdist=gdist[:,neworder]
 		uvals=hs.reorder(uvals,neworder)
 	plt.figure()
-	iax=plt.imshow(gdist,interpolation='nearest',aspect='auto',vmin=0,vmax=1)
+	iax=plt.imshow(gdist,interpolation='nearest',aspect='auto',vmin=vmin,vmax=vmax)
 	ax=iax.get_axes()
 	ax.set_xticks(range(len(uvals)))
 	ax.set_xticklabels(uvals,rotation=90)
@@ -210,6 +226,7 @@ def plotdistheatmap(gdist,uvals,neworder=False):
 	ax.set_yticklabels(uvals)
 	plt.tight_layout()
 	plt.draw()
+	plt.colorbar()
 
 
 def plotdistbar(gdist,uvals,crow=0,neworder=False):
@@ -238,7 +255,7 @@ def plotdistbar(gdist,uvals,crow=0,neworder=False):
 
 
 
-def getgroupgroupdist(expdat,field,distmat,dsamp,uvals=False,subfield='host_subject_id'):
+def getgroupgroupdist(expdat,field,distmat,dsamp,uvals=False,subfield='host_subject_id',vmin=0,vmax=1):
 	"""
 	calculate the distance matrix based on groups of samples according to field but calculate seperately for each individual and then combine
 	using a distance matrix and mapping
@@ -256,12 +273,6 @@ def getgroupgroupdist(expdat,field,distmat,dsamp,uvals=False,subfield='host_subj
 		empty to plot all values, or a list of values to plot only them (in field)
 	subfield : str
 		name of the subfield so all distances are calculated seperately for each subfield value (i.e. 'host_subject_id')
-
-	output:
-	gdist : numpy 2d array
-		the group distance matrix
-	uvals : list
-		group names in the matrix (ordered)
 	"""
 	vals=hs.getfieldvals(expdat,field)
 	if not uvals:
@@ -273,11 +284,15 @@ def getgroupgroupdist(expdat,field,distmat,dsamp,uvals=False,subfield='host_subj
 		newexp=hs.filtersamples(expdat,subfield,cval)
 #		dmap,dmapd=hs.loaddistmat(newexp,'amnon/bray_curtis_armpit-diff-log.txt')
 		gdist,uvals=hs.getgroupdist(newexp,field,distmat,dsamp,plotit=False,uvals=uvals)
-		print(gdist)
+		gdist[np.isnan(gdist)]=0
+		# print(cval)
+		# print(gdist)
 		if np.isnan(np.sum(np.sum(gdist))):
 			continue
 		omat=omat+gdist
 		numok+=1
 	omat=omat/numok
-	print(omat)
-	plotdistheatmap(omat,uvals)
+	# print('-----')
+	# print(omat)
+	plotdistheatmap(omat,uvals,vmin=vmin,vmax=vmax)
+	return omat

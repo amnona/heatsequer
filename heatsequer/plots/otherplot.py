@@ -318,7 +318,7 @@ def plottimeseries(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 	toaxis.title('lala')
 
 
-def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
+def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True,showscatter=True,showlegend=True,colordict=None,showtitle=True,scaleto=None,ylabel='perceent of reads'):
 	"""
 	plot a line plot for a timeseries with a different line for each individual
 	with mean of points in same timepoint and scatter
@@ -334,27 +334,46 @@ def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 		False (default) to draw in a new figure
 	numeric : bool
 		True (default) if timefield is numeric
+	showscatter : bool
+		True (default) to plot the scatter, False to plot just the mean
+	showlegend : bool
+		True (default) to show the legend, False to not show
+	colordict : None or dict of {label:color}
+		if None, use default colors, if not - use color specified for each label
+	showtitle : bool
+		True (default) to show figure title, False to hide
+	scaleto : int or None
+		None (default) to keep the values, otherwise int to multiply each number by int
+	ylabel : str or None
+		y axis label or None to not show y label
 	"""
 
 	coloridx=0
-	colors=['b','r','k','g','c','m','y']
+	colors=['o-b','o-r','o-k','o--g','o--c','o--m','o:y']
 	if not toaxis:
 		plt.figure()
 		toaxis=plt.gca()
 
-	newexp=hs.sortsamples(expdat,timefield,numeric=numeric)
+	oldexp=hs.sortsamples(expdat,timefield,numeric=numeric)
 	times=hs.getfieldvals(expdat,timefield)
 	utimes=list(set(times))
 	if numeric:
-		utimes=hs.tofloat(utimes)
-	utimes=np.sort(utimes)
-	ids=hs.getfieldvals(newexp,idfield)
-	for cid in list(set(ids)):
-		print(coloridx)
-		ccolor=colors[coloridx]
-		coloridx+=1
-		if coloridx>=len(colors):
-			coloridx=0
+		sv,si=hs.isort(hs.tofloat(utimes))
+		utimes=hs.reorder(utimes,si)
+	else:
+		utimes=np.sort(utimes)
+	ids=hs.getfieldvals(oldexp,idfield)
+	allids=list(set(ids))
+	allids.sort()
+	for cid in allids:
+		newexp=hs.filtersamples(oldexp,idfield,cid)
+		if colordict is None:
+			ccolor=colors[coloridx]
+			coloridx+=1
+			if coloridx>=len(colors):
+				coloridx=0
+		else:
+			ccolor=colordict[cid]
 		x=[]
 		y=[]
 		xp=[]
@@ -366,17 +385,27 @@ def plottimeseries2(expdat,idfield,timefield,seq,toaxis=False,numeric=True):
 			cx=[]
 			cy=[]
 			for cpoint in tpoints:
-				cx.append(ctime)
-				cy.append(newexp.data[newexp.seqdict[seq],cpoint])
+				cx.append(float(ctime))
+				currenty=newexp.data[newexp.seqdict[seq],cpoint]/100
+				if scaleto is not None:
+					currenty=currenty*scaleto
+				cy.append(currenty)
 			xp+=cx
 			yp+=cy
 			x.append(np.mean(cx))
 			y.append(np.mean(cy))
-		toaxis.plot(x,y,'-',color=ccolor)
-		toaxis.plot(xp,yp,'o',color=ccolor)
-
-	toaxis.legend(list(set(ids)))
-	toaxis.title('lala')
+		toaxis.plot(x,y,ccolor)
+		if showscatter:
+			toaxis.plot(xp,yp,'o',color=ccolor)
+	if showlegend:
+		toaxis.legend(allids,loc='best')
+	if showtitle:
+		plt.title(expdat.tax[expdat.seqdict[seq]])
+	else:
+		print(expdat.tax[expdat.seqdict[seq]])
+	plt.xlabel(timefield)
+	if ylabel is not None:
+		plt.ylabel(ylabel)
 
 
 def plotgroupbar(expdat,field,seqs=[],type='meanse',uvals=[]):
@@ -593,18 +622,23 @@ def getcolor(idx):
 
 
 
-def compare2exp(exp1,exp2):
+def compare2exp(exp1,exp2,unnormalize=True):
 	"""
 	compare 2 experiments to see differences in bacteria
 
 	input:
 	exp1,exp2 : Experiment
 		the experiments to compare
+	unnormalize : bool
+		True (default) to revert to raw reads, False to use normalized reads instead (i.e. sum 10k)
 
 	output:
 	newexp : Experiment
 		with the difference in each otu freq (exp1-exp2)
 	"""
+	if unnormalize:
+		exp1=hs.toorigreads(exp1)
+		exp2=hs.toorigreads(exp2)
 	u1=hs.filterseqs(exp1,exp2.seqs,exclude=True)
 	u2=hs.filterseqs(exp2,exp1.seqs,exclude=True)
 
@@ -675,3 +709,238 @@ def animatetimeseries(expdat,compfield,subfield,fieldname,numeric=True,seqs=[]):
 			plt.ylim([0,1000])
 			plt.title(cval)
 			# writer.grab_frame()
+
+
+def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,showlegend=True):
+	"""
+	plot a taxonomy bar plot of each sample at the taxonomic level taxlevel.
+	input:
+	expdat : Experiment
+	taxlevel : int
+		the taxonomic level (1=kingdom, 2=phylum etc.)
+	maxnum : int
+		the maximum number of unique taxonomy to show (others are grouped into 'Other')
+	normalize : bool
+		True (default) to show normalized data, False to use original reads
+	sortfield : str
+		Name of field to sort and show values in x axis, or None (default) to show sample names
+	showlegend : bool
+		True (default) to show the legend, False to hide it
+	"""
+
+	# collapse the taxonomy
+	colors=['b','r','w','g','m','c','y','k']
+	if not normalize:
+		expdat=hs.toorigreads(expdat)
+	expdat=hs.collapsetaxonomy(expdat,taxlevel)
+	expdat=hs.sortbyfreq(expdat,reverse=True)
+
+	if sortfield is not None:
+		expdat=hs.sortsamples(expdat,sortfield)
+
+	# clip at maxnum unique labels
+	if len(expdat.seqs)>maxnum:
+		expdat.data[maxnum-1,:]=np.sum(expdat.data[maxnum-1:,:],axis=0)
+		expdat.tax[maxnum-1]='Other'
+		expdat=hs.reorderbacteria(expdat,np.arange(maxnum))
+
+	fig, ax = plt.subplots()
+	csum=np.zeros(len(expdat.samples))
+	xpos=np.arange(len(expdat.samples))
+	for idx,cseq in enumerate(expdat.seqs):
+		cdat=expdat.data[idx,:]
+		clabel=expdat.tax[idx].split(';')
+		clabel=clabel[-1]
+		plt.bar(xpos,cdat,bottom=csum,color=colors[np.mod(idx,len(colors))],label=clabel)
+		csum+=cdat
+
+	# # add some text for labels, title and axes ticks
+	ax.set_xlabel('number of reads')
+	if showlegend:
+		# need to reverse the legend (first is at the bottom)
+		handles, labels = ax.get_legend_handles_labels()
+		plt.legend(handles[::-1], labels[::-1], loc='upper left')
+	ax.set_xticks(xpos)
+	if sortfield is not None:
+		xlab=hs.getfieldvals(expdat,sortfield)
+	else:
+		xlab=expdat.samples
+	ax.set_xticklabels(xlab,rotation=90)
+	plt.tight_layout()
+
+
+def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True,showtaxnames=True):
+	"""
+	plot an experiment with dendrogram for the sequences (based on sequence similarity)
+	input:
+	expdat : Experiment
+		the experiment to plot the dendrogram for
+	field : str
+		the field to sort by for plotting
+
+	output:
+	newexp : Experiment
+		sorted by the sequence similarity clustering
+	"""
+	import scipy.spatial.distance
+	import scipy.cluster.hierarchy
+
+	# calculate the sequence distance matrix
+	dm=np.zeros([len(expdat.seqs),len(expdat.seqs)])
+	for idx1,seq1 in enumerate(expdat.seqs):
+		for idx2,seq2 in enumerate(expdat.seqs):
+			cdist=sum(c1!=c2 for c1,c2 in zip(seq1,seq2))
+			dm[idx1,idx2]=cdist
+	dm[dm>0]+=0.5
+	dm[dm>0]=np.log2(dm[dm>0])
+	sdm=scipy.spatial.distance.squareform(dm)
+
+	fig=plt.figure()
+	[ax1_x, ax1_y, ax1_w, ax1_h] = [0.75,0.1,0.2,0.8]
+	[axm_x, axm_y, axm_w, axm_h] = [ax1_x-xwidth,0.1,xwidth,0.8]
+	# [ax1_x, ax1_y, ax1_w, ax1_h] = [0.05,0.1,0.2,0.8]
+	# [axm_x, axm_y, axm_w, axm_h] = [0.25,0.1,0.7,0.8]
+	ax1 = fig.add_axes([ax1_x, ax1_y, ax1_w, ax1_h], frame_on=True)
+	linkmat = scipy.cluster.hierarchy.linkage(sdm, method='single')
+	dend = scipy.cluster.hierarchy.dendrogram(linkmat,orientation='right',no_labels=True)
+	tickdist=np.array([1,2,3,5,8,15,30])
+	ticklabs=[]
+	for ctick in tickdist:
+		ticklabs.append(str(ctick))
+	plt.xticks(np.log2(tickdist+0.5),ticklabs)
+	idx=dend['leaves']
+	print(len(idx))
+	print(len(expdat.seqs))
+	newexp=hs.reorderbacteria(expdat,idx)
+	axm = fig.add_axes([axm_x, axm_y, axm_w, axm_h], frame_on=True)
+	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone,showtaxnames=showtaxnames)
+	return newexp
+
+
+
+def compare2repeats(exp1,exp2,samplefield='#SampleID',sampleid=None):
+	"""
+	compare 2 experiments which are technical repeats of the same samples
+
+	input:
+	exp1,exp2 : Experiment
+		the two experiments to compare. need to have same sampleids
+	samplefield : str
+		name of the field containing the sampleids for comparison (i.e. identical between the 2 experiments)
+	sampleid : str
+		the sample to test
+	"""
+	import scipy.stats
+
+	idx1=hs.findsamples(exp1,samplefield,sampleid)
+	if len(idx1)!=1:
+		hs.Debug(9,'Not only 1 value for %s in exp1!!' % sampleid)
+		return
+	idx2=hs.findsamples(exp2,samplefield,sampleid)
+	if len(idx2)!=1:
+		hs.Debug(9,'Not only 1 value for %s in exp2!!' % sampleid)
+		return
+	idx1=idx1[0]
+	idx2=idx2[0]
+	dat1=exp1.data[:,idx1]
+	dat2=exp2.data[:,idx2]
+
+	minvals=[]
+	maxvals=[]
+	allseqs=set(exp1.seqs).union(exp2.seqs)
+	print(len(allseqs))
+	for cseq in allseqs:
+		if cseq in exp1.seqdict:
+			val1=dat1[exp1.seqdict[cseq]]
+		else:
+			val1=0
+		if cseq in exp2.seqdict:
+			val2=dat2[exp2.seqdict[cseq]]
+		else:
+			val2=0
+		if val1==0 and val2==0:
+			continue
+		val1+=0.001
+		val2+=0.001
+		# minvals.append(np.min([val1,val2]))
+		# maxvals.append(np.max([val1,val2]))
+		minvals.append((val1+val2)/2)
+		maxvals.append(np.abs(val1-val2)/(val1+val2))
+	plt.figure()
+	# plt.plot([0,5000],[0,5000],'k')
+	plt.plot(minvals,maxvals,'.')
+	plt.xlabel('min value')
+	plt.ylabel('max value')
+
+	# bins=np.logspace(-2,3.5,num=25)
+	# binmedian,binedges,binnumber=scipy.stats.binned_statistic(minvals,maxvals,statistic='mean',bins=bins)
+	# plt.plot(binedges[:-1],binmedian,'r')
+	# plt.xscale('log')
+	# plt.yscale('log')
+	# plt.xlim([0.0001,1000])
+	# plt.ylim([0.0001,1000])
+	plt.xlim([-10,1000])
+	plt.ylim([-0.1,1.1])
+
+
+def plotstability(exp1,exp2,samplefield='#SampleID',sampleid=None,newfig=False,plotit=True,minpresratio=0.1,xpos=None):
+	"""
+	"""
+	if sampleid is not None:
+		idx1=hs.findsamples(exp1,samplefield,sampleid)
+		idx2=hs.findsamples(exp2,samplefield,sampleid)
+		if len(idx1)!=1:
+			hs.Debug(7,'sampleid %s has %d samples in exp1' % (sampleid,len(idx1)))
+			return [],[]
+		if len(idx2)!=1:
+			hs.Debug(7,'sampleid %s has %d samples in exp2' % (sampleid,len(idx1)))
+			return [],[]
+		# exp1=hs.filtersamples(exp1,samplefield,sampleid)
+		# exp2=hs.filtersamples(exp2,samplefield,sampleid)
+
+	allx=[]
+	ally=[]
+	if xpos is None:
+		xpos=np.arange(5000)
+	for minreads in xpos:
+		allx.append(minreads)
+		bact1=np.where(exp1.data[:,idx1]>=minreads)[0]
+		if len(bact1)==0:
+			ally.append(np.nan)
+			continue
+		numbact2=0.0
+		for cseq in bact1:
+			if exp1.seqs[cseq] in exp2.seqdict:
+				if exp2.data[exp2.seqdict[exp1.seqs[cseq]],idx2]>minpresratio*exp1.data[cseq,idx1]:
+					numbact2+=1
+		ratio=numbact2/len(bact1)
+		ally.append(ratio)
+	if newfig:
+		plt.figure()
+	if plotit:
+		plt.plot(allx,ally)
+		plt.xscale('log')
+		plt.xlim([0.1,10000])
+		plt.ylim([-0.1,1.1])
+	return allx,ally
+
+
+def plotstabilitysummary(exp1,exp2,samplefield='#SampleID',newfig=False,minpresratio=0.0,color='r',removesingletons=False):
+	xpos=np.logspace(-1,3,100)
+	ally=np.zeros([0,len(xpos)])
+	for cid in hs.getfieldvals(exp1,samplefield):
+		cx,cy=hs.plotstability(exp1,exp2,samplefield,cid,newfig=False,plotit=False,xpos=xpos,minpresratio=minpresratio)
+		ally=np.vstack([ally,cy])
+	print(np.shape(ally))
+	if newfig:
+		plt.figure()
+	cmean=np.nanmean(ally,axis=0)
+	cstd=np.nanstd(ally,axis=0)/np.sqrt(np.sum(np.isfinite(ally),axis=0))
+	nxpos=xpos/10000
+	plt.fill_between(nxpos, cmean+cstd, cmean-cstd, alpha=0.25,color=color)
+	plt.plot(nxpos,cmean,color=color)
+	plt.xscale('log')
+	plt.xlim([1.0/100000,0.1])
+	plt.ylim([0,1.05])
+	plt.xlabel('minimal sequence frequency')
+	plt.ylabel('mean fraction of overlap between repeats')

@@ -17,7 +17,7 @@ Create a virtual environment for heatsequer:
 in the command prompt, run:
 
 ```
-conda create --name heatsequer scipy numpy networkx pyqt qt scikit-learn matplotlib hdf5 h5py
+conda create --name heatsequer scipy numpy networkx pyqt=4.11.4 scikit-learn matplotlib hdf5 h5py requests python=3
 ```
 
 Activate the environment:
@@ -38,10 +38,6 @@ Install additional required packages:
 
 ```
 pip install biom-format
-
-pip install h5py
-
-pip install scikit-bio
 ```
 
 Download the heatsequer files from github (https://github.com/amnona/heatsequer):
@@ -49,7 +45,7 @@ Download the heatsequer files from github (https://github.com/amnona/heatsequer)
 cd to where you want the new heatsequer directory to be created
 
 ```
-git clone git@github.com:amnona/heatsequer.git
+git clone https://github.com/amnona/heatsequer.git
 ```
 
 To run the program:

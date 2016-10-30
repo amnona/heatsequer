@@ -8,26 +8,54 @@ heatsequer
 various utility functions
 """
 
-import sys
 import numpy as np
+import scipy as sp
 
-from sys import getsizeof, stderr
 import inspect
 import os
-from itertools import chain
-from collections import deque
-try:
-	from reprlib import repr
-except ImportError:
-	pass
+import logging
+import time
 
 __version__ = "0.2"
 
 
+def start_log(level=logging.DEBUG, filename='log.hs.log'):
+	"""start the logger for the run
+
+	Parameters
+	----------
+	level : int, optional
+		logging.DEBUG, logging.INFO etc. for the log level (between 0-50).
+	filename : str, optional
+		name of the filename to save the log to or None (default) to print to screen
+	"""
+	logging.basicConfig(filename=filename, level=level,format='%(asctime)s:%(message)s')
+	logger = logging.getLogger(__name__)
+	logger.info('*************************')
+	logger.info('logging started')
+
+
 def Debug(dlevel,*args):
 	if dlevel>=DebugLevel:
+		logger = logging.getLogger(__name__)
+		logger.debug(args)
 		print (args)
 
+
+def SetDebugLevel(dlevel):
+	"""
+	set the debug level for output
+	0 - all info (debug)
+	5 - warnings / info
+	9 - critical
+
+	input:
+	dlevel : int (0-10)
+		the minimum message level to show
+	"""
+	global DebugLevel
+
+	DebugLevel = dlevel
 
 
 def reverse(seq):
@@ -494,3 +522,130 @@ def getnicetax(name,separator=';'):
 		if len(cstr)>0:
 			nicename=cstr
 	return nicename
+
+
+def sum(data,axis=None):
+	"""
+	Get the sum of the numpy array/scipy sparse matrix
+
+	input:
+	data : numpy array or scipy matrix
+		the data to sum
+	axis : int or None
+		equivalent to axis parameter on numpy sum
+
+	output:
+	csum : a 1d numpy array
+		the sum
+	"""
+
+	# if sparse matrix, the output is a matrix
+	# so we need to convert to 1d array
+	if sp.sparse.isspmatrix(data):
+		csum=data.sum(axis=axis).A.flatten()
+	else:
+		csum=np.sum(data,axis=axis)
+	return csum
+
+
+def mean(data,axis=None):
+	"""
+	Get the mean of the numpy array/scipy sparse matrix
+
+	input:
+	data : numpy array or scipy matrix
+		the data to sum
+	axis : int or None
+		equivalent to axis parameter on numpy sum
+
+	output:
+	cmean : a 1d numpy array
+		the mean
+	"""
+
+	# if sparse matrix, the output is a matrix
+	# so we need to convert to 1d array
+	if sp.sparse.isspmatrix(data):
+		cmean=data.mean(axis=axis).A.flatten()
+	else:
+		cmean=np.mean(data,axis=axis)
+	return cmean
+
+
+def median(data,axis=None):
+	"""
+	Get the mean of the numpy array/scipy sparse matrix
+
+	input:
+	data : numpy array or scipy matrix
+		the data to sum
+	axis : int or None
+		equivalent to axis parameter on numpy sum
+
+	output:
+	cmedian : a 1d numpy array
+		the mean
+	"""
+
+	# if sparse matrix, the output is a matrix
+	# so we need to convert to 1d array
+	if sp.sparse.isspmatrix(data):
+		Debug(9,'Median not supported for sparse matrix. come back one year')
+		cdat=data.todense().A[0]
+		cmedian=np.median(cdat,axis=axis)
+	else:
+		cmedian=np.median(data,axis=axis)
+	return cmedian
+
+
+def divvec(data,vec):
+	"""
+	divide the data matrix data by the vector vec
+	works for sparse and non sparse data types
+
+	input:
+	data : sparse matrix or numpy array
+		the data to divide each colum by the vector element
+	vec : numpy array
+		the vector to devide by
+
+	output:
+	data : same as data
+		each element in each column in data divided by the corresponding vec element
+	"""
+	if sp.sparse.isspmatrix(data):
+		# for cpos,cval in data.items():
+		# 	data[cpos]=cval/vec[cpos[1]]
+		numcols=data.shape[1]
+		b=sp.sparse.lil_matrix( (numcols,numcols) )
+		for idx in range(numcols):
+			b[idx,idx]=1.0/vec[idx]
+		b=b.tocsr()
+		data=data*b
+	else:
+		data=data/vec
+
+	return data
+
+
+def log2(data,minthresh=2):
+	"""
+	calculate the log2 of the data in dense or sparse format. numbers below minthresh are rounded to minthresh
+
+	input:
+	data : numpy array of sparse matrix
+		the 2d array to calculate the log2
+	minthresh: float
+		the minimal number of reads
+		(data numbers below minthresh are rounded to minthresh)
+
+	output:
+	ldat : numpy array or sparse matrix
+		log2 of the data matrix after thresholding. output format is similar to input
+	"""
+	if sp.sparse.isspmatrix(data):
+		pass
+	else:
+		data[data<minthresh]=minthresh
+		ldat=np.log2(data)
+	return ldat

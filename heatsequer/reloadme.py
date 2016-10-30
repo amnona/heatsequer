@@ -23,6 +23,7 @@ def reloadme():
 	imp.reload(hs.analysis.metrics)
 	imp.reload(hs.analysis.mislabels)
 	imp.reload(hs.analysis.analyse)
+	imp.reload(hs.analysis.annotationanalysis)
 	imp.reload(hs.analysis)
 	imp.reload(hs.bactdb.bdb)
 	imp.reload(hs.bactdb)

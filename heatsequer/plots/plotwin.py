@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 #from matplotlib.pyplot import *
 
 
-def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline=''):
+def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,cdb=None,showline=True,ontofig=False,usegui=True,showxall=False,showcolorbar=False,ptitle=False,lowcutoff=1,uselog=True,showxlabel=True,colormap=False,colorrange=False,linewidth=2,subline='',showhline=True,newfig=True,fixfont=False,fontsize=None,nosort=False,zeroisnone=False,xlabelrotation=45,showtaxnames=False):
 	"""
 	Plot an experiment
 	input:
@@ -38,7 +38,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	usegui - True use a gui for otu summary, False just print
 	showxall - True to show all sample names when not sorting, False to show no more than 10
 	showcolorbar - True to plot the colorbar. False to not plot
-	ptitle - name of the figure or False to show processing history as name
+	ptitle : str (optional)
+		'' to show o show processing history as name, None to not show title, or str of name of the figure
 	lowcutoff - minimal value for read (for 0 log transform) - the minimal resolution - could be 10000*2/origreads
 	showxlabel : bool
 		True to show the x label (default), False to hide it
@@ -48,6 +49,23 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		[min,max] to set the colormap range, False to use data min,max (default) as specified in rangeall
 	subline : str
 		Name of category for subline plotting or '' (Default) for no sublines
+	showhline : bool
+		True (default) to plot the horizontal lines listed in exp.hlines. False to not plot them
+	newfig : bool
+		True (default) to open figure in new window, False to use current
+	fixfont : bool (optional)
+		False (default) to use fixedfont, True to use fixed width font
+	fontsize : int or None (optional)
+		None (default) to use default font size, number to use that font size
+	nosort : bool (optional)
+		False (default) to sort by the sort field, True to skip the sorting
+	zeroisnone : bool (optional)
+		False (default) to plot zeros as 0, True to assign None (white color)
+	xlabelrotation : int (optional)
+		the rotation of the xtick labels
+	showtaxnames : book (optional)
+		False (default) to not show tax names (need to press 'h' to show)
+		True to show the taxonomy names
 
 	output:
 	newexp - the plotted experiment (sorted and filtered)
@@ -58,20 +76,30 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	hs.Debug(1,"Commands:")
 	for ccommand in exp.commands:
 		hs.Debug(1,"%s" % ccommand)
+
+	if exp.sparse:
+		hs.Debug(9,'Sparse matrix - converting to dense')
+		exp=hs.copyexp(exp,todense=True)
+
 	vals=[]
 	if cdb is None:
 		cdb=hs.cdb
 	if seqdb is None:
 		seqdb=hs.bdb
 	if sortby:
-		hs.Debug(1,"Sorting by field %s" % sortby)
-		for csamp in exp.samples:
-			vals.append(exp.smap[csamp][sortby])
-		if numeric:
-			hs.Debug(1,"(numeric sort)")
-			vals=hs.tofloat(vals)
-		svals,sidx=hs.isort(vals)
-		newexp=hs.reordersamples(exp,sidx)
+		if not nosort:
+			hs.Debug(1,"Sorting by field %s" % sortby)
+			for csamp in exp.samples:
+				vals.append(exp.smap[csamp][sortby])
+			if numeric:
+				hs.Debug(1,"(numeric sort)")
+				vals=hs.tofloat(vals)
+			svals,sidx=hs.isort(vals)
+			newexp=hs.reordersamples(exp,sidx)
+		else:
+			hs.Debug(1,"no sorting but showing columns")
+			svals=hs.getfieldvals(exp,sortby)
+			newexp=hs.copyexp(exp)
 	else:
 		hs.Debug(1,"No sample sorting")
 		svals=hs.getfieldvals(exp,'#SampleID')
@@ -94,6 +122,8 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 
 #	ldat=ldat[:,sidx]
 	ldat=newexp.data
+	if zeroisnone:
+		ldat[ldat==0]=None
 	if uselog:
 		hs.Debug(1,"Using log, cutoff at %f" % lowcutoff)
 		ldat[np.where(ldat<lowcutoff)]=lowcutoff
@@ -102,7 +132,10 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 	mpl.rc('keymap',back='c, backspace')
 	mpl.rc('keymap',forward='v')
 	mpl.rc('keymap',all_axes='A')
-	f=plt.figure()
+	if newfig:
+		f=plt.figure(tight_layout=True)
+	else:
+		f=plt.gcf()
 	# set the colormap to default if not supplied
 	if not colormap:
 		colormap=plt.rcParams['image.cmap']
@@ -117,15 +150,16 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		hs.Debug(1,"colormap range is 0,10")
 		iax=plt.imshow(ldat,interpolation='nearest',aspect='auto',clim=[0,10],cmap=plt.get_cmap(colormap))
 
-	if not ptitle:
-		hs.Debug(1,"Showing filters in title")
-		if (len(newexp.filters))>4:
-			cfilters=[newexp.filters[0],'...',newexp.filters[-2],newexp.filters[-1]]
-		else:
-			cfilters=newexp.filters
-		cfilters=hs.clipstrings(cfilters,30)
-		ptitle='\n'.join(cfilters)
-	plt.title(ptitle,fontsize=10)
+	if ptitle is not None:
+		if not ptitle:
+			hs.Debug(1,"Showing filters in title")
+			if (len(newexp.filters))>4:
+				cfilters=[newexp.filters[0],'...',newexp.filters[-2],newexp.filters[-1]]
+			else:
+				cfilters=newexp.filters
+			cfilters=hs.clipstrings(cfilters,30)
+			ptitle='\n'.join(cfilters)
+		plt.title(ptitle,fontsize=10)
 
 	ax=iax.get_axes()
 	ax.autoscale(False)
@@ -157,7 +191,7 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		hs.Debug(1,"number of lines is %d" % len(linepos))
 		if showxlabel:
 			ax.set_xticks(labpos)
-			ax.set_xticklabels(labs,rotation=45,ha='right')
+			ax.set_xticklabels(labs,rotation=xlabelrotation,ha='right')
 		for cx in linepos:
 			plt.plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'k',linewidth=linewidth)
 			plt.plot([cx,cx],[-0.5,np.size(ldat,0)-0.5],'w:',linewidth=linewidth)
@@ -167,8 +201,12 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 			hs.Debug(1,"less than 10 samples, showing all sample names")
 			ax.set_xticklabels(svals,rotation=90)
 			ax.set_xticks(range(len(newexp.samples)))
-	plt.tight_layout()
-	ax.set_ylim(-0.5,np.size(ldat,0)+0.5)
+	# f.tight_layout()
+	ax.set_ylim(-0.5,np.size(ldat,0)-0.5)
+
+	if fixfont:
+		fontProperties = {'family':'monospace'}
+		ax.set_yticklabels(ax.get_yticks(), fontProperties)
 
 	if showcolorbar:
 		hs.Debug(1,"Showing colorbar")
@@ -216,7 +254,13 @@ def plotexp(exp,sortby=False,numeric=False,minreads=4,rangeall=False,seqdb=None,
 		hs.Debug(1,"Experiment has metadata attached for plotting (%d points)" % len(newexp.plotmetadata))
 		for cmet in newexp.plotmetadata:
 			addplotmetadata(newexp,field=cmet[0],value=cmet[1],color=cmet[2],inverse=cmet[3],beforesample=cmet[4])
+	if showhline:
+		if newexp.hlines:
+			for cpos in newexp.hlines:
+				plt.plot([0,np.shape(newexp.data)[1]],[cpos-0.5,cpos-0.5],'g')
 	plt.show()
+	if showtaxnames:
+		showtaxonomies(newexp,ax,showdb=False,showcontam=False)
 
 #	if usegui:
 #		app.exec_()
@@ -289,12 +333,13 @@ def onplotkeyclick(event):
 					print(cinfo)
 				sys.stdout.flush()
 		if cexp.scdb:
-			info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
+#			info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
+			info = hs.supercooldb.getannotationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
 			if cax.guiwin:
 				cax.guiwin.addtocdblist(info)
 			else:
 				for cinfo in info:
-					print(cinfo)
+					print(cinfo[1])
 				sys.stdout.flush()
 	if event.key=='.':
 		# select prev bacteria
@@ -311,12 +356,13 @@ def onplotkeyclick(event):
 					print(cinfo)
 				sys.stdout.flush()
 		if cexp.scdb:
-			info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
+#			info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
+			info = hs.supercooldb.getannotationstrings(cexp.scdb,cexp.seqs[cax.lastselect])
 			if cax.guiwin:
 				cax.guiwin.addtocdblist(info)
 			else:
 				for cinfo in info:
-					print(cinfo)
+					print(cinfo[1])
 				sys.stdout.flush()
 
 	if event.key=='<':
@@ -340,6 +386,9 @@ def onplotkeyclick(event):
 	# show taxonomies
 	if event.key=='h':
 		showtaxonomies(cexp,cax)
+	# for the deblur paper - need to do nicer!!!!!
+	if event.key=='j':
+		showtaxonomies(cexp,cax,showdb=False,showcontam=False)
 	if event.key=='H':
 		showsampleids(cexp,cax)
 	# nice taxonomies (genus+species)
@@ -528,12 +577,13 @@ def onplotmouseclick(event):
 				print(cinfo)
 			sys.stdout.flush()
 	if cexp.scdb:
-		info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[ry])
+#		info = hs.supercooldb.getcurationstrings(cexp.scdb,cexp.seqs[ry])
+		info = hs.supercooldb.getannotationstrings(cexp.scdb,cexp.seqs[ry])
 		if ax.guiwin:
 			ax.guiwin.addtocdblist(info)
 		else:
 			for cinfo in info:
-				print(cinfo)
+				print(cinfo[1])
 			sys.stdout.flush()
 
 

@@ -76,6 +76,79 @@ def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1,nofreqpr
 		return newexp
 
 
+def geteffectsize(expdat,field,val1,val2,method='mean'):
+	"""
+	get the difference between 2 groups for all bacteria in experiment
+
+	input:
+	expdat : Experiment
+	field - the field for the 2 categories
+	val1 - values for the first group
+	val2 - value for the second group or false to compare to all other
+	method - the test to compare the 2 groups:
+		mean - absolute difference in mean frequency
+		binary - abs diff in binary presence/absence
+		ranksum - abs diff in rank order (to ignore outliers)
+		freqpres - abs diff in frequency only in samples where bacteria is present
+
+	output:
+	odif : array of float
+		the difference between the 2 groups for each bacteria
+	"""
+	minthresh=2
+	exp1=hs.filtersamples(expdat,field,val1,exact=True)
+	if val2:
+		exp2=hs.filtersamples(expdat,field,val2,exact=True)
+	else:
+		exp2=hs.filtersamples(expdat,field,val1,exact=True,exclude=True)
+
+	cexp=hs.joinexperiments(exp1,exp2)
+	len1=len(exp1.samples)
+	len2=len(exp2.samples)
+	dat=cexp.data
+	dat[dat<minthresh]=minthresh
+	dat=np.log2(dat)
+	numseqs=len(cexp.seqs)
+
+	eps=0.000001
+
+	if method=='mean':
+		pass
+	elif method=='ranksum':
+		for idx in range(numseqs):
+			dat[idx,:]=stats.rankdata(dat[idx,:])
+	elif method=='binary':
+		dat=(dat>np.log2(minthresh))
+	elif method=='freqpres':
+		dat[dat<=minthresh]=np.nan
+		# remove sequences that don't have >thresh in one group
+		keeplist=[]
+		for cbact in range(len(cexp.seqs)):
+			keepit=True
+			if np.sum(np.isnan(dat[cbact,0:len1]))==len1:
+				keepit=False
+			if np.sum(np.isnan(dat[cbact,len1:]))==len2:
+				keepit=False
+			if keepit:
+				keeplist.append(cbact)
+		hs.Debug(6,'keeping %d bacteria (out of %d) for freqpres analysis' % (len(keeplist),len(cexp.seqs)))
+		cexp=hs.reorderbacteria(cexp,keeplist)
+		dat=cexp.data
+		dat[dat<minthresh]=minthresh
+		dat=np.log2(dat)
+		dat[dat<=minthresh]=np.nan
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+
+	m1=np.nanmean(dat[:,0:len1],axis=1)
+	m2=np.nanmean(dat[:,len1:],axis=1)
+	odif=(m1-m2)/(m1+m2+eps)
+	odif[np.isnan(odif)]=0
+
+	return odif
+
+
 def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1):
 	"""
 	test the differential expression between 2 groups (val1 and val2 in field field)
@@ -182,12 +255,16 @@ def getdiffsig(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0
 	hs.Debug(6,'method %s. number of higher in %s : %d. number of higher in %s : %d. total %d' % (method,val1,np.sum(odif>0),val2,np.sum(odif<0),len(odif)))
 	newexp=hs.reorderbacteria(newexp,si)
 	newexp.odif=sv
+	bz=np.where(np.array(newexp.odif)<0)[0]
+	if len(bz)>0:
+		seppos=np.max(bz)
+		newexp.hlines.append(seppos)
 	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
 	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
 	return newexp
 
 
-def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='ranksum'):
+def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='ranksum',justp=False,fixzero=False):
 	"""
 	find bacteria significantly associated (correlated) with a mapping file sortable field
 	input:
@@ -200,7 +277,11 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 		'ranksum' - ranksum correlation
 	numperm - number of random permutations to run
 	maxfval - the maximal f-value (FDR) for a bacteria to keep
-
+	justp : bool
+		False (default) to run normally, True to return all p-values without FDR
+		p-values will be stored in newexp.pvals
+	fixzero : bool (optional)
+		False (default) to use data normally, True (experimental) to replace 0s with the mean of the group
 	output:
 	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
 	"""
@@ -214,7 +295,13 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 	numsamps=len(cexp.samples)
 
 	dat=cexp.data
-	dat[dat<minthresh]=minthresh
+	if not fixzero:
+		dat[dat<minthresh]=minthresh
+	else:
+		for cidx in range(len(cexp.seqs)):
+			zeros=np.where(dat[cidx,:]<=minthresh)[0]
+			nonzeros=np.where(dat[cidx,:]>minthresh)[0]
+			dat[cidx,zeros]=np.mean(dat[cidx,nonzeros])
 	dat=np.log2(dat)
 	dat=dat-np.mean(dat,axis=1,keepdims=True)
 
@@ -223,6 +310,7 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 	if method=='ranksum':
 		compareto=np.arange(numsamps)
 		compareto=compareto-np.mean(compareto,keepdims=True)
+		maxscore=np.sum(compareto*compareto)
 #		compareto=compareto-np.mean(compareto,axis=1,keepdims=True)
 		# calculate the rank
 		for idx in range(numseqs):
@@ -256,6 +344,13 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 		# need to remember we only know as much as the number of permutations - so add 1 as upper bound for fdr
 		cpval=min(cpval+(1.0/cnumperm),1)
 		pval.append(cpval)
+
+
+	if justp:
+		newexp=hs.copyexp(expdat)
+		newexp.odif=odif/maxscore
+		newexp.pvals=pval
+		return newexp
 	# NOTE: maybe use better fdr (this one not tested...)
 	fval=hs.fdr(pval)
 	keep=np.where(np.array(fval)<=maxfval)
@@ -263,12 +358,21 @@ def getsigcorr(expdat,field=False,numeric=True,numperm=1000,maxfval=0.1,method='
 	for cidx in keep[0]:
 		seqlist.append(cexp.seqs[cidx])
 
+	if justp:
+		newexp=hs.copyexp(expdat)
+		newexp.odif=odif/maxscore
+		newexp.pvals=pval
+		return newexp
+
 	# do we need this or is reorder enough?
 	newexp=hs.filterseqs(expdat,seqlist,logit=False)
 	odif=odif[keep[0]]
+	outpval=np.array(pval)[keep[0]]
 	sv,si=hs.isort(odif)
 	newexp=hs.reorderbacteria(newexp,si)
-	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
+	newexp.odif=odif[si]/maxscore
+	newexp.pvals=outpval[si]
+	hs.addcommand(newexp,"getsigcorr",params=params,replaceparams={'expdat':expdat})
 	newexp.filters.append('significant correlation %s for field %s' % (method,field))
 	return newexp
 
@@ -1038,8 +1142,9 @@ def testbactenrichment(expdat,seqs,cdb=False,bdb=False,dbexpres=False,translates
 	"""
 
 	# maybe need to keep similar freq bacteria?
-	if cdb:
-		hs.cooldb.testenrichment(cdb,expdat.seqs,seqs)
+	# if cdb:
+	# 	hs.cooldb.testenrichment(cdb,expdat.seqs,seqs)
+	hs.annotationenrichment(expdat,seqs)
 	if bdb:
 		if not dbexpres:
 			dbexpres=hs.bactdb.GetSeqListInfo(bdb,expdat.seqs,info='studies')
@@ -1110,7 +1215,7 @@ def getdiffsummary(expdat,seqs,field,val1,val2=False,method='mean',threshold=0.1
 
 
 
-def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1000],maxfval=0.1,mineffect=0.1,permutefield=False):
+def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1000],maxfval=0.1,mineffect=0.1,permutefield=False,justp=False):
 	"""
 	test the differential expression between 2 groups (val1 and val2 in field field)
 	for bacteria that have a high difference.
@@ -1131,6 +1236,9 @@ def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1
 		the minimal effect size to keep (abs(diff)/mean)
 	permutefield : string or False
 		if False (default) permute all samples, otherwise permute separately on samples with same value on field permutefield
+	justp : bool
+		False (default) to run normally, True to return all p-values without FDR
+		p-values will be stored in newexp.pvals
 
 	output:
 	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
@@ -1182,6 +1290,11 @@ def diffexpfastpermute(expdat,field,val1,val2=False,method='mean',numperm=[100,1
 		permutegroups=False
 
 	pval,odif=fastpermutepv(dat,meanfunc,pos1,pos2,numperm=numperm,maxpval=maxfval,mineffect=mineffect,permutegroups=permutegroups)
+
+	if justp:
+		newexp=hs.copyexp(expdat)
+		newexp.pvals=pval
+		return newexp
 
 	# do fdr
 	fval=hs.fdr(pval)
@@ -2026,3 +2139,291 @@ def groupbacteria(expdat,minreads=0,uselog=True):
 	newexp=hs.sortbacteria(newexp)
 
 	return outexp,seqpergroup,taxpergroup
+
+
+
+def teststat(data, labels,useabs=True):
+	"""
+	calculate the abs mean difference between two groups
+	"""
+	mean1 = np.mean(data[:, labels==0], axis = 1)
+	mean0 = np.mean(data[:, labels==1], axis = 1)
+	if useabs:
+		tstat = np.abs(mean1 - mean0)
+	else:
+		tstat = mean1 - mean0
+	return tstat
+
+
+def pfdr(data,labels,alpha=0.1,numperm=1000,befast=False):
+	"""
+	calculate the permutation fdr
+
+	input:
+	data : 2d numpy array
+		each row is a bacteria, each column is a sample
+		each column should be normalized to same sum
+	labels :
+		an 1d array of 0,1
+		group of each sample. same order as the columns in data
+	alpha : float
+		the fdr level (0<alpha<1)
+	befast : bool
+		False (default) to test all thresholds and select best. True to start from highest
+		Should be equivalent but should check...
+
+	output:
+	reject : array of 0,1
+		0 if null hypothesis accepted, 1 if rejected for each sample
+	odif : array of float
+		the original t statistic for each bacteria
+	"""
+	print('permuting')
+	numbact=np.shape(data)[0]
+
+	# calculate the real data statistic
+	t=teststat(data,labels)
+
+	print('ok')
+
+	# now do random permutations
+	u=np.zeros([numbact,numperm])
+	print(t.dtype)
+	print(u.dtype)
+	for cperm in range(numperm):
+		rlabels=np.random.permutation(labels)
+		rt=teststat(data,rlabels)
+		u[:,cperm]=rt
+
+	print('calculating fdr')
+	# there is a problem with numpy where permutations that should have a similar mean
+	# get a slight difference, and that can destroy the rank
+	# see https://github.com/numpy/numpy/issues/8116
+	print('fixing floating point errors')
+	for crow in range(numbact):
+		closepos=np.isclose(t[crow],u[crow,:])
+		# numid=np.sum(t[crow]==u[crow,:])
+		# numclose=np.sum(closepos)
+		# if numclose!=numid:
+		# 	print('row: %d, identical: %d, close: %d' % (crow,numid,numclose))
+		u[crow,closepos]=t[crow]
+
+	print('rank transforming')
+	# rank transfrom the results
+	for crow in range(numbact):
+		cvec=np.hstack([t[crow],u[crow,:]])
+		cvec=stats.rankdata(cvec,method='min')
+		t[crow]=cvec[0]
+		u[crow,:]=cvec[1:]
+
+	# now calculate the fdr for each t value
+	print('fdring')
+	sortt=list(set(t))
+	sortt=np.sort(sortt)
+	if befast:
+		sortt=sortt[::-1]
+	print('ok')
+	foundit=False
+	for ct in sortt:
+		# 		z= t>=ct
+		# #		fracnull=(1+np.sum(u>=ct,axis=1))/(numperm+1)
+		# 		fracnull=(z+np.sum(u>=ct,axis=1))/(numperm+1)
+		# 		realnum=np.sum(z)
+		# 		fdr=np.sum(fracnull)/realnum
+		realnum=np.sum(t>=ct)
+		fdr=(realnum+np.count_nonzero(u>=ct)) / (realnum*(numperm+1))
+		if befast:
+			if fdr>alpha:
+				break
+			realct=ct
+
+		if fdr<=alpha:
+			if not foundit:
+				realct=ct
+			foundit=True
+	if not foundit:
+		print('not low enough. number of rejects : 0')
+		reject=np.zeros(numbact,dtype=int)
+		reject= (reject>10)
+		return reject,t
+
+	# and fill the reject null hypothesis
+	reject=np.zeros(numbact,dtype=int)
+	reject= (t>=realct)
+	print('number of rejects : %d' % np.sum(reject))
+	odif=teststat(data,labels,useabs=False)
+	return reject,odif
+
+
+
+def oldfdr(data,labels,alpha=0.1,numperm=1000):
+	import statsmodels.sandbox.stats.multicomp
+
+	print('permuting')
+	numbact=np.shape(data)[0]
+
+	# calculate the real data statistic
+	t=teststat(data,labels)
+
+	# now do random permutations
+	u=np.zeros([numbact,numperm])
+	for cperm in range(numperm):
+		rlabels=np.random.permutation(labels)
+		rt=teststat(data,rlabels)
+		u[:,cperm]=rt
+
+	print('calculating old fdr')
+	trep=np.tile(t[np.newaxis].transpose(),(1,numperm))
+	pvals=(np.sum(u>=trep,axis=1)+1)/(numperm+1)
+
+	reject,pvc,als,alb=statsmodels.sandbox.stats.multicomp.multipletests(pvals,alpha=alpha,method='fdr_bh')
+	print('number of rejects : %d' % np.sum(reject))
+	odif=teststat(data,labels,useabs=False)
+	return reject,odif
+
+
+
+def getpfdr(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1,usepfdr=True,befast=False):
+	"""
+	test the differential expression between 2 groups (val1 and val2 in field field)
+	for bacteria that have a high difference.
+	input:
+	expdat
+	field - the field for the 2 categories
+	val1 - values for the first group
+	val2 - value for the second group or false to compare to all other
+	method - the test to compare the 2 groups:
+		mean - absolute difference in mean frequency
+		binary - abs diff in binary presence/absence
+		ranksum - abs diff in rank order (to ignore outliers)
+	numperm - number of random permutations to run
+	maxfval - the maximal f-value (FDR) for a bacteria to keep
+	usepfdr : bool
+		True to use the new permutation fdr, False to use bh-fdr
+
+	output:
+	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
+	"""
+	params=locals()
+
+	minthresh=2
+	exp1=hs.filtersamples(expdat,field,val1,exact=True)
+	if val2:
+		exp2=hs.filtersamples(expdat,field,val2,exact=True)
+	else:
+		exp2=hs.filtersamples(expdat,field,val1,exact=True,exclude=True)
+	cexp=hs.joinexperiments(exp1,exp2)
+	len1=len(exp1.samples)
+	len2=len(exp2.samples)
+
+	dat=cexp.data
+	dat[dat<minthresh]=minthresh
+	dat=np.log2(dat)
+	numseqs=len(cexp.seqs)
+
+	if method=='mean':
+		pass
+	elif method=='ranksum':
+		for idx in range(numseqs):
+			dat[idx,:]=stats.rankdata(dat[idx,:])
+	elif method=='binary':
+		dat=(dat>np.log2(minthresh))
+	else:
+		hs.Debug(9,"Method not supported!",method)
+		return
+
+	labels=np.zeros(len(cexp.samples))
+	labels[:len1]=1
+
+	print(np.shape(cexp.data))
+	if usepfdr:
+		keep,odif=pfdr(dat,labels,alpha=maxfval,numperm=numperm,befast=befast)
+	else:
+		keep,odif=oldfdr(dat,labels,alpha=maxfval,numperm=numperm)
+
+	keep=np.where(keep)
+	seqlist=[]
+
+	for cidx in keep[0]:
+		seqlist.append(cexp.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(odif)
+	hs.Debug(6,'method %s. number of higher in %s : %d. number of higher in %s : %d. total %d' % (method,val1,np.sum(odif>0),val2,np.sum(odif<0),len(odif)))
+	newexp=hs.reorderbacteria(newexp,si)
+	newexp.odif=sv
+	bz=np.where(np.array(newexp.odif)<0)[0]
+	if len(bz)>0:
+		seppos=np.max(bz)
+		newexp.hlines.append(seppos)
+	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
+	return newexp
+
+
+
+def correlatemicromet(microexp,metexp,method='pearson'):
+	samples=list(set(microexp.samples).intersection(set(metexp.samples)))
+	exp1=hs.filtersamples(microexp,'#SampleID',samples)
+	exp2=hs.filtersamples(metexp,'#SampleID',samples)
+	res=np.zeros([len(exp1.seqs),len(exp2.seqs)])
+	for idx1 in range(len(exp1.seqs)):
+		for idx2 in range(len(exp2.seqs)):
+			cc=np.corrcoef(exp1.data[idx1,:],exp2.data[idx2,:])
+			res[idx1,idx2]=cc[0,1]
+	plt.figure()
+	plt.imshow(res,interpolation='nearest',aspect='auto',clim=[-1,1])
+	plt.colorbar()
+	return res
+
+
+
+def getclosesequences(exp,seqs):
+	"""
+	Get the closest sequence for each sequence in seqs (from experiment exp)
+	closeness is based on hamming distance.
+	a new experiment is created with each sequence from seqs followed by it's close neighbor
+
+	input:
+	exp : Experiment
+		the experiment from which to find the closest sequence (and the original sequences)
+	seqs : list of str (ACGT)
+		a list of sequences from exp for which to find the neighbor
+
+	output:
+	newexp: Experiment
+		a subset of exp, ordered by s from seqs, closest neighbor to s.
+	closeseqs: list of str (ACGT)
+		a list of closest sequence to each sequence is seqs
+	"""
+	closeseqs=[]
+	filterseqs=[]
+
+	# convert sequences to numpy arrays for fast comparisons
+	seqarray=[]
+	for cseq in exp.seqs:
+		seqarray.append(hs.SeqToArray(cseq))
+
+	for idx,cseq in enumerate(seqs):
+		cseqa=hs.SeqToArray(cseq)
+		minmm=2
+		simseq=None
+		for expidx,cexpseq in enumerate(seqarray):
+			nummm=np.count_nonzero(np.not_equal(cseqa,cexpseq))
+			if nummm==0:
+				continue
+			if nummm<minmm:
+				simseq=expidx
+				minmm=nummm
+		if simseq is None:
+			hs.Debug(7,'No similar sequence for sequence %s' % seqs[idx])
+			continue
+		closeseqs.append(exp.seqs[simseq])
+		filterseqs.append(cseq)
+		filterseqs.append(exp.seqs[simseq])
+	newexp=hs.filterseqs(exp,filterseqs)
+	for cseq in closeseqs:
+		newexp.tax[newexp.seqdict[cseq]]=newexp.tax[newexp.seqdict[cseq]].lower()
+	return newexp,closeseqs

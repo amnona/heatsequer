@@ -26,15 +26,17 @@ def filterminreads(exp,minreads,logit=True,useabs=False):
 		the minimum number of reads total for all samples (and out of 10k/sample) for a bacteria to be kept
 	logit : bool
 		True to add to command log, False to not (if called from another heatsequer function)
+	useabs: bool
+		False (default) to work on sum of reads, True to work on sum(abs(reads)) (if they are log freq/etc)
 	output:
 	newexp - the filtered experiment
 	"""
 	params=locals()
 
 	if useabs:
-		numreads=np.sum(np.abs(exp.data),axis=1)
+		numreads=hs.sum(np.abs(exp.data),axis=1)
 	else:
-		numreads=np.sum(exp.data,axis=1)
+		numreads=hs.sum(exp.data,axis=1)
 	keep=np.where(numreads>=minreads)
 	newexp=hs.reorderbacteria(exp,keep[0])
 	if logit:
@@ -58,7 +60,7 @@ def filterpresence(expdat,frac):
 	"""
 	params=locals()
 
-	fracreads=(np.sum(expdat.data>0,axis=1)+0.0)/len(expdat.samples)
+	fracreads=(hs.sum(expdat.data>0,axis=1)+0.0)/len(expdat.samples)
 	keep=np.where(fracreads>=frac)
 	newexp=hs.reorderbacteria(expdat,keep[0])
 	newexp.filters.append('filter presence %f' % frac)
@@ -69,7 +71,7 @@ def filterpresence(expdat,frac):
 
 def filterminsamples(expdat,minsamples):
 	"""
-	filter away bacteria present in less than frac of the samples
+	filter away bacteria present in less than minsamples samples
 	input:
 	expdat : Experiment
 	minsamples : int
@@ -81,7 +83,7 @@ def filterminsamples(expdat,minsamples):
 	"""
 	params=locals()
 
-	numsamples=np.sum(expdat.data>0,axis=1)
+	numsamples=hs.sum(expdat.data>0,axis=1)
 	keep=np.where(numsamples>=minsamples)
 	newexp=hs.reorderbacteria(expdat,keep[0])
 	newexp.filters.append('filter min samples %d' % minsamples)
@@ -104,8 +106,8 @@ def filtermean(expdat,meanval):
 	"""
 	params=locals()
 
-	meanreads=np.mean(expdat.data,axis=1)
-	meantotreads=np.mean(np.sum(expdat.data,0))
+	meanreads=hs.mean(expdat.data,axis=1)
+	meantotreads=hs.mean(hs.sum(expdat.data,0))
 	keep=np.where(meanreads>=meanval*meantotreads)
 	newexp=hs.reorderbacteria(expdat,keep[0])
 	newexp.filters.append('filter mean reads %f' % meanval)
@@ -232,6 +234,7 @@ def filterid(expdat,sids,exclude=False):
 		newexp.filters.append('Filter %d ids' % len(sids))
 	hs.addcommand(newexp,"filterid",params=params,replaceparams={'expdat':expdat})
 	return newexp
+
 
 def filtertaxonomy(exp,tax,exact=False,exclude=False):
 	"""
@@ -486,7 +489,7 @@ def filterbacteriafromfile(expdat,filename,exclude=False,subseq=False):
 	seqs=[]
 	for cline in fl:
 		seqs.append(cline.strip())
-	newexp=hs.filterseqs(expdat,seqs,exclude=exclude,subseq=False)
+	newexp=hs.filterseqs(expdat,seqs,exclude=exclude,subseq=subseq)
 	filt='Filter sequences from file '+filename
 	if exclude:
 		filt+=' (Exclude)'
@@ -554,7 +557,7 @@ def filterannotations(expdat,annotation,cdb=None,exclude=False):
 	return newexp
 
 
-def filtersimilarsamples(expdat,field,method='mean'):
+def filtersimilarsamples(expdat,field,method='mean',minnumsamples=0,minthresh=5):
 	"""
 	join similar samples into one sample (i.e. to remove samples of same individual)
 	input:
@@ -568,6 +571,11 @@ def filtersimilarsamples(expdat,field,method='mean'):
 		'random' - replace with a single random sample out of these samples
 		'sum' - replace with sum of original reads in all samples, renormalized after to 10k and orignumreads updated
 		'fracpres' - replace with fraction of samples where the bacteria is present
+	minnumsamples : int
+		The minimal number of samples for a given value in order to retain this value in the filtered list. 0 to keep all (default)
+	minthresh : float
+		The minimal number of reads of a bacteria in a sample in oreder to call it present (for 'fracpres' method)
+
 	output:
 	newexp : Experiment
 		like the input experiment but only one sample per unique value in field
@@ -581,6 +589,9 @@ def filtersimilarsamples(expdat,field,method='mean'):
 	keep=[]
 	for cval in uvals:
 		cpos=hs.findsamples(expdat,field,cval)
+		if len(cpos)<minnumsamples:
+			hs.Debug(6,'value %s has only %d samples - not keeping' % (cval,len(cpos)))
+			continue
 		if len(cpos)==1:
 			keep.append(cpos[0])
 			continue
@@ -594,20 +605,20 @@ def filtersimilarsamples(expdat,field,method='mean'):
 				if cmap[cfield]!=expdat.smap[expdat.samples[ccpos]][cfield]:
 					cmap[cfield]='NA'
 		if method=='mean':
-			cval=np.mean(expdat.data[:,cpos],axis=1)
+			cval=hs.mean(expdat.data[:,cpos],axis=1)
 			newexp.data[:,cpos[0]]=cval
 			keep.append(cpos[0])
 		elif method=='median':
-			cval=np.median(expdat.data[:,cpos],axis=1)
+			cval=hs.median(expdat.data[:,cpos],axis=1)
 			newexp.data[:,cpos[0]]=cval
 			keep.append(cpos[0])
 		elif method=='sum':
-			cval=np.sum(newexp.data[:,cpos],axis=1)
+			cval=hs.sum(newexp.data[:,cpos],axis=1)
 			newexp.data[:,cpos[0]]=cval
 			newexp.origreads[cpos[0]]=np.sum(hs.reorder(expdat.origreads,cpos))
 			keep.append(cpos[0])
 		elif method=='fracpres':
-			cval=np.sum(expdat.data[:,cpos]>0,axis=1)
+			cval=hs.sum(expdat.data[:,cpos]>minthresh,axis=1)
 			newexp.data[:,cpos[0]]=cval/len(cpos)
 			keep.append(cpos[0])
 		else:
@@ -653,6 +664,8 @@ def filterwave(expdat,field=False,numeric=True,minfold=2,minlen=3,step=1,directi
 	"""
 	params=locals()
 
+	if expdat.sparse:
+		expdat=expdat.copy(todense=True)
 	# sort if needed
 	if field:
 		newexp=hs.sortsamples(expdat,field,numeric=numeric)
@@ -782,6 +795,7 @@ def cleantaxonomy(expdat,mitochondria=True,chloroplast=True,bacteria=True,unknow
 			newexp=hs.filtertaxonomy(newexp,'Bacteria;',exclude=True,exact=True)
 		else:
 			ne6=hs.filtertaxonomy(newexp,'Bacteria;',exclude=False,exact=True)
+
 	if exclude:
 		newexp=hs.normalizereads(newexp)
 	else:
@@ -826,6 +840,9 @@ def filterfieldwave(expdat,field,val1,val2=False,mineffect=1,method='mean',uselo
 		only with sequences showing a mineffect difference
 	"""
 	params=locals()
+
+	if expdat.sparse:
+		expdat=hs.copyexp(todense=True)
 
 	numseqs=len(expdat.seqs)
 	numsamples=len(expdat.samples)
@@ -894,4 +911,107 @@ def filternans(expdat,minpresence):
 	newexp=hs.reorderbacteria(expdat,keep)
 	newexp.filters.append('filternans keep only with >=%d non nan reads' % minpresence)
 	hs.addcommand(newexp,"filternans",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+def filterseqsfromtree(expdat,tree):
+	"""
+	filter an experiment keeping only sequences present in the phylogenetic tree
+	input:
+	expdat : Experiment
+	tree : str or skbio tree
+		if str - name of the tree file
+		if tree - from skbio.tree.TreeNode.read('')
+
+	output:
+	newexp : Experiment
+		with only sequences present in the tree
+	"""
+	params=locals()
+	import skbio.tree
+
+	# load the tree if it's a filename
+	filterdesc='filterseqsfromtree'
+	if type(tree)==str:
+		hs.Debug(3,'loading tree data from %s' % tree)
+		treedat=skbio.tree.TreeNode.read(tree)
+		filterdesc+=' from file %s' % tree
+	else:
+		hs.Debug(1,'tree data supplied')
+		treedat=tree
+
+	hs.Debug(1,'getting sequences')
+	seqlist=[]
+	for ctip in treedat.tips():
+		seqlist.append(ctip.name)
+	hs.Debug(3,'found %d tips' % len(seqlist))
+
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	newexp.filters.append(filterdesc)
+	hs.addcommand(newexp,"filterseqsfromtree",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+def randomsplit(expdat,frac=0.5):
+	"""
+	randomly split an experiment into 2 experiments
+	keeping frac of the samples in exp1, 1-frac in exp2
+
+	input:
+	expdat : Experiment
+	frac : float
+		the fraction of samples to put in exp1 (rounded down)
+
+	output:
+	exp1,exp2 : Experiment
+		The random split (by samples) of expdat
+	"""
+	params=locals()
+
+	numsamples=len(expdat.samples)
+	samples=np.random.permutation(numsamples)
+	num1=int(numsamples*frac)
+
+	exp1=hs.reordersamples(expdat,samples[:num1])
+	exp2=hs.reordersamples(expdat,samples[num1:])
+
+	return exp1,exp2
+
+
+
+def collapsetaxonomy(expdat,taxlevel=3):
+	"""
+	collapse the otus to a given taxonomic level (all otus with the same taxonomy up to level taxlevel are summed together)
+
+	input:
+	expdat : Experiment
+		the experiment to collapse
+	taxlevel : int
+		the taxonomic level to collapse to (1=Kingdom,2=Phylum etc.)
+
+	output:
+	newexp : Experiment
+		with otus collapsed to the taxonomic level
+	"""
+	params=locals()
+
+	newexp=hs.copyexp(expdat)
+	alltax={}
+	allpos=[]
+	for idx,ctax in enumerate(expdat.tax):
+		# get only the taxonomy up to the level we want
+		taxlist=ctax.split(';')
+		if len(taxlist)>taxlevel:
+			taxlist=taxlist[:taxlevel]
+		ctax=';'.join(taxlist)
+
+		if ctax not in alltax:
+			alltax[ctax]=idx
+			newexp.tax[idx]=ctax
+			allpos.append(idx)
+		else:
+			newexp.data[alltax[ctax]]+=newexp.data[idx]
+	newexp=hs.reorderbacteria(newexp,allpos)
+	newexp.filters.append('collapse taxonomy to level %d' % taxlevel)
+	hs.addcommand(newexp,"collapsetaxonomy",params=params,replaceparams={'expdat':expdat})
 	return newexp
