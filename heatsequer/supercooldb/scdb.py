@@ -413,6 +413,49 @@ def addexpdata(db,data,studyid=None):
 		return None
 
 
+def addontologyterm(db,term,parent,synonyms):
+	"""
+	Add a new ontology term to the database and link to parent/add synonyms
+
+	input:
+	db : dbstruct
+		from dbstart()
+	tern : str
+		the new ontology term (i.e. 'goldfish')
+	parent : str
+		the parent term for the new term (i.e. 'fish') or '' if to be linked to root
+	synonyms : list of str
+		the list of synonyms to the new ontology term (i.e. yellowfish)
+
+	output:
+	newid : int
+		the id of the new term or 0 if error
+	"""
+	Debug(2,"addontologyterm - %s" % term)
+	if len(term)==0:
+		Debug(6,"Term is empty!")
+		return False
+
+
+	# add the ontology term
+	rdata={}
+	rdata['term']=term
+	if len(parent)>0:
+		rdata['parent']=parent
+	if len(synonyms)>0:
+		rdata['synonyms']=synonyms
+
+	res=requests.post(db.dburl+'/ontology/add',json=rdata)
+	if res.status_code==200:
+		newid=res.json()['termid']
+		Debug(1,"ontology term %s added. id is %d" % (term,newid))
+		return newid
+	Debug(8,'problem adding new ontology term %s' % term)
+	Debug(8,res.content)
+	return 0
+
+
+
 def addannotations(db,expid,sequences,annotationtype,annotations,submittername='NA',description='',method='',primerid=0,agenttype='HeatSequer',private='n'):
 	"""
 	Add a new manual curation to the database

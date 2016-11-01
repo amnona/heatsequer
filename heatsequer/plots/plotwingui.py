@@ -86,7 +86,7 @@ class PlotGUIWindow(QtWidgets.QDialog):
 		self.bExpInfo.clicked.connect(self.expinfo)
 		self.bSampleInfo.clicked.connect(self.sampleinfo)
 		self.lCoolDB.doubleClicked.connect(self.showannotation)
-		self.cSampleField.activated.connect(self.samplefield)
+		self.cSampleField.activated[str].connect(self.samplefield)
 		self.FigureTab.currentChanged.connect(self.tabchange)
 		self.cSampleField.setCurrentIndex(0)
 		self.cexp=expdat
@@ -448,7 +448,7 @@ class PlotGUIWindow(QtWidgets.QDialog):
 				okcontinue=False
 				while not okcontinue:
 					hs.Debug(6,'study data info not found based on datamd5, mapmd5. need to add one!!!')
-					qres=QtWidgets.QMessageBox.warning(self,"No study data","No information added about study data. Add info?",QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No,QMessageBox.Cancel)
+					qres=QtWidgets.QMessageBox.warning(self,"No study data","No information added about study data. Add info?",QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Cancel)
 					if qres==QtWidgets.QMessageBox.Cancel:
 						return
 					if qres==QtWidgets.QMessageBox.No:
@@ -711,7 +711,20 @@ class DBAnnotateSave(QtWidgets.QDialog):
 		if conto in self.ontology:
 			conto=self.ontologyfromid[self.ontology[conto]]
 		else:
-			hs.Debug(1,'Not in ontology!!!')
+			hs.Debug(6,'Not in ontology!!!')
+			newonto = DBNewOntology(self.cexp,conto)
+			res=newonto.exec_()
+			if res==QtWidgets.QDialog.Accepted:
+				parent=str(newonto.lParent.text())
+				if parent in self.ontology:
+					parent=self.ontologyfromid[self.ontology[parent]]
+				else:
+					hs.Debug(6,'parent not in ontology')
+				synonyms=[str(x) for x in qtlistiteritems(newonto.lSynonymList)]
+				hs.supercooldb.addontologyterm(hs.scdb,conto,parent,synonyms)
+			else:
+				hs.Debug(6,'cancel')
+				return
 			# TODO: add are you sure... not in ontology list....
 
 		# if item already in list, don't do anything
@@ -802,7 +815,7 @@ def getqtlistitems(qtlist):
 
 
 
-def qtlistadd(qtlist,text,data,color="black"):
+def qtlistadd(qtlist,text,data=None,color="black"):
 	"""
 	Add an entry (text) to qtlist and associaxte metadata data
 	input:
@@ -921,3 +934,70 @@ def showannotationdata(annotationdetails):
 		info.append('sequences: %d' % len(seqs))
 	slistwin = SListWindow(info,'Annotation details')
 	slistwin.exec_()
+
+
+
+
+
+
+class DBNewOntology(QtWidgets.QDialog):
+	"""
+	Dialog for getting information about a new ontology term
+	"""
+	def __init__(self,expdat,newterm):
+		super(DBNewOntology, self).__init__()
+		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/newontology.py'), self)
+
+		self.lRemove.clicked.connect(self.remove)
+		self.lSynonym.returnPressed.connect(self.plus)
+		self.cexp=expdat
+		self.lTerm.setText(newterm)
+
+		completer = QCompleter()
+		self.lParent.setCompleter(completer)
+		scdb=hs.scdb
+		self.scdb=scdb
+
+		model = QStringListModel()
+		completer.setModel(model)
+		completer.maxVisibleItems=10
+		completer.setCaseSensitivity(Qt.CaseInsensitive)
+
+		# make the completer selection also erase the text edit
+		# completer.activated.connect(self.cleartext,type=Qt.QueuedConnection)
+
+		# in qt5 should work with middle complete as well...
+#		completer.setFilterMode(Qt.MatchContains)
+		if not hs.scdb.ontologyfromid:
+			hs.scdb=hs.supercooldb.loaddbonto(hs.scdb)
+
+		self.ontology=hs.scdb.ontology
+		self.ontologyfromid=hs.scdb.ontologyfromid
+
+		nlist=list(self.ontology.keys())
+#		nlist=sorted(nlist)
+		nlist=sorted(nlist, key=lambda s: s.lower())
+		print("sorted ontology")
+
+		model.setStringList(nlist)
+		self.setWindowTitle('details for new ontology term %s' % newterm)
+
+		self.lParent.setFocus()
+
+
+	def keyPressEvent(self, e):
+		"""
+		override the enter event so will not close dialog
+		"""
+		e.ignore()
+
+
+	def plus(self):
+		cval=str(self.lSynonym.text())
+		qtlistadd(self.lSynonymList,cval)
+		self.lSynonym.setText('')
+
+	def remove(self):
+		items=self.lSynonymList.selectedItems()
+		for citem in items:
+			self.lSynonymList.takeItem(self.lSynonymList.row(citem))
