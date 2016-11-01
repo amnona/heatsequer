@@ -17,15 +17,16 @@ import os
 import sys
 import numpy as np
 import matplotlib as mpl
-mpl.use('Qt4Agg')
+mpl.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import *
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-from PyQt4 import QtGui, QtCore, uic
-from PyQt4.QtCore import Qt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from PyQt5 import QtGui, QtCore, QtWidgets, uic
+from PyQt5.QtCore import Qt
 #from PyQt4 import QtGui
-from PyQt4.QtGui import QCompleter,QStringListModel,QMessageBox,QListWidgetItem
+from PyQt5.QtWidgets import QCompleter,QMessageBox,QListWidgetItem
+from PyQt5.QtCore import QStringListModel
 import pickle
 # for debugging - use XXX()
 from pdb import set_trace as XXX
@@ -37,7 +38,7 @@ for the GUI
 
 
 
-class SListWindow(QtGui.QDialog):
+class SListWindow(QtWidgets.QDialog):
 	def __init__(self,listdata=[],listname=''):
 		"""
 		create a list window with items in the list and the listname as specified
@@ -65,11 +66,11 @@ class MyMplCanvas(FigureCanvas):
 #		self.axes.hold(False)
 		FigureCanvas.__init__(self, self.fig)
 		self.setParent(parent)
-		FigureCanvas.setSizePolicy(self,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Expanding)
+		FigureCanvas.setSizePolicy(self,QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Expanding)
 		FigureCanvas.updateGeometry(self)
 
 
-class PlotGUIWindow(QtGui.QDialog):
+class PlotGUIWindow(QtWidgets.QDialog):
 	cexp=[]
 
 	def __init__(self,expdat):
@@ -85,8 +86,8 @@ class PlotGUIWindow(QtGui.QDialog):
 		self.bExpInfo.clicked.connect(self.expinfo)
 		self.bSampleInfo.clicked.connect(self.sampleinfo)
 		self.lCoolDB.doubleClicked.connect(self.showannotation)
-		self.connect(self.cSampleField, QtCore.SIGNAL('activated(QString)'), self.samplefield)
-		self.FigureTab.connect(self.FigureTab, QtCore.SIGNAL("currentChanged(int)"),self.tabchange)
+		self.cSampleField.activated.connect(self.samplefield)
+		self.FigureTab.currentChanged.connect(self.tabchange)
 		self.cSampleField.setCurrentIndex(0)
 		self.cexp=expdat
 		self.selectionlines={}
@@ -107,12 +108,12 @@ class PlotGUIWindow(QtGui.QDialog):
 		self.createaddplot(useqt=True)
 		# right click menu
 		self.lCoolDB.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		self.lCoolDB.connect(self.lCoolDB, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),self.listItemRightClicked)
+		self.lCoolDB.customContextMenuRequested.connect(self.listItemRightClicked)
 
 	def listItemRightClicked(self, QPos):
-		self.listMenu= QtGui.QMenu()
+		self.listMenu= QtWidgets.QMenu()
 		menuitem = self.listMenu.addAction("Delete annotation")
-		self.connect(menuitem, QtCore.SIGNAL("triggered()"), self.menuDeleteAnnotation)
+		menuitem.triggered.connect(self.menuDeleteAnnotation)
 
 		parentPosition = self.lCoolDB.mapToGlobal(QtCore.QPoint(0, 0))
 		self.listMenu.move(parentPosition + QPos)
@@ -146,14 +147,14 @@ class PlotGUIWindow(QtGui.QDialog):
 		"""
 		if useqt:
 			# add the matplotlib figure
-			self.frame = QtGui.QWidget(self)
+			self.frame = QtWidgets.QWidget(self)
 			self.dc = MyMplCanvas(self.frame, width=5, height=4, dpi=100)
 			# add it to an hboxlayout to make it resize with window
-			layout = QtGui.QHBoxLayout(self)
+			layout = QtWidgets.QHBoxLayout(self)
 			layout.insertSpacing(0,250)
 	#		layout.addWidget(self.dc)
 	#		self.setLayout(layout)
-			layout2 = QtGui.QVBoxLayout()
+			layout2 = QtWidgets.QVBoxLayout()
 			layout.addLayout(layout2)
 			layout2.addWidget(self.dc)
 			self.mpl_toolbar = NavigationToolbar(self.dc, self)
@@ -217,13 +218,13 @@ class PlotGUIWindow(QtGui.QDialog):
 
 	def getsequence(self):
 		seq=self.cexp.seqs[self.cseq]
-		val,ok=QtGui.QInputDialog.getText(self,'Sequence',self.cexp.tax[self.cseq],text=seq)
+		val,ok=QtWidgets.QInputDialog.getText(self,'Sequence',self.cexp.tax[self.cseq],text=seq)
 
 	def view(self):
 		slist=[]
 		for cseq in self.selection:
 			slist.append(self.cexp.tax[cseq]+'-'+str(self.cexp.sids[cseq]))
-		val,ok=QtGui.QInputDialog.getItem(self,'Selected bacteria','',slist)
+		val,ok=QtWidgets.QInputDialog.getItem(self,'Selected bacteria','',slist)
 
 	def getselectedseqs(self):
 		slist=[]
@@ -235,7 +236,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		"""
 		save the selected list to the coolseq database
 		"""
-		val,ok=QtGui.QInputDialog.getText(self,'Save %d bacteria to coolseqDB' % len(self.selection),'Enter description')
+		val,ok=QtWidgets.QInputDialog.getText(self,'Save %d bacteria to coolseqDB' % len(self.selection),'Enter description')
 		hs.Debug(1,ok)
 		if ok:
 			seqs=[]
@@ -264,9 +265,9 @@ class PlotGUIWindow(QtGui.QDialog):
 					ccolor=QtGui.QColor(155,0,0)
 				else:
 					ccolor=QtGui.QColor(0,155,0)
-				item = QtGui.QListWidgetItem()
+				item = QtWidgets.QListWidgetItem()
 				item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
-				item.setTextColor(ccolor)
+				item.setForeground(ccolor)
 				slistwin.lList.addItem(item)
 				print("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
 			slistwin.exec_()
@@ -276,7 +277,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		"""
 		save the selected list to a fasta file
 		"""
-		fname = str(QtGui.QFileDialog.getSaveFileName(self, 'Save selection fasta file name','pita'))
+		fname = str(QtWidgets.QFileDialog.getSaveFileName(self, 'Save selection fasta file name','pita'))
 		slist=[]
 		for cseq in self.selection:
 			slist.append(self.cexp.seqs[cseq])
@@ -357,7 +358,7 @@ class PlotGUIWindow(QtGui.QDialog):
 					ccolor=QtGui.QColor(0,200,0)
 				else:
 					ccolor=QtGui.QColor(0,0,0)
-				newitem.setTextColor(ccolor)
+				newitem.setForeground(ccolor)
 				self.lCoolDB.addItem(newitem)
 			else:
 				self.lCoolDB.addItem(cinfo)
@@ -402,7 +403,7 @@ class PlotGUIWindow(QtGui.QDialog):
 		self.cexp.selectedseqs=sequences
 		dbs = DBAnnotateSave(self.cexp)
 		res=dbs.exec_()
-		if res==QtGui.QDialog.Accepted:
+		if res==QtWidgets.QDialog.Accepted:
 			# fl=open('/Users/amnon/Python/git/heatsequer/db/ontologyfromid.pickle','rb')
 			# ontologyfromid=pickle.load(fl)
 			# fl.close()
@@ -447,13 +448,13 @@ class PlotGUIWindow(QtGui.QDialog):
 				okcontinue=False
 				while not okcontinue:
 					hs.Debug(6,'study data info not found based on datamd5, mapmd5. need to add one!!!')
-					qres=QtGui.QMessageBox.warning(self,"No study data","No information added about study data. Add info?",QtGui.QMessageBox.Yes, QtGui.QMessageBox.No,QMessageBox.Cancel)
-					if qres==QtGui.QMessageBox.Cancel:
+					qres=QtWidgets.QMessageBox.warning(self,"No study data","No information added about study data. Add info?",QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No,QMessageBox.Cancel)
+					if qres==QtWidgets.QMessageBox.Cancel:
 						return
-					if qres==QtGui.QMessageBox.No:
+					if qres==QtWidgets.QMessageBox.No:
 						cdata=hs.supercooldb.addexpdata(scdb,( ('DataMD5',self.cexp.datamd5), ('MapMD5',self.cexp.mapmd5) ) )
 						okcontinue=True
-					if qres==QtGui.QMessageBox.Yes:
+					if qres==QtWidgets.QMessageBox.Yes:
 						okcontinue=getstudydata(self.cexp)
 						cdata=hs.supercooldb.finddataid(scdb,datamd5=self.cexp.datamd5,mapmd5=self.cexp.mapmd5)
 						hs.Debug(1,'new cdata is %s' % cdata)
@@ -467,7 +468,7 @@ class PlotGUIWindow(QtGui.QDialog):
 			hs.lastdatamd5=self.cexp.datamd5
 
 
-class DBStudyAnnotations(QtGui.QDialog):
+class DBStudyAnnotations(QtWidgets.QDialog):
 	def __init__(self,studyid):
 		super(DBStudyAnnotations, self).__init__()
 		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/annotationlist.py'), self)
@@ -486,7 +487,7 @@ class DBStudyAnnotations(QtGui.QDialog):
 		print(str(items[0].text()))
 
 
-class DBStudyInfo(QtGui.QDialog):
+class DBStudyInfo(QtWidgets.QDialog):
 	def __init__(self,expdat):
 		super(DBStudyInfo, self).__init__()
 		uic.loadUi(os.path.join(hs.heatsequerdir,'ui/studyinfo.py'), self)
@@ -559,7 +560,7 @@ class DBStudyInfo(QtGui.QDialog):
 					self.addentry(fromdb=False,ctype=infofield,value=uvals[0].lower(),color='black')
 
 
-class DBAnnotateSave(QtGui.QDialog):
+class DBAnnotateSave(QtWidgets.QDialog):
 	def __init__(self,expdat):
 		super(DBAnnotateSave, self).__init__()
 		print("DBAnnotateSave")
@@ -813,11 +814,11 @@ def qtlistadd(qtlist,text,data,color="black"):
 	color : (R,G,B)
 		the color of the text in the list
 	"""
-	item = QtGui.QListWidgetItem()
+	item = QtWidgets.QListWidgetItem()
 	item.setText(text)
 	ccol=QtGui.QColor()
 	ccol.setNamedColor(color)
-	item.setTextColor(ccol)
+	item.setForeground(ccol)
 	item.setData(Qt.UserRole,data)
 	qtlist.addItem(item)
 
@@ -868,7 +869,7 @@ def getstudydata(cexp):
 	"""
 	dbsi = DBStudyInfo(cexp)
 	res=dbsi.exec_()
-	if res==QtGui.QDialog.Accepted:
+	if res==QtWidgets.QDialog.Accepted:
 		newstudydata=[]
 		allstudydata=[]
 		for citem in qtlistiteritems(dbsi.blist):
@@ -906,6 +907,8 @@ def showannotationdata(annotationdetails):
 		the experiment (for rhe scdb pointer)
 	"""
 	info=[]
+	if annotationdetails is None:
+		return
 	for k,v in annotationdetails.items():
 		if type(v)==list:
 			for cv in v:

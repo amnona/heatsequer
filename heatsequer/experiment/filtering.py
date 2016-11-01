@@ -961,6 +961,7 @@ def randomsplit(expdat,frac=0.5):
 	expdat : Experiment
 	frac : float
 		the fraction of samples to put in exp1 (rounded down)
+		if >=1, the number of samples to keep
 
 	output:
 	exp1,exp2 : Experiment
@@ -970,7 +971,13 @@ def randomsplit(expdat,frac=0.5):
 
 	numsamples=len(expdat.samples)
 	samples=np.random.permutation(numsamples)
-	num1=int(numsamples*frac)
+	if frac<1:
+		num1=int(numsamples*frac)
+	else:
+		num1=int(frac)
+		if num1>len(expdat.samples):
+			hs.Debug(6,'Less samples (%d) than requested (%d)' % (len(expdat.samples),num1))
+			num1=len(expdat.samples)
 
 	exp1=hs.reordersamples(expdat,samples[:num1])
 	exp2=hs.reordersamples(expdat,samples[num1:])
@@ -1010,7 +1017,7 @@ def collapsetaxonomy(expdat,taxlevel=3):
 			newexp.tax[idx]=ctax
 			allpos.append(idx)
 		else:
-			newexp.data[alltax[ctax]]+=newexp.data[idx]
+			newexp.data[alltax[ctax],:]+=newexp.data[idx,:]
 	newexp=hs.reorderbacteria(newexp,allpos)
 	newexp.filters.append('collapse taxonomy to level %d' % taxlevel)
 	hs.addcommand(newexp,"collapsetaxonomy",params=params,replaceparams={'expdat':expdat})

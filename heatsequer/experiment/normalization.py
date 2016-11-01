@@ -49,7 +49,7 @@ def normalizeprctile(expdat,percent=80):
 
 def normalizereads(expdat,numreads=10000,fixorig=False,inplace=False):
 	"""
-	normalize the number of reads per sample to 10k
+	normalize the number of reads per sample (default to 10k)
 	input:
 	expdat
 	numreads - the number of reads to normalize to
@@ -104,6 +104,7 @@ def normalizebyseqs(expdat,seqs,exclude=False,fixorig=True):
 		newexp.data[:,idx]=newexp.data[:,idx]/frat[idx]
 		if fixorig:
 			newexp.origreads[idx]=newexp.origreads[idx]/frat[idx]
+			newexp.scalingfactor[idx]=newexp.scalingfactor[idx]*frat
 	filt='Normalize By Seqs '
 	if len(spos)==1:
 		filt+=newexp.tax[spos[0]]
@@ -133,20 +134,48 @@ def toorigreads(expdat,inplace=False):
 	else:
 		newexp=hs.copyexp(expdat)
 
-	colsum=hs.sum(newexp.data,axis=0)
-	# for idx,csamp in enumerate(newexp.samples):
-	# 	totreads=colsum[idx]
-	# 	origreads=newexp.origreads[idx]
-	# 	if totreads==0:
-	# 		continue
-	# 	ratio=float(origreads)/totreads
-	# 	newexp.data[:,idx]=newexp.data[:,idx]*ratio
-	newexp.data=hs.divvec(newexp.data,colsum/np.array(expdat.origreads))
+	newexp.data=hs.multvec(newexp.data,newexp.scalingfactor)
+	newexp.data=np.round(newexp.data)
 	newexp.data=newexp.data.astype(int)
+	newexp.scalingfactor=1
 
 	newexp.filters.append("changed reads to origread value")
 	hs.addcommand(newexp,"toorigreads",params=params,replaceparams={'expdat':expdat})
 	return newexp
+
+
+# def toorigreadsold(expdat,inplace=False):
+# 	"""
+# 	convert the number of reads to absolute using the origreads field
+# 	input:
+# 	expdat
+# 	inplace - True to replace current exp, false to create a new one
+
+# 	output:
+# 	newexp - each sample has origreads reads (instead of 10k)
+# 	"""
+# 	params=locals()
+
+# 	if inplace:
+# 		newexp=expdat
+# 	else:
+# 		newexp=hs.copyexp(expdat)
+
+# 	colsum=hs.sum(newexp.data,axis=0)
+# 	# for idx,csamp in enumerate(newexp.samples):
+# 	# 	totreads=colsum[idx]
+# 	# 	origreads=newexp.origreads[idx]
+# 	# 	if totreads==0:
+# 	# 		continue
+# 	# 	ratio=float(origreads)/totreads
+# 	# 	newexp.data[:,idx]=newexp.data[:,idx]*ratio
+# 	newexp.data=hs.divvec(newexp.data,colsum/np.array(expdat.origreads))
+# 	newexp.data=np.round(newexp.data)
+# 	newexp.data=newexp.data.astype(int)
+
+# 	newexp.filters.append("changed reads to origread value")
+# 	hs.addcommand(newexp,"toorigreads",params=params,replaceparams={'expdat':expdat})
+# 	return newexp
 
 
 def subsample(expdat,numreads=10000,inplace=False):

@@ -628,6 +628,34 @@ def divvec(data,vec):
 	return data
 
 
+def multvec(data,vec):
+	"""
+	multiply the data matrix data by the vector vec
+	works for sparse and non sparse data types
+
+	input:
+	data : sparse matrix or numpy array
+		the data to multiply each colum by the vector element
+	vec : numpy array
+		the vector to multiply by
+
+	output:
+	data : same as data
+		each element in each column in data multiplied by the corresponding vec element
+	"""
+	if sp.sparse.isspmatrix(data):
+		numcols=data.shape[1]
+		b=sp.sparse.lil_matrix( (numcols,numcols) )
+		for idx in range(numcols):
+			b[idx,idx]=vec[idx]
+		b=b.tocsr()
+		data=data*b
+	else:
+		data=data*vec
+
+	return data
+
+
 def log2(data,minthresh=2):
 	"""
 	calculate the log2 of the data in dense or sparse format. numbers below minthresh are rounded to minthresh

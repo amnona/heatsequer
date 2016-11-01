@@ -127,7 +127,7 @@ def loaddistmat(expdat,dmfilename):
 	return dist,dsamp
 
 
-def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals=False):
+def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals=False,showlegend=True,numbins=50):
 	"""
 	calculate the distance matrix based on groups of samples according to field
 	using a distance matrix and mapping
@@ -146,6 +146,11 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 		'hist' - to plot histogram of pairwise values
 	uvals : string
 		empty to plot all values, or a list of values to plot only them (in field)
+	showlegend:
+		True (default) to show legend for hist, False to hide
+	numbins : int
+		number of bins for the histogram
+
 	output:
 	gdist : numpy 2d array
 		the group distance matrix
@@ -168,11 +173,11 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 			adist=[]
 			for p1 in pos1:
 				if expdat.samples[p1] not in dsamp:
-					print('missing %s' % expdat.samples[p1])
+					# print('missing %s' % expdat.samples[p1])
 					continue
 				for p2 in pos2:
 					if expdat.samples[p2] not in dsamp:
-						print('missing2 %s' % expdat.samples[p1])
+						# print('missing2 %s' % expdat.samples[p1])
 						continue
 					if p1==p2:
 						continue
@@ -181,6 +186,7 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 			distdict[(cg1,cg2)]=adist
 			gdist[idx1,idx2]=np.nanmean(adist)
 	if plotit:
+		plt.figure()
 		if plottype=='heatmap':
 			plotdistheatmap(gdist,uvals)
 			plt.title(expdat.studyname+' '+field)
@@ -195,8 +201,9 @@ def getgroupdist(expdat,field,distmat,dsamp,plotit=True,plottype='heatmap',uvals
 				pl.append(v)
 				pairs.append(ks)
 				names.append(k)
-			plt.hist(pl,alpha=0.5,normed=True,bins=50,range=[0,1])
-			plt.legend(names)
+			plt.hist(pl,alpha=0.5,normed=True,bins=numbins,range=[0,1])
+			if showlegend:
+				plt.legend(names)
 	return gdist,uvals
 
 
