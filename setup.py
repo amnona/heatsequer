@@ -49,7 +49,7 @@ setup(name='heatsequer',
       packages=find_packages(),
       setup_requires=['numpy >= 1.9.2'],
       # note, hdf5 is required to be installed beforehand
-      # also pyqt==4.11.4 needs to be installed beforehand
+      # also qt5,pyqt==5 needs to be installed beforehand
       install_requires=[
           'biom-format',
           'easygui',
