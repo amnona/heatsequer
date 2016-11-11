@@ -26,6 +26,7 @@ from sklearn.preprocessing import scale
 from sklearn import metrics
 import copy
 from pdb import set_trace as XXX
+from heatsequer.analysis.pbfdr import pbfdr
 
 
 def getdiffsigall(expdat,field,val1,val2=False,numperm=1000,maxfval=0.1,nofreqpres=False):
@@ -2362,6 +2363,68 @@ def getpfdr(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1,
 	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
 	return newexp
 
+
+def getpbfdr(expdat,field,val1,val2=False,method='meandiff',transform='rankdata',numperm=1000,maxfval=0.1,fdrmethod='pbfdr'):
+	"""
+	test the differential expression between 2 groups (val1 and val2 in field field)
+	using permutation based fdr (pbfdr)
+	for bacteria that have a high difference.
+	input:
+	expdat
+	field - the field for the 2 categories
+	val1 - values for the first group
+	val2 - value for the second group or false to compare to all other
+	method - the test to compare the 2 groups:
+		mean - absolute difference in mean frequency
+		binary - abs diff in binary presence/absence
+		ranksum - abs diff in rank order (to ignore outliers)
+	transform : how to transform the data
+	numperm - number of random permutations to run
+	maxfval - the maximal f-value (FDR) for a bacteria to keep
+	usepfdr : bool
+		True to use the new permutation fdr, False to use bh-fdr
+
+	output:
+	newexp - the experiment with only significant (FDR<=maxfval) difference, sorted according to difference
+	"""
+	params=locals()
+
+	minthresh=2
+	exp1=hs.filtersamples(expdat,field,val1,exact=True)
+	if val2:
+		exp2=hs.filtersamples(expdat,field,val2,exact=True)
+	else:
+		exp2=hs.filtersamples(expdat,field,val1,exact=True,exclude=True)
+	cexp=hs.joinexperiments(exp1,exp2)
+	len1=len(exp1.samples)
+	len2=len(exp2.samples)
+
+	labels=np.zeros(len(cexp.samples))
+	labels[:len1]=1
+
+	print(np.shape(cexp.data))
+	keep,odif=pbfdr(cexp.data,labels,method=method,transform=transform,alpha=maxfval,numperm=numperm,fdrmethod=fdrmethod)
+
+	keep=np.where(keep)
+	seqlist=[]
+
+	for cidx in keep[0]:
+		seqlist.append(cexp.seqs[cidx])
+
+	# do we need this or is reorder enough?
+	newexp=hs.filterseqs(expdat,seqlist,logit=False)
+	odif=odif[keep[0]]
+	sv,si=hs.isort(odif)
+	hs.Debug(6,'method %s. number of higher in %s : %d. number of higher in %s : %d. total %d' % (method,val1,np.sum(odif>0),val2,np.sum(odif<0),len(odif)))
+	newexp=hs.reorderbacteria(newexp,si)
+	newexp.odif=sv
+	bz=np.where(np.array(newexp.odif)<0)[0]
+	if len(bz)>0:
+		seppos=np.max(bz)
+		newexp.hlines.append(seppos)
+	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
+	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
+	return newexp
 
 
 def correlatemicromet(microexp,metexp,method='pearson'):

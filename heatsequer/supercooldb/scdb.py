@@ -45,6 +45,7 @@ class scdbstruct:
 		# self.dburl='http://localhost:5000'
 #		self.dburl='http://amnonim.webfactional.com/scdb:29708'
 		self.dburl='http://amnonim.webfactional.com/scdb_main'
+#		self.dburl='http://amnonim.webfactional.com/scdb_develop'
 
 
 def addontology(scdb,ontology,ontoprefix='',namelist={}):

@@ -448,7 +448,7 @@ class PlotGUIWindow(QtWidgets.QDialog):
 				okcontinue=False
 				while not okcontinue:
 					hs.Debug(6,'study data info not found based on datamd5, mapmd5. need to add one!!!')
-					qres=QtWidgets.QMessageBox.warning(self,"No study data","No information added about study data. Add info?",QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No,QMessageBox.Cancel)
+					qres=QtWidgets.QMessageBox.warning(self,"No study data","No information added about study data. Add info?",QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Cancel)
 					if qres==QtWidgets.QMessageBox.Cancel:
 						return
 					if qres==QtWidgets.QMessageBox.No:
