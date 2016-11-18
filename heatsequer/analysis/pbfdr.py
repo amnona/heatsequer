@@ -258,7 +258,7 @@ def pbfdr(data,labels, method='meandiff', transform='rankdata', alpha=0.1, numpe
 			# no good threshold was found
 			reject=np.zeros(numbact,dtype=int)
 			reject= (reject>10)  # just want to output "FALSE"
-			return reject
+			return reject,tstat
 
 		# fill the reject null hypothesis
 		reject=np.zeros(numbact,dtype=int)

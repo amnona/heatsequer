@@ -1051,3 +1051,29 @@ def filtermapfields(expdat,fields=['#SampleID'],keep=True,inplace=False):
 	expdat.filters.append('filter map fields %s (keep=%s)' % (fields,keep))
 	hs.addcommand(expdat,"filtermapfields",params=params,replaceparams={'expdat':expdat})
 	return newexp
+
+
+def expfromcalour(cexp):
+	'''
+	convert an experiment from calour to heatsequer
+	input:
+	cexp : calour experiment
+	'''
+	newexp=Experiment()
+	newexp.data=copy.copy(cexp.data).transpose()
+	newexp.samples=list(cexp.sample_metadata.index)
+	newexp.seqs=list(cexp.feature_metadata.index)
+	if 'taxonomy' in cexp.feature_metadata.columns:
+		newexp.tax=[';'.join(x) for x in cexp.feature_metadata['taxonomy']]
+	else:
+		newexp.tax=list(cexp.feature_metadata.index)
+	newexp.sids=list(cexp.feature_metadata.index)
+	newexp.origreads=np.sum(newexp.data,0)
+	newexp.fields=list(cexp.sample_metadata.columns)
+	for csamp in newexp.samples:
+		newexp.smap[csamp]={}
+		for cfield in newexp.fields:
+			newexp.smap[csamp][cfield]=cexp.sample_metadata.loc[csamp][cfield]
+	newexp.commands.append('From calour experiment')
+	newexp.commands.append(cexp.description)
+	return newexp

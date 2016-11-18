@@ -126,8 +126,12 @@ class PlotGUIWindow(QtWidgets.QDialog):
 			cdetails=citem.data(Qt.UserRole)
 			if cdetails is None:
 				print('no details')
-			else:
-				print('delete id %d?' % cdetails['annotationid'])
+				return
+			annotationid=cdetails['annotationid']
+			qres=QtWidgets.QMessageBox.warning(self,"Delete annotation","Are you sure you want to delete annotation %d?\nThis cannot be undone" % annotationid,QtWidgets.QMessageBox.Yes,QtWidgets.QMessageBox.Cancel)
+			if qres==QtWidgets.QMessageBox.Cancel:
+				return
+			hs.supercooldb.delete_annotation(hs.scdb,annotationid)
 
 
 	def showannotation(self):
@@ -919,5 +923,10 @@ def showannotationdata(annotationdetails):
 	if 'annotationid' in annotationdetails:
 		seqs=hs.supercooldb.getannotationseqs(hs.scdb,annotationdetails['annotationid'])
 		info.append('sequences: %d' % len(seqs))
+	# get the experiment details:
+	if 'expid' in annotationdetails:
+		expinfo=hs.supercooldb.getexperimentinfo(hs.scdb,annotationdetails['expid'])
+		for cinfo in expinfo:
+			info.append('experiment %s:%s' % (cinfo[0],cinfo[1]))
 	slistwin = SListWindow(info,'Annotation details')
 	slistwin.exec_()

@@ -181,203 +181,6 @@ def dbstart(dbname="db/supercooldb.db"):
 	return scdb
 
 
-# def dbconnect(scdb,dbname="db/supercooldb.db"):
-# 	"""
-# 	connect to the database
-# 	input:
-# 	scdb : scdbstruct
-# 		from scdbstart()
-# 	dbname - the name of the database to connect to
-# 	"""
-
-# 	scdb.dbfile=dbname
-# 	# the database connection
-# 	Debug(1,"Connecting to database ",dbname)
-# 	scdb.con=sqlite3.connect(scdb.dbfile)
-# 	Debug(1,"Connected")
-# 	# and the cursor
-# 	scdb.cur=scdb.con.cursor()
-# 	# test if the database file exists:
-# 	try:
-# 		scdb.cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Curations'")
-# 		istable=scdb.cur.fetchone()
-# 		if istable[0]==0:
-# 			Debug(9,"Can't find Reads table in database file %s" % dbname)
-# 			scdb=False
-# 	except:
-# 		Debug(9,"Can't test database file %s" % dbname)
-# 		scdb=False
-# 	return scdb
-
-
-# def CreateTables(dbfilename='db/supercooldb.db',areyousure='no'):
-# 	"""
-# 	Create the database tables
-# 	NOTE: will delete old database!!!!
-# 	input:
-# 	dbfilename - name of the database file to create
-# 	areyousure - must be 'yes' in order to create the database
-
-# 	output:
-# 	db - the database structure
-# 	"""
-
-# 	assert areyousure=='yes'
-# 	db=dbstart(dbfilename)
-
-# 	# Primers table - info about each primer set used
-# 	# PrimerID - uniqueID - the key for other table
-# 	# FPrimer - forward primer sequence ACGT (upper case)
-# 	# RPrimer - reverse primer sequence ACGT (upper case)
-# 	# Region - name of the region (i.e. V4, etc)
-# 	db.cur.execute("DROP TABLE IF EXISTS Primers")
-# 	db.cur.execute("CREATE TABLE Primers(PrimerID INTEGER PRIMARY KEY AUTOINCREMENT,FPrimer TEXT,RPrimer TEXT,Region TEXT)")
-# 	db.cur.execute("CREATE INDEX PrimerIDInd ON Primers (PrimerID)")
-# 	# add the V4 EMP primers
-# 	db.cur.execute("INSERT INTO Primers (PrimerID,FPrimer,RPrimer,Region) VALUES (?,?,?,?)",(1,"GTGCCAGC[AC]GCCGCGGTAA","ATTAGA[AT]ACCC[CGT][AGT]GTAGTCC","V4"))
-
-# 	# Data table - info about the experiment sequence data used
-# 	# DataUniqueID - uniqueID - the key for other table
-# 	# DataID - same for all data info for the same experiment (so can have multiple entries for the same experiment - paper,qiita,sra etc.)
-# 	# also contains "DataMD5" and "MapMD5" with appropriate values
-# 	# Type - the type of reference (SRA,DRYAD,QIITA,PUBMEDID,HTML)
-# 	# Value - the value for the Type field selected (i.e. 10192,www.pita.com etc.)
-# 	db.cur.execute("DROP TABLE IF EXISTS Data")
-# 	db.cur.execute("CREATE TABLE Data(DataUniqueID INTEGER PRIMARY KEY AUTOINCREMENT,DataID INTEGER,Type TEXT,Value TEXT)")
-# 	db.cur.execute("CREATE INDEX DataIDInd ON Data (DataID)")
-# 	db.cur.execute("CREATE INDEX ValueInd ON Data (Value)")
-
-# 	# Sequences table - info about each sequence with manual curation
-# 	# SeqID - uniqueID - the key for other table
-# 	# Sequence - ACGT (upper case)
-# 	# Primers - link to PrimerID of Primers table for forward and reverse primer sequences
-# 	# Length - lenght of the sequence
-# 	# Taxonomy - the taxonomy string for the sequence
-# 	db.cur.execute("DROP TABLE IF EXISTS Sequences")
-# 	db.cur.execute("CREATE TABLE Sequences(SeqID INTEGER PRIMARY KEY AUTOINCREMENT,Sequence TEXT,PrimerID INTEGER, Length INTEGER, Taxonomy TEXT)")
-# 	db.cur.execute("CREATE INDEX SeqIDInd ON Sequences (SeqID)")
-# 	db.cur.execute("CREATE INDEX SeqInd ON Sequences (Sequence)")
-
-# 	# SeqCurations table - manual curation ids for each sequenceid
-# 	# SeqID - the sequence id (from Sequences table)
-# 	# CurationID - the curation id (from Curations table)
-# 	db.cur.execute("DROP TABLE IF EXISTS SeqCurations")
-# 	db.cur.execute("CREATE TABLE SeqCurations(SeqID INTEGER,CurationID INTEGER)")
-
-# 	# Curations table - manual curation data
-# 	# CurationID - the curation id (from Curations). also used a identifier for all CurationList items for this curation
-# 	# Date - the date when this curation was added (ISO8601 strings ("YYYY-MM-DD HH:MM:SS.SSS"))
-# 	# SubmitterName - name of the user who added this curation (first,last) or NA
-# 	# DataID - the identifier (for Data table) of all entries related to the dataset used for this analysis
-# 	# Description - a text description of the observation (i.e. higher in pigs with IBD)
-# 	# Method - how the annotation was achieved
-# 	# SubmitterAgent - name of the program submitting the curation (e.g. HeatSequer)
-# 	# CurType - the curation type ('DIFFEXP,COMMON,CONTAM,HIGHFREQ,PATHOGEN')
-# 	db.cur.execute("DROP TABLE IF EXISTS Curations")
-# 	db.cur.execute("CREATE TABLE Curations(CurationID INTEGER PRIMARY KEY AUTOINCREMENT,Date TEXT,SubmitterName TEXT,DataID INTEGER,Description TEXT,Method TEXT,SubmitterAgent TEXT,CurType TEXT)")
-# 	db.cur.execute("CREATE INDEX CurationIDInd ON Curations (CurationID)")
-# 	db.cur.execute("CREATE INDEX CurDataIDInd ON Curations (DataID)")
-
-# 	# CurationList table - the list of curations (i.e. contamination, higher in, all, etc)
-# 	# CurationID - for linking to other table, all entries with the same value are for the same curation
-# 	# Type - type of curation (ALL - all bacteria in the experiment, HIGHERIN, LOWERIN, ISA)
-# 	# Value - for the type (for ISA - COMMON, HIGHFREQ, CONTAMINATION, PATHOGEN, etc.)
-# 	db.cur.execute("DROP TABLE IF EXISTS CurationList")
-# 	db.cur.execute("CREATE TABLE CurationList(CurationID INTEGER, Type TEXT,Value TEXT)")
-# 	db.cur.execute("CREATE INDEX CurationListIDInd ON CurationList (CurationID)")
-# 	db.cur.execute("CREATE INDEX CurationListValue ON CurationList (Value)")
-
-# 	db.con.commit()
-# 	return db
-
-
-# def getseq(db,seq,primerid=1,insert=False):
-# 	"""
-# 	get the sequence id for the sequence seq in the database.
-# 	if it doesn't exist - create it and return the new id
-
-# 	input:
-# 	db : scdbstruct
-# 		from dbstart()
-# 	seq : sequence (ACGT)
-# 		the sequence to find/add
-# 	primerid : int
-# 		the PrimerID from Primers table of the sequenced region
-# 	insert : bool
-# 		True to insert the sequence if not in table, False to return 0 and not insert
-
-# 	output:
-# 	seqid : int
-# 		the SeqID from the Sequences table for the sequence
-# 	"""
-# 	seq=seq.upper()
-# 	rdata={}
-# 	rdata['sequence']=seq
-# 	db.cur.execute("SELECT SeqID FROM Sequences WHERE Sequence = ?",[seq])
-# 	res=db.cur.fetchone()
-# 	if res:
-# 		seqid=res[0]
-# 		Debug(0,"Found sequence %s,SeqID=%s" % (seq,seqid))
-# 	else:
-# 		if insert:
-# 			Debug(0,"Sequence %s not found - creating in table" % seq)
-# 			db.cur.execute("INSERT INTO Sequences (Sequence,PrimerID,Length) VALUES (?,?,?)",[seq,primerid,len(seq)])
-# 			seqid=db.cur.lastrowid
-# 			Debug(0,"SequenceID is",seqid)
-# 		else:
-# 			Debug(3,"Sequence %s not found in database" % seq)
-# 			seqid=0
-# 	return(seqid)
-
-
-
-# def delcuration(db,curid):
-# 	"""
-# 	delete a curation and the corresponding curationlist from the database
-
-# 	input:
-# 	db : : from startdb()
-# 	curid : int
-# 		the curationid
-
-# 	output:
-# 	deleted : bool
-# 		True if deleted, False if not found/not deleted
-# 	"""
-# 	Debug(6,'delcuration for id %d' % curid)
-# 	Debug(6,'deleting curationlist')
-# 	db.cur.execute("DELETE FROM CurationList WHERE CurationID = ?",(curid))
-# 	Debug(6,'deleting curation')
-# 	db.cur.execute("DELETE FROM Curations WHERE CurationID = ?",(curid))
-# 	return True
-
-
-# def getseqcurationids(db,seqid):
-# 	"""
-# 	get the curation ids for the sequence with the id seqid
-
-# 	input:
-# 	db : from sbdtart()
-# 	seqid : int
-# 		the sequence identifier (from getseq)
-
-# 	output:
-# 	curids : list of int
-# 		ids of all the curations for this sequence
-# 	"""
-# 	ids=[]
-# 	db.cur.execute("SELECT CurationID FROM SeqCurations WHERE SeqID = ?",[seqid])
-# 	allvals=db.cur.fetchall()
-# 	for cres in allvals:
-# 		ids.append(cres[0])
-# 	Debug(2,'found %d curations' % len(ids))
-# 	return ids
-
-################################################################
-# new functions
-
-
-
 def addexpdata(db,data,studyid=None):
 	"""
 	add new data entries (for a new study)
@@ -931,3 +734,94 @@ def getcurationontologies(db,sequence):
 				else:
 					onto[ctype][conto]+=1
 	return onto
+
+
+def delete_annotation(db,annotationid):
+	'''
+	delete an annotation from the database.
+
+	input:
+	db :
+	annotationid : int
+		the annotationid to delete
+
+	output:
+	'''
+	Debug(1,'delete annotation for annotatioid %d' % annotationid)
+	rdata={}
+	rdata['annotationid']=annotationid
+	res=requests.post(db.dburl+'/annotations/delete',json=rdata)
+	if res.status_code!=200:
+		Debug(6,'error deleting annotationid %d' % annotationid)
+		Debug(6,res.content)
+		return []
+	Debug(2,'Annotation %d deleted' % annotationid)
+
+
+
+
+def get_experiment_annotations(db,exp):
+	'''
+	get annotations on all sequences in the experiment
+
+	input:
+	db:
+	exp : Experiment
+
+	output:
+	'''
+	Debug(1,'get experiment sequence annotations for %d sequences' % len(exp.seqs))
+	rdata={}
+	rdata['sequences']=exp.seqs
+	res=requests.get(db.dburl+'/sequences/get_list_annotations',json=rdata)
+	if res.status_code!=200:
+		Debug(6,'error getting list annotations')
+		Debug(6,res.content)
+		return []
+	return res.json()['seqannotations']
+
+
+def convert_olddb_to_server(db,olddbfilename='db/supercooldb.db'):
+	'''
+	load the old local sqlite3 database to the server
+
+	input:
+	db
+	olddbfilename : str
+		the sqlite3 database filename
+	'''
+	con=sqlite3.connect(olddbfilename)
+	Debug(7,"Connected to database")
+	# and the cursor
+	cur=con.cursor()
+
+	# add all studies
+	# get studyids
+	Debug(7,'getting study ids')
+	cur.execute("SELECT DataID FROM Data")
+	allvals=cur.fetchall()
+	Debug(7,'found %d details' % len(allvals))
+	studyids=set()
+	for cres in allvals:
+		studyids.add(cres[0])
+	Debug(7,'found %d unique ids' % len(studyids))
+	Debug(7,'processing per study data')
+	studyoldnew={}
+	for cid in studyids:
+		cur.execute("SELECT Type,Value FROM Data WHERE DataID = ?",[cid])
+		allvals=cur.fetchall()
+		Debug(7,'found %d details for studyid %d' % (len(allvals),cid))
+		Debug(7,'adding study data')
+		Debug(7,'looking for md5 in previous studies')
+		for cres in allvals:
+			if cres[0]=='DataMD5':
+				datamd5=cres[1]
+			if cres[0]=='MapMD5':
+				mapmd5=cres[1]
+		newid=finddataid(db,datamd5=datamd5,mapmd5=mapmd5,getall=False)
+		if newid is not None:
+			Debug(7,'already exists. id=%d' % newid[0])
+		# newid = addexpdata(db,list(allvals))
+		newid=0
+		Debug(7,'added data new studyid %d' % newid)
+		studyoldnew[cid]=newid
