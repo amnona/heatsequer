@@ -825,3 +825,5 @@ def convert_olddb_to_server(db,olddbfilename='db/supercooldb.db'):
 		newid=0
 		Debug(7,'added data new studyid %d' % newid)
 		studyoldnew[cid]=newid
+
+	

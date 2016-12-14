@@ -2413,7 +2413,11 @@ def getpbfdr(expdat,field,val1,val2=False,method='meandiff',transform='rankdata'
 
 	# do we need this or is reorder enough?
 	newexp=hs.filterseqs(expdat,seqlist,logit=False)
-	odif=odif[keep[0]]
+	if len(keep[0])>0:
+		odif=odif[keep[0]]
+	else:
+		print('none found')
+		odif=[]
 	sv,si=hs.isort(odif)
 	hs.Debug(6,'method %s. number of higher in %s : %d. number of higher in %s : %d. total %d' % (method,val1,np.sum(odif>0),val2,np.sum(odif<0),len(odif)))
 	newexp=hs.reorderbacteria(newexp,si)

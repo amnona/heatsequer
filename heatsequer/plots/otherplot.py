@@ -245,6 +245,85 @@ def plotdiffsummary(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=T
 	return diff,expnames,otus
 
 
+def plotdiffsummaryscatter(expdatlist,seqs,field,val1,val2=False,method='mean',sortit=True,threshold=0.1,ptitle=False,showallfirstexp=True):
+	"""
+	plot a heat map for the fold change in each experiment in expdatlist
+	for the log2 foldchange between the 2 groups (val1,val2 values in field)
+	for zech chinese ibd paper
+	input:
+	expdatlist - a list of experiments to plot (row per experiment - all must contain field and val1,val2 in it)
+	seqs - the sequences to examine
+	field - name of the field dividing the 2 groups
+	val1 - value of the field for group 1 (or a list of values 1 per experiment)
+	val2 - value of the field for group 2 or False for all the rest (not val1) (or a list of values 1 per experiment)
+	method:
+		- mean - calculate the difference in the mean of the 2 groups
+	sortit - True to sort according to difference in the first expdat, False to use the order in seqs
+	threshold - minimum value of stat for ratio calculation (otherwise rounded up to threshold)
+	ptitle - name of figure of False for auto title
+	showallfirstexp : bool
+		True - show all sequences, False - show only sequences present in at least one other study except the first
+
+	output:
+	diffsum - the same as the plotted heatmap (row per otu, column per experiment)
+	expnames - names (studyname) of the experiments plotted (for label)
+	otus - the otu sequences for the rows
+	"""
+
+	if not(type(val1) is list):
+		tval1=val1
+		val1=[]
+		for cexp in expdatlist:
+			val1.append(tval1)
+	if not(type(val2) is list):
+		tval2=val2
+		val2=[]
+		for cexp in expdatlist:
+			val2.append(tval2)
+	diff=np.array(hs.getdiffsummary(expdatlist[0],seqs,field,val1[0],val2[0],method,threshold=threshold))
+	odiff=copy.copy(diff)
+	odiffnotnan=np.where(np.isfinite(odiff))[0]
+	diffsum=[]
+	for cidx,cexp in enumerate(expdatlist[1:]):
+		cdiff=np.array(hs.getdiffsummary(cexp,seqs,field,val1[cidx+1],val2[cidx+1],method,threshold=threshold))
+		diff=np.vstack([diff,cdiff])
+		notnan=np.where(np.isfinite(cdiff))[0]
+		notnan=np.intersect1d(notnan,odiffnotnan)
+		if len(notnan)>0:
+			cdiffsum=float(np.sum((cdiff[notnan]>0)==(odiff[notnan]>0)))/len(notnan)
+		else:
+			cdiffsum=np.nan
+		diffsum.append(cdiffsum)
+
+	# remove all NaN lines (not enough reads for threshold)
+	if showallfirstexp:
+		nanlines=np.where(~np.isnan(diff).all(axis=0))[0]
+	else:
+		nanlines=np.where(~np.isnan(diff[1:,:]).all(axis=0))[0]
+	diff=diff[:,nanlines]
+	otus=hs.reorder(seqs,nanlines)
+
+	if sortit:
+		si=np.argsort(diff[0,:])
+		diff=diff[:,si]
+		otus=hs.reorder(otus,si)
+	plt.figure()
+	maxdiff=np.nanmax(np.abs(diff))
+	diff=np.transpose(diff)
+	plt.imshow(diff,interpolation='nearest',aspect='auto',cmap=plt.get_cmap("coolwarm"),clim=[-maxdiff,maxdiff])
+	plt.colorbar()
+	if ptitle:
+		plt.title(ptitle)
+	else:
+		plt.title("log2 fold change between %s and %s in field %s" % (val1,val2,field))
+	expnames=[]
+	for cexp in expdatlist:
+		expnames.append(cexp.studyname)
+	plt.xticks(np.arange(len(expnames)),expnames,rotation=45)
+	plt.tight_layout()
+	plt.show()
+	return diff,expnames,otus
+
 
 def showleakage(expdat,seq,wwpp=['1','2','3','4','5','6','7','8']):
 	plt.figure()
@@ -815,7 +894,7 @@ def plottaxonomybar(expdat,taxlevel=3,maxnum=8,normalize=True,sortfield=None,sho
 	return expdat
 
 
-def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True,showtaxnames=True,labelsize=8):
+def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisnone=True,showtaxnames=True,labelsize=8,colormap=False):
 	"""
 	plot an experiment with dendrogram for the sequences (based on sequence similarity)
 	input:
@@ -848,8 +927,8 @@ def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisno
 	# [axm_x, axm_y, axm_w, axm_h] = [0.25,0.1,0.7,0.8]
 	ax1 = fig.add_axes([ax1_x, ax1_y, ax1_w, ax1_h], frame_on=True)
 	linkmat = scipy.cluster.hierarchy.linkage(sdm, method='single')
-	dend = scipy.cluster.hierarchy.dendrogram(linkmat,orientation='right',no_labels=True)
-	tickdist=np.array([1,2,3,5,8,15,30])
+	dend = scipy.cluster.hierarchy.dendrogram(linkmat,orientation='right',no_labels=True,color_threshold=0)
+	tickdist=np.array([1,3,8,30])
 	ticklabs=[]
 	for ctick in tickdist:
 		ticklabs.append(str(ctick))
@@ -859,7 +938,7 @@ def plotdendrogram(expdat,field=None,nosort=False,minreads=0,xwidth=0.5,zeroisno
 	print(len(expdat.seqs))
 	newexp=hs.reorderbacteria(expdat,idx)
 	axm = fig.add_axes([axm_x, axm_y, axm_w, axm_h], frame_on=True)
-	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone,showtaxnames=showtaxnames,fontsize=labelsize)
+	hs.plotexp(newexp,field,newfig=False,ptitle=None,nosort=nosort,minreads=minreads,zeroisnone=zeroisnone,showtaxnames=showtaxnames,fontsize=labelsize,colormap=colormap)
 	return newexp
 
 

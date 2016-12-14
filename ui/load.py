@@ -240,6 +240,31 @@
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="QCheckBox" name="cNoNormalize">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>130</y>
+     <width>131</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>change map sampleid to lowercase</string>
+   </property>
+   <property name="text">
+    <string>No Nomalization</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>20</width>
+     <height>20</height>
+    </size>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

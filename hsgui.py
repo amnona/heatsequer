@@ -161,7 +161,7 @@ class BiClusterWindow(QtWidgets.QDialog):
 					ccolor=QtGui.QColor(0,155,0)
 				item = QtWidgets.QListWidgetItem()
 				item.setText("%s - %s (p:%f o:%d e:%f)" % (cmd['field'],cmd['val'],cmd['pval'],cmd['observed'],cmd['expected']))
-				item.setTextColor(ccolor)
+				item.setForeground(ccolor)
 				self.lSamples.addItem(item)
 			if self.cooldb:
 				bmd=hs.annotationenrichment(self.cexp,self.seqs)
@@ -174,7 +174,7 @@ class BiClusterWindow(QtWidgets.QDialog):
 						ccolor=QtGui.QColor(0,155,0)
 					item = QtWidgets.QListWidgetItem()
 					item.setText("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
-					item.setTextColor(ccolor)
+					item.setForeground(ccolor)
 					self.lBacteria.addItem(item)
 	#					self.lBacteria.addItem("%s (p:%f o:%d e:%f)" % (cbmd['description'],cbmd['pval'],cbmd['observed'],cbmd['expected']))
 
@@ -704,11 +704,12 @@ class AppWindow(QtWidgets.QMainWindow):
 			expname=str(loadwin.tLoadName.text())
 			metabolite=loadwin.cMetabolite.checkState()
 			emp=loadwin.cEMP.checkState()
+			normalize=not loadwin.cNoNormalize.checkState()
 			if metabolite:
 				tabletype='meta'
 			else:
 				tabletype='biom'
-			expdat=hs.load(tablefname,mapfname,tabletype=tabletype,mapsampletolowercase=emp)
+			expdat=hs.load(tablefname,mapfname,tabletype=tabletype,mapsampletolowercase=emp,normalize=normalize)
 			expdat.studyname=expname
 			self.addexp(expdat)
 			# for biom table show the number of reads`

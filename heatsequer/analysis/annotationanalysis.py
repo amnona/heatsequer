@@ -89,9 +89,9 @@ def annotationenrichment(expdat,seqs,compareseqs=None,fdrval=0.1):
 	"""
 	# if annotations not initialized - get them (to save time)
 	if expdat.seqannotations is None:
-		expdat=hs.getexpannotations(expdat)
+		expdat=hs.getexpannotations(expdat,usesupercooldb=False)
 	if expdat.annotationseqs is None:
-		expdat=hs.getexpannotations(expdat)
+		expdat=hs.getexpannotations(expdat,usesupercooldb=False)
 
 	# count the number of annotations for each term in the group
 	# into a dict {term:total number observed in group}

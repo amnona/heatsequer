@@ -289,7 +289,7 @@ def clearexp(expdat):
 	params=locals()
 
 	newexp=filterorigreads(expdat,1)
-	newexp=filterminreads(expdat,1)
+	newexp=filterminreads(expdat,0.000000000001)
 	newexp.filters.append('clear nonpresent bacteria and samples')
 	hs.Debug(6,'%d bacteria left' % len(newexp.sids))
 	hs.addcommand(newexp,"clearexp",params=params,replaceparams={'expdat':expdat})
@@ -1021,4 +1021,32 @@ def collapsetaxonomy(expdat,taxlevel=3):
 	newexp=hs.reorderbacteria(newexp,allpos)
 	newexp.filters.append('collapse taxonomy to level %d' % taxlevel)
 	hs.addcommand(newexp,"collapsetaxonomy",params=params,replaceparams={'expdat':expdat})
+	return newexp
+
+
+
+def subsamplebacteria(expdat,numbact):
+	'''
+	Randomly take a subset of the bacteria in expdat
+
+	input:
+	expdat : Experiment
+	numbact : int
+		number of bacteria to subsample
+
+	output:
+	newexp : Experiment
+		with randomly chosen numbact bacteria from expdat
+	'''
+	params=locals()
+
+	if len(expdat.seqs)<numbact:
+		hs.Debug(7, 'not enough bacteria in experiment (%d) to subsample %d' % (len(expdat.seqs),numbact))
+		return None
+
+	newexp = hs.copyexp(expdat)
+	bact=np.random.permutation(len(newexp.seqs))
+	newexp=hs.reorderbacteria(newexp,bact[:numbact])
+	newexp.filters.append('subsample bacteria to %d' % numbact)
+	hs.addcommand(newexp,"subsamplebacteria",params=params,replaceparams={'expdat':expdat})
 	return newexp
