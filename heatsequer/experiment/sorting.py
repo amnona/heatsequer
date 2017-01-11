@@ -495,3 +495,32 @@ def sortsamplesbybactfreq(expdat,seq):
 	newexp.filters.append("sort samples by bacteria frequency")
 	hs.addcommand(newexp,"sortsamplesbybactfreq",params=params,replaceparams={'expdat':expdat})
 	return newexp
+
+
+
+def sortbyprev(expdat,minreads=1,reverse=False):
+	"""
+	sort bacteria in experiment according to prevalence
+	expdat : Experiment
+	minreads : float
+		minimal number of reads in order to call a bacteria present
+	reverse : book
+		True to reverse the order
+	output:
+	newexp : Experiment
+		the experiment with bacteria sorted according to subgroup freq.
+	"""
+	params=locals()
+
+	texp=hs.copyexp(expdat)
+	texp.data= texp.data>=minreads
+	meanvals=hs.mean(texp.data,axis=1)
+	svals,sidx=hs.isort(meanvals)
+
+	if reverse:
+		sidx=sidx[::-1]
+
+	newexp=hs.reorderbacteria(expdat,sidx)
+	newexp.filters.append("sort by prevalence")
+	hs.addcommand(newexp,"sortbyprev",params=params,replaceparams={'expdat':expdat})
+	return newexp
