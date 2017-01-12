@@ -2357,7 +2357,7 @@ def getpfdr(expdat,field,val1,val2=False,method='mean',numperm=1000,maxfval=0.1,
 	newexp.odif=sv
 	bz=np.where(np.array(newexp.odif)<0)[0]
 	if len(bz)>0:
-		seppos=np.max(bz)
+		seppos=np.max(bz)+1
 		newexp.hlines.append(seppos)
 	hs.addcommand(newexp,"getdiffsigall",params=params,replaceparams={'expdat':expdat})
 	newexp.filters.append('differential expression (%s) in %s between %s and %s' % (method,field,val1,val2))
